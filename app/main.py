@@ -58,15 +58,17 @@ app.include_router(messages.router)
 # Middleware для проверки авторизации
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Разрешаем доступ к статическим файлам и странице логина
-        if request.url.path.startswith("/static") or request.url.path == "/login":
-            return await call_next(request)
-            
-        # Проверяем авторизацию только для маршрутов /disp/
-        if request.url.path.startswith("/disp/"):
+        # Список исключенных путей, которые не требуют авторизации
+        excluded_paths = ['/disp/login', '/login', '/static']
+        
+        # Проверяем, начинается ли путь с любого из исключенных путей
+        is_excluded = any(request.url.path.startswith(path) for path in excluded_paths)
+        
+        # Если путь не исключен, проверяем наличие сессии
+        if not is_excluded:
             session = request.cookies.get("session")
             if not session:
-                return RedirectResponse(url="/login", status_code=303)
+                return RedirectResponse(url="/disp/login", status_code=303)
         
         return await call_next(request)
 
@@ -1288,11 +1290,26 @@ async def accept_all_drivers(db: Session = Depends(get_db)):
         )
 
 @app.get("/login", response_class=HTMLResponse)
+async def get_login_redirect(request: Request):
+    """Перенаправление со старого пути на новый"""
+    return RedirectResponse(url="/disp/login", status_code=303)
+
+@app.post("/login")
+async def login_redirect(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    """Перенаправление POST запросов со старого пути на новый"""
+    response = RedirectResponse(url="/disp/login", status_code=303)
+    return response
+
+@app.get("/disp/login", response_class=HTMLResponse)
 async def get_login(request: Request):
     """Страница входа в систему"""
     return templates.TemplateResponse("disp/login.html", {"request": request})
 
-@app.post("/login")
+@app.post("/disp/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
     # Простая проверка логина и пароля (в реальном приложении нужно использовать хеширование и т.д.)
     if username == "admin" and password == "admin":
@@ -1303,7 +1320,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
         response.set_cookie(key="session", value=session_token, httponly=True, max_age=86400)
         return response
     else:
-        return RedirectResponse(url="/login?error=1", status_code=303)
+        return RedirectResponse(url="/disp/login?error=1", status_code=303)
 
 if __name__ == "__main__":
     import uvicorn

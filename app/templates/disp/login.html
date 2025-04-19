@@ -135,7 +135,7 @@
                     style="display: none;">
                     Неправильный логин или пароль
                 </div>
-                <form action="/login" method="post">
+                <form action="/disp/login" method="post">
                     <div class="form-group">
                         <label for="username">Логин</label>
                         <input type="text" id="username" name="username"
@@ -162,6 +162,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('error')) {
                 document.getElementById('error-message').style.display = 'block';
+            }
+            
+            // Если пользователь уже авторизован (есть куки сессии), перенаправляем на главную
+            if (document.cookie.indexOf('session=') !== -1) {
+                window.location.href = '/disp/';
             }
         }
     </script>
