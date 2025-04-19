@@ -20,6 +20,7 @@ class Driver(Base):
     tariff = Column(String(50), nullable=False)  # Бюджетный, Стандартный, Бизнес, Люкс
     taxi_park = Column(String(100), nullable=True)
     phone = Column(String(50), nullable=True)  # Номер телефона водителя
+    status = Column(String(20), default="pending")  # accepted, rejected, pending
     
     cars = relationship("Car", back_populates="driver")
     

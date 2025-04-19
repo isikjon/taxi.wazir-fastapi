@@ -20,7 +20,7 @@
                     <h4>Информация</h4>
                     <nav>
                         <ul>
-                            <li><a href="/disp/docs">Документы</a></li>
+                            <li><a href="#">Документы</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -28,7 +28,7 @@
                     <h4>Техподдержка</h4>
                     <nav>
                         <ul>
-                            <li><a href="/disp/support">Техподдержка</a></li>
+                            <li><a href="#">Техподдержка</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -38,8 +38,8 @@
                     <h4>Диспетчерская</h4>
                     <nav>
                         <ul>
-                            <li><a href="/disp">Статистика</a></li>
-                            <li><a href="/disp/analytics">Аналитика</a></li>
+                            <li><a
+                                    href="/disp/analytics">Статистика</a></li>
                             <li><a href="/disp/new_order">Новый заказ</a></li>
                         </ul>
                     </nav>
@@ -48,7 +48,7 @@
                     <h4>Автопарк</h4>
                     <nav>
                         <ul>
-                            <li><a href="/disp/create_driver">Создание
+                            <li><a href="/disp/create_driver_step1">Создание
                                     водителя</a></li>
                             <li><a href="/disp/pay_balance">Пополнение
                                     баланса</a></li>
@@ -73,8 +73,9 @@
                     <h4>Основные</h4>
                     <nav>
                         <ul>
-                            <li><a href="#">Профиль партнера</a></li>
-                            <li><a href="#">Категория транзакций</a></li>
+                            <li><a href="/disp">Профиль партнера</a></li>
+                            <li><a href="/disp/pay_balance">Категория
+                                    транзакций</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -112,11 +113,13 @@
                     <div class="navbar__links">
                         <div class="navbar__links-content">
                             <a
-                                class="{% if current_page in ['analytics', 'get_balance', 'new_order'] %}navbar__links-content-active{% endif %}"
+                                class="{% if current_page in ['home', 'get_balance'] %}navbar__links-content-active{% endif %}"
                                 href="/disp"><img
                                     src="{{ url_for('static', path='/assets/img/ico/disp.png') }}"
                                     alt="disp"></a>
-                            <a href="/disp/new_order"><img
+                            <a
+                                class="{% if current_page == 'new_order' %}navbar__links-content-active{% endif %}"
+                                href="/disp/new_order"><img
                                     src="{{ url_for('static', path='/assets/img/ico/maps.png') }}"
                                     alt="maps"></a>
                             <a
@@ -133,7 +136,7 @@
                                 class="{% if current_page == 'analytics' %}navbar__links-content-active{% endif %}"
                                 href="/disp/analytics"><img
                                     src="{{ url_for('static', path='/assets/img/ico/analytics.png') }}"
-                                    alt="analytics"></a>
+                                    alt="car"></a>
                         </div>
                     </div>
                     <div class="navbar__links">
@@ -162,7 +165,7 @@
                             <li><a href="/disp/cars">Автомобиль</a></li>
                             <li><a href="/disp/drivers_control">Фото
                                     контроль</a></li>
-                            <li><a href="/disp">Тариф</a></li>
+                            <li><a href="/disp/pay_balance">Баланс</a></li>
                             <li><a href="/disp/chat">Чат</a></li>
                         </ul>
                     </div>

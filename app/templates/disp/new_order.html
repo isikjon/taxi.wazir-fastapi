@@ -1,1368 +1,1049 @@
-<!DOCTYPE html>
-<html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Новый заказ - taxi.wazir.kg</title>
-        <link rel="stylesheet"
-            href="{{ url_for('static', path='/assets/css/main.css') }}">
-        <!-- Google Maps API -->
-        <script
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDFCIyRWIoOLx-1wytqeEmMQWf7gH51dGU&libraries=places&region=kg&language=ru"></script>
-        <!-- Добавляем адаптивные стили -->
-        <style>
-            /* Адаптивные стили */
-            .main__order-wrapper {
-                border-radius: 5px;
-            }
-            .main__order-header {
-                flex-wrap: wrap;
-            }
-            .main__btn {
-                padding: 12px 30px;
-            }
-            .main__order-subheader {
-                gap: 20px;
-                flex-wrap: wrap;
-            }
-            .main__order-subheader-item {
-                width: 100%;
-            } 
-            .main__subheader-filing {
-                width: 100%;
-            }
-            #tariff-select,
-            #payment-method {
-                width: 100%;
-            }
-            .main__order-subheader-item .main__btn-short {
-                width: 100%;
-            }
-            .main__order-notes {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-            } 
-            .main__order-notes-text {
-                width: 65%;
-            }
-            @media (max-width: 1200px) {
-                .main__order-wrapper-blocks {
-                    flex-direction: column;
-                }
-                .main__order-settings, .main__order-map {
-                    width: 100%;
-                    margin-bottom: 20px;
-                }
-                .main__header-tags ul li {
-                    padding: 10px 15px;
-                }
-            }
-            
-            @media (max-width: 768px) {
-                .main__header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-                .main__header-logo, .main__header-tags, .main__header-search {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-                .main__subheader-add {
-                    flex-wrap: wrap;
-                }
-                .main__order-header, .main__order-subheader {
-                    flex-direction: column;
-                }
-                .main__order-header-item, .main__order-subheader-item {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-                .main__order-details-item {
-                    flex-direction: column;
-                }
-                .main__order-details-item input {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-                .main__order-map-item {
-                    height: 300px;
-                }
-            }
-            
-            /* Улучшения существующих стилей */
-            .main__order-map-item {
-                min-height: 400px;
-                border-radius: 8px;
-                overflow: hidden;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            
-            .main__btn, .main__btn-short, .main__btn-green {
-                transition: all 0.3s ease;
-            }
-            
-            .main__btn:hover, .main__btn-short:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            }
-            
-            .main__btn-green:hover {
-                background-color: #35a63a;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            }
-            
-            .main__order-notes-text textarea {
-                width: 100%;
-                min-height: 80px;
-                padding: 10px;
-                border-radius: 8px;
-                border: 1px solid #47484c;
-                background-color: #2d2e33;
-                color: #fff;
-                resize: vertical;
-            }
-            
-            /* Живое время */
-            #current-time {
-                font-size: 18px;
-                font-weight: bold;
-                color: #fff;
-                background-color: #47484c;
-                padding: 8px 12px;
-                border-radius: 5px;
-                display: inline-block;
-                margin-left: 15px;
-            }
-            
-            /* Улучшения для карты и маршрута */
-            .route-info {
-                background-color: #2d2e33;
-                padding: 15px;
-                border-radius: 8px;
-                margin-top: 15px;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: space-between;
-            }
-            
-            .route-info-item {
-                background-color: #47484c;
-                padding: 10px 15px;
-                border-radius: 5px;
-                margin-bottom: 10px;
-                width: 100%;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-            .route-info-item input {
-                width: 90%;
-            }
-            
-            @media (max-width: 576px) {
-                .route-info-item {
-                    width: 100%;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="wrapper">
-            <div class="navbar__settings navbar__menu">
-                <div class="navbar__menu-links">
-                    <h4>Информация</h4>
-                    <nav>
-                        <ul>
-                            <li><a href="#">Документы</a></li>
-                        </ul>
-                    </nav>
+{% extends "base.html" %}
+{% block header_title %}Новый заказ{% endblock %}
+
+{% block content %}
+<div class="main__order-wrapper">
+    <form id="order-form" method="post" action="/api/orders/">
+        <div class="main__order-wrapper-blocks">
+            <div class="main__order-settings">
+                <div class="main__order-header">
+                    <div class="main__order-header-item">
+                        <p>Заказ №</p>
+                        <input type="text" id="order-number" name="order_number" readonly class="main__btn-short" value="{{ order_number }}">
+                    </div>
+                    <div class="main__order-header-item">
+                        <p>Дата время</p>
+                        <input type="text" id="order-date" name="order_date" readonly class="main__btn-short" value="{{ now.strftime('%d.%m.%y') }}">
+                        <input type="text" id="order-time" name="order_time" readonly class="main__btn-short" value="{{ now.strftime('%H:%M') }}">
+                    </div>
+                    <div class="main__order-header-item">
+                        <p>Путевой лист</p>
+                        <input type="text" id="route-number" name="route_number" readonly class="main__btn-short" value="{{ route_number }}">
+                    </div>
                 </div>
-                <div class="navbar__menu-links">
-                    <h4>Техподдержка</h4>
-                    <nav>
-                        <ul>
-                            <li><a href="#">Техподдержка</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-            <div class="navbar__menu-info navbar__menu">
-                <div class="navbar__menu-links">
-                    <h4>Диспетчерская</h4>
-                    <nav>
-                        <ul>
-                            <li><a
-                                    href="{{ url_for('disp_analytics') }}">Статистика</a></li>
-                            <li><a href="#"
-                                    onclick="alert('В разработке')">Запрос на
-                                    баланс</a></li>
-                            <li><a href="{{ url_for('disp_new_order') }}">Новый
-                                    заказ</a></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="navbar__menu-links">
-                    <h4>Автопарк</h4>
-                    <nav>
-                        <ul>
-                            <li><a href="#"
-                                    onclick="alert('В разработке')">Создание
-                                    водителя</a></li>
-                            <li><a href="#"
-                                    onclick="alert('В разработке')">Пополнение
-                                    баланса</a></li>
-                            <li><a
-                                    href="{{ url_for('disp_drivers') }}">Водители</a></li>
-                            <li><a
-                                    href="{{ url_for('disp_cars') }}">Автомобили</a></li>
-                            <li><a
-                                    href="{{ url_for('disp_chat') }}">Чат</a></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="navbar__menu-links">
-                    <h4>Контроль</h4>
-                    <nav>
-                        <ul>
-                            <li><a href="#" onclick="alert('В разработке')">Фото
-                                    контроль</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-            <div class="navbar__menu-settings navbar__menu">
-                <div class="navbar__menu-links">
-                    <h4>Основные</h4>
-                    <nav>
-                        <ul>
-                            <li><a href="#">Профиль партнера</a></li>
-                            <li><a href="#">Категория транзакций</a></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="navbar__menu-links"
-                    style="position: absolute; bottom: 10%;">
-                    <h4>Интерфейс</h4>
-                    <div class="main__subheader-filing">
-                        <h4>Язык Интерфейса</h4>
-                        <form action="#">
-                            <select name="filing-date"
-                                style="width: 100%;">
-                                <option value="Русский">Русский</option>
-                                <option value="Киргизский">Киргизский</option>
+                <div class="main__order-subheader">
+                    <div class="main__order-subheader-item">
+                        <select id="driver-select" name="driver_id" class="main__btn-short">
+                            <option value disabled selected>Выберите водителя</option>
+                            {% for driver in drivers %}
+                            <option value="{{ driver.id }}" data-phone="{{ driver.phone|default('+996 (XXX) XX-XX-XX') }}" data-tariff="{{ driver.tariff }}">
+                                {{ driver.full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" id="driver-phone" readonly class="main__btn-short" value="+996 (XXX) XX-XX-XX">
+                    </div>
+                    <div class="main__order-subheader-item">
+                        <div class="main__subheader-filing">
+                            <select id="tariff-select" name="tariff">
+                                <option value disabled selected>Вариант</option>
+                                <option value="Эконом">Эконом</option>
+                                <option value="Комфорт">Комфорт</option>
+                                <option value="Комфорт+">Комфорт+</option>
+                                <option value="Бизнес">Бизнес</option>
                             </select>
-                        </form>
-                    </div>
-                    <div class="main__subheader-filing">
-                        <h4>Тема</h4>
-                        <form action="#">
-                            <select name="filing-date"
-                                style="width: 100%;">
-                                <option value="Ночная Тема">Ночная Тема</option>
-                                <option value="Светлая Тема">Светлая
-                                    Тема</option>
+                        </div>
+                        <div class="main__subheader-filing">
+                            <select id="payment-method" name="payment_method">
+                                <option value disabled selected>Оплата</option>
+                                <option value="Наличные">Наличные</option>
+                                <option value="На карту">На карту</option>
                             </select>
-                        </form>
+                        </div>
                     </div>
+                </div>
+                <div class="main__order-details">
+                    <div class="main__order-details-item main__order-details-where">
+                        <input type="text" id="origin-street" name="origin_street" placeholder="Улица" class="main__btn" />
+                        <input type="text" id="origin-house" name="origin_house" placeholder="Дом" class="main__btn" />
+                        <input type="text" id="origin-district" name="origin_district" placeholder="Район" class="main__btn" />
+                        <input type="hidden" id="origin-full" name="origin" />
+                    </div>
+                    <div class="main__order-details-item main__order-details-whither">
+                        <input type="text" id="destination-street" name="destination_street" placeholder="Улица" class="main__btn" />
+                        <input type="text" id="destination-house" name="destination_house" placeholder="Дом" class="main__btn" />
+                        <input type="text" id="destination-district" name="destination_district" placeholder="Район" class="main__btn" />
+                        <input type="hidden" id="destination-full" name="destination" />
+                    </div>
+                </div>
+                <div class="main__order-notes">
+                    <div class="main__order-notes-text">
+                        <textarea id="notes" name="notes" placeholder="Примечание"></textarea>
+                    </div>
+                    <div class="main__order-notes-settings">
+                        <button type="button" class="main__btn-short">Заказ другому человеку</button>
+                        <button type="button" class="main__btn-short">Дополнительные услуги</button>
+                    </div>
+                </div>
+                <div class="main__table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Заказ</th>
+                                <th>Время</th>
+                                <th>Откуда</th>
+                                <th>Куда</th>
+                                <th>Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-orders">
+                            {% if orders %}
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.time }} {{ order.created_at.strftime('%d.%m.%y') }}</td>
+                                <td>{{ order.origin }}</td>
+                                <td>{{ order.destination }}</td>
+                                <td>{{ order.price|default('') }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5">Нет данных о последних заказах</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="navbar">
-                <div class="navbar__content">
-                    <div class="navbar__logo">
-                        <a href="{{ url_for('disp_home') }}"><img
-                                src="{{ url_for('static', path='/assets/img/logo/logo_small.png') }}"
-                                alt="logo"></a>
-                    </div>
-                    <div class="navbar__links">
-                        <div class="navbar__links-content">
-                            <a class="navbar__links-content-active"
-                                href="{{ url_for('disp_home') }}"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/disp.png') }}"
-                                    alt="disp"></a>
-                            <a href="#"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/maps.png') }}"
-                                    alt="maps"></a>
-                            <a href="{{ url_for('disp_drivers') }}"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
-                                    alt="user"></a>
-                            <a href="{{ url_for('disp_cars') }}"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/car.png') }}"
-                                    alt="car"></a>
-                            <a href="{{ url_for('disp_analytics') }}"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/analytics.png') }}"
-                                    alt="analytics"></a>
-                        </div>
-                    </div>
-                    <div class="navbar__links">
-                        <div class="navbar__links-content">
-                            <a href="#" class="support"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/info.png') }}"
-                                    alt="info"></a>
-                            <a href="#" class="settings"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/settings.png') }}"
-                                    alt="settings"></a>
-                            <a href="#" class="menu"><img
-                                    src="{{ url_for('static', path='/assets/img/ico/menu.png') }}"
-                                    alt="menu"></a>
-                        </div>
-                    </div>
+            <div class="main__order-map">
+                <div class="main__order-map-item" id="map-container">
+                    <!-- Google Maps будет загружен сюда -->
                 </div>
-            </div>
-            <div class="main">
-                <div class="main__header">
-                    <div class="main__header-logo"
-                        style="width: 280px;">
-                        <h3 style="font-size: 20px;">Новый заказ</h3>
+                <div class="main__order-map-settings">
+                    <div class="main__order-map-settings">
+                        <button type="button" class="main__btn">Данные для рассчета</button>
                     </div>
-                    <div class="main__header-tags">
-                        <ul>
-                            <li><a
-                                    href="{{ url_for('disp_drivers') }}">Водитель</a></li>
-                            <li><a
-                                    href="{{ url_for('disp_cars') }}">Автомобиль</a></li>
-                            <li><a href="#" onclick="alert('В разработке')">Фото
-                                    контроль</a></li>
-                            <li>Тариф</li>
-                            <li><a
-                                    href="{{ url_for('disp_chat') }}">Чат</a></li>
-                        </ul>
-                    </div>
-                    <div class="main__header-search">
-                        <div class="main__header-search-item">
-                            <form action="#">
-                                <input type="search" placeholder="Поиск">
-                                <button><img
-                                        src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
-                                        alt="search"></button>
-                            </form>
+                    <div class="route-info">
+                        <div class="route-info-item">
+                            <input type="text" id="tariff-display" readonly class="main__btn-short" value="Эконом">
                         </div>
-                        <div class="main__header-search-profile">
-                            <div class="main__header-search-profile-item">
-                                <a href="#"><img
-                                        src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
-                                        alt="notif"></a>
-                            </div>
-                            <div class="main__header-search-profile-item">
-                                <a href="#"><img
-                                        src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
-                                        alt="profile"></a>
-                            </div>
+                        <div class="route-info-item">
+                            <input type="text" id="boarding-fee" readonly class="main__btn-short" value="Посадка: 48 сом">
+                        </div>
+                        <div class="route-info-item">
+                            <input type="text" id="distance" readonly class="main__btn-short" value="Расстояние: 0 км">
+                        </div>
+                        <div class="route-info-item">
+                            <input type="text" id="price" readonly class="main__btn-short" value="Стоимость: 0 сом">
+                            <input type="hidden" id="calculated-price" name="price" value="0">
                         </div>
                     </div>
-                </div>
-                <div class="main__subheader main__subheader-drivers">
-                    <div class="main__subheader-add">
-                        <div class="main__header-search-item">
-                            <button class="main__btn" style="width: 200px;">+
-                                Новый (F2)</button>
-                        </div>
-                        <div class="main__subheader-filing">
-                            <button class="main__btn">Свободные</button>
-                        </div>
-                        <div class="main__subheader-filing">
-                            <button class="main__btn">На заказе</button>
-                        </div>
-                        <div class="main__subheader-filing">
-                            <button class="main__btn">Отммененные</button>
-                        </div>
-                    </div>
-                    <div class="main__subheader-drivers">
-                        <div
-                            class="main__header-tags main__subheader-drivers-tags">
-                            <ul>
-                                <li>На линии {{ total_drivers }} водителей</li>
-                                <li><span class="status-span free"></span> {{
-                                    available_drivers|default(0) }}
-                                    свободный</li>
-                                <li><span class="status-span busy"></span> {{
-                                    busy_drivers|default(0) }}
-                                    занят</li>
-                            </ul>
-                        </div>
-                        <div class="main__subheader-balance">
-                            <img
-                                src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
-                                alt="balance">
-                            <p>
-                                Баланс: {{ balance|default('0') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="main__order-wrapper">
-                    <form id="order-form" method="post" action="/api/orders/">
-                        <div class="main__order-wrapper-blocks">
-                            <div class="main__order-settings">
-                                <div class="main__order-header">
-                                    <div class="main__order-header-item">
-                                        <p>Заказ №</p>
-                                        <input type="text" id="order-number"
-                                            name="order_number" readonly
-                                            class="main__btn-short"
-                                            value="{{ order_number }}">
-                                    </div>
-                                    <div class="main__order-header-item">
-                                        <p>Дата время</p>
-                                        <input type="text" id="order-date"
-                                            name="order_date" readonly
-                                            class="main__btn-short"
-                                            value="{{ now.strftime('%d.%m.%y') }}">
-                                        <input type="text" id="order-time"
-                                            name="order_time" readonly
-                                            class="main__btn-short"
-                                            value="{{ now.strftime('%H:%M') }}">
-                                    </div>
-                                    <div class="main__order-header-item">
-                                        <p>Путевой лист</p>
-                                        <input type="text" id="route-number"
-                                            name="route_number" readonly
-                                            class="main__btn-short"
-                                            value="{{ route_number }}">
-                                    </div>
-                                </div>
-                                <div class="main__order-subheader">
-                                    <div class="main__order-subheader-item">
-                                        <select id="driver-select"
-                                            name="driver_id"
-                                            class="main__btn-short">
-                                            <option value disabled
-                                                selected>Выберите
-                                                водителя</option>
-                                            {% for driver in drivers %}
-                                            <option value="{{ driver.id }}"
-                                                data-phone="{{ driver.phone|default('+996 (XXX) XX-XX-XX') }}"
-                                                data-tariff="{{ driver.tariff }}">
-                                                {{ driver.full_name }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                        <input type="text" id="driver-phone"
-                                            readonly class="main__btn-short"
-                                            value="+996 (XXX) XX-XX-XX">
-                                    </div>
-                                    <div class="main__order-subheader-item">
-                                        <div class="main__subheader-filing">
-                                            <select id="tariff-select"
-                                                name="tariff">
-                                                <option value disabled
-                                                    selected>Вариант</option>
-                                                <option
-                                                    value="Эконом">Эконом</option>
-                                                <option
-                                                    value="Комфорт">Комфорт</option>
-                                                <option
-                                                    value="Комфорт+">Комфорт+</option>
-                                                <option
-                                                    value="Бизнес">Бизнес</option>
-                                            </select>
-                                        </div>
-                                        <div class="main__subheader-filing">
-                                            <select id="payment-method"
-                                                name="payment_method">
-                                                <option value disabled
-                                                    selected>Оплата</option>
-                                                <option
-                                                    value="Наличные">Наличные</option>
-                                                <option value="На карту">На
-                                                    карту</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="main__order-details">
-                                    <div
-                                        class="main__order-details-item main__order-details-where">
-                                        <input type="text" id="origin-street"
-                                            name="origin_street"
-                                            placeholder="Улица"
-                                            class="main__btn" />
-                                        <input type="text" id="origin-house"
-                                            name="origin_house"
-                                            placeholder="Дом"
-                                            class="main__btn" />
-                                        <input type="text" id="origin-district"
-                                            name="origin_district"
-                                            placeholder="Район"
-                                            class="main__btn" />
-                                        <input type="hidden" id="origin-full"
-                                            name="origin" />
-                                    </div>
-                                    <div
-                                        class="main__order-details-item main__order-details-whither">
-                                        <input type="text"
-                                            id="destination-street"
-                                            name="destination_street"
-                                            placeholder="Улица"
-                                            class="main__btn" />
-                                        <input type="text"
-                                            id="destination-house"
-                                            name="destination_house"
-                                            placeholder="Дом"
-                                            class="main__btn" />
-                                        <input type="text"
-                                            id="destination-district"
-                                            name="destination_district"
-                                            placeholder="Район"
-                                            class="main__btn" />
-                                        <input type="hidden"
-                                            id="destination-full"
-                                            name="destination" />
-                                    </div>
-                                </div>
-                                <div class="main__order-notes">
-                                    <div class="main__order-notes-text">
-                                        <textarea id="notes" name="notes"
-                                            placeholder="Примечание"></textarea>
-                                    </div>
-                                    <div class="main__order-notes-settings">
-                                        <button type="button"
-                                            class="main__btn-short">
-                                            Заказ другому человеку
-                                        </button>
-                                        <button type="button"
-                                            class="main__btn-short">
-                                            Дополнительные услуги
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="main__table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Заказ</th>
-                                                <th>Время</th>
-                                                <th>Откуда</th>
-                                                <th>Куда</th>
-                                                <th>Сумма</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="recent-orders">
-                                            {% if orders %}
-                                            {% for order in orders %}
-                                            <tr>
-                                                <td>{{ order.id }}</td>
-                                                <td>{{ order.time }} {{
-                                                    order.created_at.strftime('%d.%m.%y')
-                                                    }}</td>
-                                                <td>{{ order.origin }}</td>
-                                                <td>{{ order.destination }}</td>
-                                                <td>{{ order.price|default('')
-                                                    }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                            {% else %}
-                                            <tr>
-                                                <td colspan="5">Нет данных о
-                                                    последних заказах</td>
-                                            </tr>
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="main__order-map">
-                                <div class="main__order-map-item"
-                                    id="map-container">
-                                    <!-- Google Maps будет загружен сюда -->
-                                </div>
-                                <div class="main__order-map-settings">
-                                    <div class="main__order-map-settings">
-                                        <button type="button"
-                                            class="main__btn">Данные для
-                                            рассчета</button>
-                                    </div>
-                                    <div class="route-info">
-                                        <div class="route-info-item">
-                                            <input type="text"
-                                                id="tariff-display"
-                                                readonly class="main__btn-short"
-                                                value="Эконом">
-                                        </div>
-                                        <div class="route-info-item">
-                                            <input type="text" id="boarding-fee"
-                                                readonly class="main__btn-short"
-                                                value="Посадка: 48 сом">
-                                        </div>
-                                        <div class="route-info-item">
-                                            <input type="text" id="distance"
-                                                readonly class="main__btn-short"
-                                                value="Расстояние: 0 км">
-                                        </div>
-                                        <div class="route-info-item">
-                                            <input type="text" id="price"
-                                                readonly
-                                                class="main__btn-short"
-                                                value="Стоимость: 0 сом">
-                                            <input type="hidden"
-                                                id="calculated-price"
-                                                name="price"
-                                                value="0">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="main__order-wrapper-btn">
-                            <button type="submit"
-                                class="main__btn-green">Заказать</button>
-                            <button type="button" id="cancel-btn"
-                                class="main__btn">Отменить</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
-        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <script
-            src="{{ url_for('static', path='/assets/js/script.js') }}"></script>
-        <script>
-            $(document).ready(function() {
-                console.log('jQuery готов');
+        <div class="main__order-wrapper-btn">
+            <button type="submit" class="main__btn-green">Заказать</button>
+            <button type="button" id="cancel-btn" class="main__btn">Отменить</button>
+        </div>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{{ url_for('static', path='/assets/js/script.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        console.log('jQuery готов');
+        
+        // Константы для тарифов
+        const TARIFFS = {
+            'Эконом': {
+                boardingFee: 48,
+                waitingFreeMinutes: 3,
+                waitingPricePerMinute: 5,
+                cityPricePerKm: 8.5,
+                cityPricePerMinute: 3.9,
+                outsideCityPricePerKm: 23,
+                outsideCityPricePerMinute: 3.9
+            },
+            'Комфорт': {
+                boardingFee: 60,
+                waitingFreeMinutes: 3,
+                waitingPricePerMinute: 6,
+                cityPricePerKm: 10.5,
+                cityPricePerMinute: 4.9,
+                outsideCityPricePerKm: 25,
+                outsideCityPricePerMinute: 4.9
+            },
+            'Комфорт+': {
+                boardingFee: 75,
+                waitingFreeMinutes: 3,
+                waitingPricePerMinute: 6.5,
+                cityPricePerKm: 13,
+                cityPricePerMinute: 6.2,
+                outsideCityPricePerKm: 28,
+                outsideCityPricePerMinute: 6.2
+            },
+            'Бизнес': {
+                minimumPrice: 80,
+                boardingFee: 80,
+                waitingFreeMinutes: 3,
+                waitingPricePerMinute: 7,
+                cityPricePerKm: 14,
+                cityPricePerMinute: 6.5,
+                outsideCityPricePerKm: 30,
+                outsideCityPricePerMinute: 6.5
+            }
+        };
+        
+        // Функция обновления времени (Киргизское время, GMT+6)
+        function updateKyrgyzTime() {
+            try {
+                const now = new Date();
+                // Устанавливаем киргизское время (UTC+6)
+                const kyrgyzTime = new Date(now.getTime() + (6 * 60 * 60 * 1000 + now.getTimezoneOffset() * 60 * 1000));
                 
-                // Константы для тарифов
-                const TARIFFS = {
-                    'Эконом': {
-                        boardingFee: 48,
-                        waitingFreeMinutes: 3,
-                        waitingPricePerMinute: 5,
-                        cityPricePerKm: 8.5,
-                        cityPricePerMinute: 3.9,
-                        outsideCityPricePerKm: 23,
-                        outsideCityPricePerMinute: 3.9
-                    },
-                    'Комфорт': {
-                        boardingFee: 60,
-                        waitingFreeMinutes: 3,
-                        waitingPricePerMinute: 6,
-                        cityPricePerKm: 10.5,
-                        cityPricePerMinute: 4.9,
-                        outsideCityPricePerKm: 25,
-                        outsideCityPricePerMinute: 4.9
-                    },
-                    'Комфорт+': {
-                        boardingFee: 75,
-                        waitingFreeMinutes: 3,
-                        waitingPricePerMinute: 6.5,
-                        cityPricePerKm: 13,
-                        cityPricePerMinute: 6.2,
-                        outsideCityPricePerKm: 28,
-                        outsideCityPricePerMinute: 6.2
-                    },
-                    'Бизнес': {
-                        minimumPrice: 80,
-                        boardingFee: 80,
-                        waitingFreeMinutes: 3,
-                        waitingPricePerMinute: 7,
-                        cityPricePerKm: 14,
-                        cityPricePerMinute: 6.5,
-                        outsideCityPricePerKm: 30,
-                        outsideCityPricePerMinute: 6.5
+                // Обновляем только поле времени заказа, добавляем секунды
+                const orderTimeElement = document.getElementById('order-time');
+                if (orderTimeElement) {
+                    orderTimeElement.value = kyrgyzTime.toLocaleTimeString('ru-RU', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка при обновлении времени:', error);
+            }
+        }
+        
+        // Запускаем обновление времени каждую секунду
+        updateKyrgyzTime();
+        setInterval(updateKyrgyzTime, 1000);
+
+        // Инициализация Google Maps
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let originMarker;
+        let destinationMarker;
+        let autocompleteOrigin;
+        let autocompleteDestination;
+        let distance = 0;
+        let duration = 0;
+
+        function initMap() {
+            try {
+                console.log('Инициализация карты...');
+                // Центр Бишкека (столица Киргизии)
+                const bishkekCenter = { lat: 42.8746, lng: 74.5698 };
+                
+                const mapContainer = document.getElementById("map-container");
+                if (!mapContainer) {
+                    console.error('Контейнер карты не найден');
+                    return;
+                }
+                
+                map = new google.maps.Map(mapContainer, {
+                    center: bishkekCenter,
+                    zoom: 12,
+                    styles: [
+                        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                        {
+                            featureType: "administrative.locality",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#d59563" }],
+                        },
+                        {
+                            featureType: "poi",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#d59563" }],
+                        },
+                        {
+                            featureType: "poi.park",
+                            elementType: "geometry",
+                            stylers: [{ color: "#263c3f" }],
+                        },
+                        {
+                            featureType: "poi.park",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#6b9a76" }],
+                        },
+                        {
+                            featureType: "road",
+                            elementType: "geometry",
+                            stylers: [{ color: "#38414e" }],
+                        },
+                        {
+                            featureType: "road",
+                            elementType: "geometry.stroke",
+                            stylers: [{ color: "#212a37" }],
+                        },
+                        {
+                            featureType: "road",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#9ca5b3" }],
+                        },
+                        {
+                            featureType: "road.highway",
+                            elementType: "geometry",
+                            stylers: [{ color: "#746855" }],
+                        },
+                        {
+                            featureType: "road.highway",
+                            elementType: "geometry.stroke",
+                            stylers: [{ color: "#1f2835" }],
+                        },
+                        {
+                            featureType: "road.highway",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#f3d19c" }],
+                        },
+                        {
+                            featureType: "transit",
+                            elementType: "geometry",
+                            stylers: [{ color: "#2f3948" }],
+                        },
+                        {
+                            featureType: "transit.station",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#d59563" }],
+                        },
+                        {
+                            featureType: "water",
+                            elementType: "geometry",
+                            stylers: [{ color: "#17263c" }],
+                        },
+                        {
+                            featureType: "water",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#515c6d" }],
+                        },
+                        {
+                            featureType: "water",
+                            elementType: "labels.text.stroke",
+                            stylers: [{ color: "#17263c" }],
+                        },
+                    ],
+                });
+                
+                console.log('Карта создана');
+
+                directionsService = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer({
+                    map: map,
+                    suppressMarkers: true,
+                    polylineOptions: {
+                        strokeColor: "#00FFFC",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 5
                     }
+                });
+
+                // Отслеживаем последние координаты мыши на карте
+                window.lastMouseEvent = null;
+                
+                mapContainer.addEventListener('mousemove', function(e) {
+                    window.lastMouseEvent = e;
+                });
+
+                // Добавляем обработчик правой кнопки мыши для выбора точек
+                google.maps.event.addListener(map, 'rightclick', function(e) {
+                    const latLng = e.latLng;
+                    console.log('Клик правой кнопкой по координатам:', latLng.lat(), latLng.lng());
+                    
+                    // Показываем контекстное меню
+                    showContextMenu(latLng);
+                });
+                
+                // Автозаполнение для полей адреса
+                const options = {
+                    componentRestrictions: { country: 'kg' },
+                    types: ['geocode']
                 };
-                
-                // Функция обновления времени (Киргизское время, GMT+6)
-                function updateKyrgyzTime() {
-                    try {
-                        const now = new Date();
-                        // Устанавливаем киргизское время (UTC+6)
-                        const kyrgyzTime = new Date(now.getTime() + (6 * 60 * 60 * 1000 + now.getTimezoneOffset() * 60 * 1000));
-                        
-                        // Обновляем только поле времени заказа, добавляем секунды
-                        const orderTimeElement = document.getElementById('order-time');
-                        if (orderTimeElement) {
-                            orderTimeElement.value = kyrgyzTime.toLocaleTimeString('ru-RU', { 
-                                hour: '2-digit', 
-                                minute: '2-digit',
-                                second: '2-digit',
-                                hour12: false
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Ошибка при обновлении времени:', error);
-                    }
-                }
-                
-                // Запускаем обновление времени каждую секунду
-                updateKyrgyzTime();
-                setInterval(updateKyrgyzTime, 1000);
 
-                // Инициализация Google Maps
-                let map;
-                let directionsService;
-                let directionsRenderer;
-                let originMarker;
-                let destinationMarker;
-                let autocompleteOrigin;
-                let autocompleteDestination;
-                let distance = 0;
-                let duration = 0;
-
-                function initMap() {
-                    try {
-                        console.log('Инициализация карты...');
-                        // Центр Бишкека (столица Киргизии)
-                        const bishkekCenter = { lat: 42.8746, lng: 74.5698 };
-                        
-                        const mapContainer = document.getElementById("map-container");
-                        if (!mapContainer) {
-                            console.error('Контейнер карты не найден');
-                            return;
-                        }
-                        
-                        map = new google.maps.Map(mapContainer, {
-                            center: bishkekCenter,
-                            zoom: 12,
-                            styles: [
-                                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                                {
-                                    featureType: "administrative.locality",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#d59563" }],
-                                },
-                                {
-                                    featureType: "poi",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#d59563" }],
-                                },
-                                {
-                                    featureType: "poi.park",
-                                    elementType: "geometry",
-                                    stylers: [{ color: "#263c3f" }],
-                                },
-                                {
-                                    featureType: "poi.park",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#6b9a76" }],
-                                },
-                                {
-                                    featureType: "road",
-                                    elementType: "geometry",
-                                    stylers: [{ color: "#38414e" }],
-                                },
-                                {
-                                    featureType: "road",
-                                    elementType: "geometry.stroke",
-                                    stylers: [{ color: "#212a37" }],
-                                },
-                                {
-                                    featureType: "road",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#9ca5b3" }],
-                                },
-                                {
-                                    featureType: "road.highway",
-                                    elementType: "geometry",
-                                    stylers: [{ color: "#746855" }],
-                                },
-                                {
-                                    featureType: "road.highway",
-                                    elementType: "geometry.stroke",
-                                    stylers: [{ color: "#1f2835" }],
-                                },
-                                {
-                                    featureType: "road.highway",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#f3d19c" }],
-                                },
-                                {
-                                    featureType: "transit",
-                                    elementType: "geometry",
-                                    stylers: [{ color: "#2f3948" }],
-                                },
-                                {
-                                    featureType: "transit.station",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#d59563" }],
-                                },
-                                {
-                                    featureType: "water",
-                                    elementType: "geometry",
-                                    stylers: [{ color: "#17263c" }],
-                                },
-                                {
-                                    featureType: "water",
-                                    elementType: "labels.text.fill",
-                                    stylers: [{ color: "#515c6d" }],
-                                },
-                                {
-                                    featureType: "water",
-                                    elementType: "labels.text.stroke",
-                                    stylers: [{ color: "#17263c" }],
-                                },
-                            ],
-                        });
-                        
-                        console.log('Карта создана');
-
-                        directionsService = new google.maps.DirectionsService();
-                        directionsRenderer = new google.maps.DirectionsRenderer({
-                            map: map,
-                            suppressMarkers: true,
-                            polylineOptions: {
-                                strokeColor: "#00FFFC",
-                                strokeOpacity: 0.8,
-                                strokeWeight: 5
+                const originStreetInput = document.getElementById('origin-street');
+                if (originStreetInput) {
+                    autocompleteOrigin = new google.maps.places.Autocomplete(originStreetInput, options);
+                    autocompleteOrigin.addListener('place_changed', function() {
+                        const place = autocompleteOrigin.getPlace();
+                        if (place && place.geometry) {
+                            // Удаляем предыдущий маркер, если он существует
+                            if (originMarker) {
+                                originMarker.setMap(null);
                             }
-                        });
-
-                        // Отслеживаем последние координаты мыши на карте
-                        window.lastMouseEvent = null;
-                        
-                        mapContainer.addEventListener('mousemove', function(e) {
-                            window.lastMouseEvent = e;
-                        });
-
-                        // Добавляем обработчик правой кнопки мыши для выбора точек
-                        google.maps.event.addListener(map, 'rightclick', function(e) {
-                            const latLng = e.latLng;
-                            console.log('Клик правой кнопкой по координатам:', latLng.lat(), latLng.lng());
                             
-                            // Показываем контекстное меню
-                            showContextMenu(latLng);
-                        });
-                        
-                        // Автозаполнение для полей адреса
-                        const options = {
-                            componentRestrictions: { country: 'kg' },
-                            types: ['geocode']
-                        };
-
-                        const originStreetInput = document.getElementById('origin-street');
-                        if (originStreetInput) {
-                            autocompleteOrigin = new google.maps.places.Autocomplete(originStreetInput, options);
-                            autocompleteOrigin.addListener('place_changed', function() {
-                                const place = autocompleteOrigin.getPlace();
-                                if (place && place.geometry) {
-                                    // Удаляем предыдущий маркер, если он существует
-                                    if (originMarker) {
-                                        originMarker.setMap(null);
-                                    }
-                                    
-                                    originMarker = new google.maps.Marker({
-                                        position: place.geometry.location,
-                                        map: map,
-                                        title: 'Откуда',
-                                        icon: {
-                                            url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                                        }
-                                    });
-                                    
-                                    // Заполняем скрытое поле с полным адресом
-                                    const originFullField = document.getElementById('origin-full');
-                                    if (originFullField) {
-                                        originFullField.value = place.formatted_address;
-                                    }
-                                    
-                                    // Заполняем поля с районом/домом, если они есть в адресе
-                                    fillAddressDetails(place, 'origin');
-                                    
-                                    // Центрируем карту на точке
-                                    map.setCenter(place.geometry.location);
-                                    map.setZoom(14);
-                                    
-                                    // Обновляем маршрут, если оба адреса установлены
-                                    const destinationFullField = document.getElementById('destination-full');
-                                    if (destinationFullField && destinationFullField.value) {
-                                        calculateRoute();
-                                    }
+                            originMarker = new google.maps.Marker({
+                                position: place.geometry.location,
+                                map: map,
+                                title: 'Откуда',
+                                icon: {
+                                    url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
                                 }
                             });
+                            
+                            // Заполняем скрытое поле с полным адресом
+                            const originFullField = document.getElementById('origin-full');
+                            if (originFullField) {
+                                originFullField.value = place.formatted_address;
+                            }
+                            
+                            // Заполняем поля с районом/домом, если они есть в адресе
+                            fillAddressDetails(place, 'origin');
+                            
+                            // Центрируем карту на точке
+                            map.setCenter(place.geometry.location);
+                            map.setZoom(14);
+                            
+                            // Обновляем маршрут, если оба адреса установлены
+                            const destinationFullField = document.getElementById('destination-full');
+                            if (destinationFullField && destinationFullField.value) {
+                                calculateRoute();
+                            }
                         }
+                    });
+                }
 
-                        const destinationStreetInput = document.getElementById('destination-street');
-                        if (destinationStreetInput) {
-                            autocompleteDestination = new google.maps.places.Autocomplete(destinationStreetInput, options);
-                            autocompleteDestination.addListener('place_changed', function() {
-                                const place = autocompleteDestination.getPlace();
-                                if (place && place.geometry) {
-                                    // Удаляем предыдущий маркер, если он существует
-                                    if (destinationMarker) {
-                                        destinationMarker.setMap(null);
-                                    }
-                                    
-                                    destinationMarker = new google.maps.Marker({
-                                        position: place.geometry.location,
-                                        map: map,
-                                        title: 'Куда',
-                                        icon: {
-                                            url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
-                                        }
-                                    });
-                                    
-                                    // Заполняем скрытое поле с полным адресом
-                                    const destinationFullField = document.getElementById('destination-full');
-                                    if (destinationFullField) {
-                                        destinationFullField.value = place.formatted_address;
-                                    }
-                                    
-                                    // Заполняем поля с районом/домом, если они есть в адресе
-                                    fillAddressDetails(place, 'destination');
-                                    
-                                    // Обновляем маршрут, если оба адреса установлены
-                                    const originFullField = document.getElementById('origin-full');
-                                    if (originFullField && originFullField.value) {
-                                        calculateRoute();
-                                    }
+                const destinationStreetInput = document.getElementById('destination-street');
+                if (destinationStreetInput) {
+                    autocompleteDestination = new google.maps.places.Autocomplete(destinationStreetInput, options);
+                    autocompleteDestination.addListener('place_changed', function() {
+                        const place = autocompleteDestination.getPlace();
+                        if (place && place.geometry) {
+                            // Удаляем предыдущий маркер, если он существует
+                            if (destinationMarker) {
+                                destinationMarker.setMap(null);
+                            }
+                            
+                            destinationMarker = new google.maps.Marker({
+                                position: place.geometry.location,
+                                map: map,
+                                title: 'Куда',
+                                icon: {
+                                    url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
                                 }
                             });
+                            
+                            // Заполняем скрытое поле с полным адресом
+                            const destinationFullField = document.getElementById('destination-full');
+                            if (destinationFullField) {
+                                destinationFullField.value = place.formatted_address;
+                            }
+                            
+                            // Заполняем поля с районом/домом, если они есть в адресе
+                            fillAddressDetails(place, 'destination');
+                            
+                            // Обновляем маршрут, если оба адреса установлены
+                            const originFullField = document.getElementById('origin-full');
+                            if (originFullField && originFullField.value) {
+                                calculateRoute();
+                            }
                         }
-                        
-                        console.log('Карта успешно инициализирована');
-                    } catch (error) {
-                        console.error('Ошибка при инициализации карты:', error);
-                    }
+                    });
                 }
                 
-                // Функция для заполнения полей адреса
-                function fillAddressDetails(place, type) {
-                    if (place.address_components) {
-                        for (const component of place.address_components) {
-                            if (component.types.includes('street_number')) {
-                                document.getElementById(`${type}-house`).value = component.long_name;
-                            }
-                            if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
-                                document.getElementById(`${type}-district`).value = component.long_name;
-                            }
-                        }
+                console.log('Карта успешно инициализирована');
+            } catch (error) {
+                console.error('Ошибка при инициализации карты:', error);
+            }
+        }
+        
+        // Функция для заполнения полей адреса
+        function fillAddressDetails(place, type) {
+            if (place.address_components) {
+                for (const component of place.address_components) {
+                    if (component.types.includes('street_number')) {
+                        document.getElementById(`${type}-house`).value = component.long_name;
+                    }
+                    if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
+                        document.getElementById(`${type}-district`).value = component.long_name;
                     }
                 }
+            }
+        }
 
-                // Функция для отображения контекстного меню
-                function showContextMenu(latLng) {
+        // Функция для отображения контекстного меню
+        function showContextMenu(latLng) {
+            try {
+                // Создаем контейнер для контекстного меню
+                const menuDiv = document.createElement('div');
+                menuDiv.className = 'map-context-menu';
+                menuDiv.innerHTML = `
+                    <div class="map-context-menu-item" id="set-origin">Установить точку отправления</div>
+                    <div class="map-context-menu-item" id="set-destination">Установить точку назначения</div>
+                `;
+                
+                // Устанавливаем стили для контекстного меню
+                menuDiv.style.position = 'absolute';
+                menuDiv.style.backgroundColor = '#2d2e33';
+                menuDiv.style.border = '1px solid #47484c';
+                menuDiv.style.borderRadius = '5px';
+                menuDiv.style.padding = '5px 0';
+                menuDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                menuDiv.style.zIndex = '1000';
+                
+                // Стили для пунктов меню
+                const menuItems = menuDiv.querySelectorAll('.map-context-menu-item');
+                menuItems.forEach(item => {
+                    item.style.padding = '8px 12px';
+                    item.style.cursor = 'pointer';
+                    item.style.color = '#fff';
+                    
+                    // Эффект при наведении
+                    item.addEventListener('mouseover', function() {
+                        this.style.backgroundColor = '#47484c';
+                    });
+                    item.addEventListener('mouseout', function() {
+                        this.style.backgroundColor = 'transparent';
+                    });
+                });
+                
+                // Добавляем меню на карту
+                const mapContainer = document.getElementById('map-container');
+                mapContainer.appendChild(menuDiv);
+                
+                // Используем событие rightclick для получения пиксельных координат
+                // Хранение последних координат курсора мыши
+                if (window.lastMouseEvent) {
+                    menuDiv.style.left = window.lastMouseEvent.clientX + 'px';
+                    menuDiv.style.top = window.lastMouseEvent.clientY + 'px';
+                } else {
                     try {
-                        // Создаем контейнер для контекстного меню
-                        const menuDiv = document.createElement('div');
-                        menuDiv.className = 'map-context-menu';
-                        menuDiv.innerHTML = `
-                            <div class="map-context-menu-item" id="set-origin">Установить точку отправления</div>
-                            <div class="map-context-menu-item" id="set-destination">Установить точку назначения</div>
-                        `;
+                        // Пробуем использовать OverlayView для получения координат
+                        const overlay = new google.maps.OverlayView();
+                        overlay.draw = function() {}; // Пустая функция draw
+                        overlay.setMap(map);
                         
-                        // Устанавливаем стили для контекстного меню
-                        menuDiv.style.position = 'absolute';
-                        menuDiv.style.backgroundColor = '#2d2e33';
-                        menuDiv.style.border = '1px solid #47484c';
-                        menuDiv.style.borderRadius = '5px';
-                        menuDiv.style.padding = '5px 0';
-                        menuDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-                        menuDiv.style.zIndex = '1000';
-                        
-                        // Стили для пунктов меню
-                        const menuItems = menuDiv.querySelectorAll('.map-context-menu-item');
-                        menuItems.forEach(item => {
-                            item.style.padding = '8px 12px';
-                            item.style.cursor = 'pointer';
-                            item.style.color = '#fff';
-                            
-                            // Эффект при наведении
-                            item.addEventListener('mouseover', function() {
-                                this.style.backgroundColor = '#47484c';
-                            });
-                            item.addEventListener('mouseout', function() {
-                                this.style.backgroundColor = 'transparent';
-                            });
-                        });
-                        
-                        // Добавляем меню на карту
-                        const mapContainer = document.getElementById('map-container');
-                        mapContainer.appendChild(menuDiv);
-                        
-                        // Используем событие rightclick для получения пиксельных координат
-                        // Хранение последних координат курсора мыши
-                        if (window.lastMouseEvent) {
-                            menuDiv.style.left = window.lastMouseEvent.clientX + 'px';
-                            menuDiv.style.top = window.lastMouseEvent.clientY + 'px';
-                        } else {
+                        overlay.onAdd = function() {
                             try {
-                                // Пробуем использовать OverlayView для получения координат
-                                const overlay = new google.maps.OverlayView();
-                                overlay.draw = function() {}; // Пустая функция draw
-                                overlay.setMap(map);
+                                const projection = this.getProjection();
+                                const pixel = projection.fromLatLngToContainerPixel(latLng);
                                 
-                                overlay.onAdd = function() {
-                                    try {
-                                        const projection = this.getProjection();
-                                        const pixel = projection.fromLatLngToContainerPixel(latLng);
-                                        
-                                        // Позиционируем меню по координатам клика
-                                        menuDiv.style.left = pixel.x + 'px';
-                                        menuDiv.style.top = pixel.y + 'px';
-                                    } catch (error) {
-                                        console.error('Ошибка позиционирования меню:', error);
-                                        // Если не сработало, устанавливаем позицию в центр карты
-                                        const mapContainerRect = mapContainer.getBoundingClientRect();
-                                        menuDiv.style.left = (mapContainerRect.width / 2) + 'px';
-                                        menuDiv.style.top = (mapContainerRect.height / 2) + 'px';
-                                    }
-                                };
+                                // Позиционируем меню по координатам клика
+                                menuDiv.style.left = pixel.x + 'px';
+                                menuDiv.style.top = pixel.y + 'px';
                             } catch (error) {
-                                console.error('Ошибка при создании оверлея:', error);
+                                console.error('Ошибка позиционирования меню:', error);
                                 // Если не сработало, устанавливаем позицию в центр карты
                                 const mapContainerRect = mapContainer.getBoundingClientRect();
                                 menuDiv.style.left = (mapContainerRect.width / 2) + 'px';
                                 menuDiv.style.top = (mapContainerRect.height / 2) + 'px';
                             }
+                        };
+                    } catch (error) {
+                        console.error('Ошибка при создании оверлея:', error);
+                        // Если не сработало, устанавливаем позицию в центр карты
+                        const mapContainerRect = mapContainer.getBoundingClientRect();
+                        menuDiv.style.left = (mapContainerRect.width / 2) + 'px';
+                        menuDiv.style.top = (mapContainerRect.height / 2) + 'px';
+                    }
+                }
+                
+                // Обработчики для пунктов меню
+                document.getElementById('set-origin').addEventListener('click', function() {
+                    setMarkerByClick(latLng, 'origin');
+                    removeContextMenu();
+                });
+                
+                document.getElementById('set-destination').addEventListener('click', function() {
+                    setMarkerByClick(latLng, 'destination');
+                    removeContextMenu();
+                });
+                
+                // Закрываем меню при клике вне его
+                document.addEventListener('click', removeContextMenu);
+                
+                // Функция для удаления контекстного меню
+                function removeContextMenu() {
+                    if (menuDiv && menuDiv.parentNode) {
+                        menuDiv.parentNode.removeChild(menuDiv);
+                    }
+                    document.removeEventListener('click', removeContextMenu);
+                }
+            } catch (error) {
+                console.error('Ошибка при отображении контекстного меню:', error);
+            }
+        }
+        
+        // Функция для установки маркера при клике правой кнопкой мыши
+        function setMarkerByClick(latLng, type) {
+            console.log('Установка маркера', type, 'по координатам:', latLng.lat(), latLng.lng());
+            // Получаем адрес по координатам (обратное геокодирование)
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: latLng }, function(results, status) {
+                console.log('Результат геокодирования:', status);
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    console.log('Полученный адрес:', address);
+                    
+                    // Устанавливаем маркер
+                    if (type === 'origin') {
+                        // Удаляем предыдущий маркер, если он существует
+                        if (originMarker) {
+                            originMarker.setMap(null);
                         }
                         
-                        // Обработчики для пунктов меню
-                        document.getElementById('set-origin').addEventListener('click', function() {
-                            setMarkerByClick(latLng, 'origin');
-                            removeContextMenu();
+                        originMarker = new google.maps.Marker({
+                            position: latLng,
+                            map: map,
+                            title: 'Откуда',
+                            icon: {
+                                url: "//maps.google.com/mapfiles/ms/icons/green-dot.png"
+                            }
                         });
                         
-                        document.getElementById('set-destination').addEventListener('click', function() {
-                            setMarkerByClick(latLng, 'destination');
-                            removeContextMenu();
+                        // Заполняем поле адреса
+                        document.getElementById('origin-street').value = address;
+                        document.getElementById('origin-full').value = address;
+                        
+                        // Заполняем поля с районом/домом, если они есть в адресе
+                        fillAddressDetails(results[0], 'origin');
+                        
+                    } else if (type === 'destination') {
+                        // Удаляем предыдущий маркер, если он существует
+                        if (destinationMarker) {
+                            destinationMarker.setMap(null);
+                        }
+                        
+                        destinationMarker = new google.maps.Marker({
+                            position: latLng,
+                            map: map,
+                            title: 'Куда',
+                            icon: {
+                                url: "//maps.google.com/mapfiles/ms/icons/red-dot.png"
+                            }
                         });
                         
-                        // Закрываем меню при клике вне его
-                        document.addEventListener('click', removeContextMenu);
+                        // Заполняем поле адреса
+                        document.getElementById('destination-street').value = address;
+                        document.getElementById('destination-full').value = address;
                         
-                        // Функция для удаления контекстного меню
-                        function removeContextMenu() {
-                            if (menuDiv && menuDiv.parentNode) {
-                                menuDiv.parentNode.removeChild(menuDiv);
-                            }
-                            document.removeEventListener('click', removeContextMenu);
-                        }
-                    } catch (error) {
-                        console.error('Ошибка при отображении контекстного меню:', error);
-                    }
-                }
-                
-                // Функция для установки маркера при клике правой кнопкой мыши
-                function setMarkerByClick(latLng, type) {
-                    console.log('Установка маркера', type, 'по координатам:', latLng.lat(), latLng.lng());
-                    // Получаем адрес по координатам (обратное геокодирование)
-                    const geocoder = new google.maps.Geocoder();
-                    geocoder.geocode({ location: latLng }, function(results, status) {
-                        console.log('Результат геокодирования:', status);
-                        if (status === 'OK' && results[0]) {
-                            const address = results[0].formatted_address;
-                            console.log('Полученный адрес:', address);
-                            
-                            // Устанавливаем маркер
-                            if (type === 'origin') {
-                                // Удаляем предыдущий маркер, если он существует
-                                if (originMarker) {
-                                    originMarker.setMap(null);
-                                }
-                                
-                                originMarker = new google.maps.Marker({
-                                    position: latLng,
-                                    map: map,
-                                    title: 'Откуда',
-                                    icon: {
-                                        url: "//maps.google.com/mapfiles/ms/icons/green-dot.png"
-                                    }
-                                });
-                                
-                                // Заполняем поле адреса
-                                document.getElementById('origin-street').value = address;
-                                document.getElementById('origin-full').value = address;
-                                
-                                // Заполняем поля с районом/домом, если они есть в адресе
-                                fillAddressDetails(results[0], 'origin');
-                                
-                            } else if (type === 'destination') {
-                                // Удаляем предыдущий маркер, если он существует
-                                if (destinationMarker) {
-                                    destinationMarker.setMap(null);
-                                }
-                                
-                                destinationMarker = new google.maps.Marker({
-                                    position: latLng,
-                                    map: map,
-                                    title: 'Куда',
-                                    icon: {
-                                        url: "//maps.google.com/mapfiles/ms/icons/red-dot.png"
-                                    }
-                                });
-                                
-                                // Заполняем поле адреса
-                                document.getElementById('destination-street').value = address;
-                                document.getElementById('destination-full').value = address;
-                                
-                                // Заполняем поля с районом/домом, если они есть в адресе
-                                fillAddressDetails(results[0], 'destination');
-                            }
-                            
-                            // Обновляем маршрут, если оба адреса установлены
-                            if (document.getElementById('origin-full').value && document.getElementById('destination-full').value) {
-                                calculateRoute();
-                            }
-                        } else {
-                            console.error('Ошибка геокодирования:', status);
-                            alert('Не удалось определить адрес по выбранной точке.');
-                        }
-                    });
-                }
-
-                // Расчет маршрута
-                function calculateRoute() {
-                    console.log('Расчет маршрута');
-                    const origin = document.getElementById('origin-full').value;
-                    const destination = document.getElementById('destination-full').value;
-                    
-                    if (!origin || !destination) {
-                        console.log('Не заданы начальная или конечная точки маршрута');
-                        return;
+                        // Заполняем поля с районом/домом, если они есть в адресе
+                        fillAddressDetails(results[0], 'destination');
                     }
                     
-                    console.log('Построение маршрута от', origin, 'до', destination);
-                    
-                    const request = {
-                        origin: origin,
-                        destination: destination,
-                        travelMode: google.maps.TravelMode.DRIVING,
-                        region: 'kg'
-                    };
-                    
-                    directionsService.route(request, function(response, status) {
-                        console.log('Ответ от сервиса маршрутов:', status);
-                        if (status === 'OK') {
-                            directionsRenderer.setDirections(response);
-                            
-                            // Получаем расстояние и время
-                            const route = response.routes[0];
-                            distance = route.legs[0].distance.value / 1000; // километры
-                            duration = route.legs[0].duration.value / 60; // минуты
-                            
-                            console.log('Расстояние:', distance.toFixed(1), 'км, время:', duration.toFixed(0), 'мин');
-                            
-                            document.getElementById('distance').value = `Расстояние: ${distance.toFixed(1)} км`;
-                            
-                            // Пересчитываем стоимость
-                            calculatePrice();
-                            
-                            // Подстраиваем карту под маршрут
-                            const bounds = new google.maps.LatLngBounds();
-                            bounds.extend(originMarker.getPosition());
-                            bounds.extend(destinationMarker.getPosition());
-                            map.fitBounds(bounds);
-                        } else {
-                            console.error('Ошибка расчета маршрута:', status);
-                            alert('Не удалось рассчитать маршрут. Пожалуйста, проверьте адреса.');
-                        }
-                    });
-                }
-
-                // Расчет стоимости поездки
-                function calculatePrice() {
-                    try {
-                        const tariff = document.getElementById('tariff-select').value;
-                        console.log('Расчет цены для тарифа:', tariff);
-                        
-                        if (!tariff || !TARIFFS[tariff]) {
-                            console.error('Тариф не выбран или не найден в списке тарифов:', tariff);
-                            return;
-                        }
-
-                        const tariffData = TARIFFS[tariff];
-                        let price = tariffData.boardingFee;
-                        
-                        // Обновляем отображение тарифа
-                        const tariffDisplay = document.getElementById('tariff-display');
-                        if (tariffDisplay) {
-                            tariffDisplay.value = tariff;
-                            console.log('Установлен тариф в поле отображения:', tariff);
-                        } else {
-                            console.error('Элемент tariff-display не найден');
-                        }
-                        
-                        // Расчет стоимости в зависимости от расстояния
-                        if (distance > 0) {
-                            // По умолчанию используем городской тариф
-                            const pricePerKm = tariffData.cityPricePerKm;
-                            const pricePerMinute = tariffData.cityPricePerMinute;
-                            
-                            // Расчет стоимости по километражу и времени
-                            const distancePrice = distance * pricePerKm;
-                            const timePrice = duration * pricePerMinute;
-                            
-                            price += distancePrice + timePrice;
-                        }
-                        
-                        // Минимальная стоимость для бизнес-класса
-                        if (tariff === 'Бизнес' && price < tariffData.minimumPrice) {
-                            price = tariffData.minimumPrice;
-                        }
-                        
-                        // Округляем до целого числа
-                        price = Math.ceil(price);
-                        
-                        const priceElement = document.getElementById('price');
-                        const calculatedPriceElement = document.getElementById('calculated-price');
-                        const boardingFeeElement = document.getElementById('boarding-fee');
-                        
-                        if (priceElement) {
-                            priceElement.value = `Стоимость: ${price} сом`;
-                        }
-                        
-                        if (calculatedPriceElement) {
-                            calculatedPriceElement.value = price;
-                        }
-                        
-                        if (boardingFeeElement) {
-                            boardingFeeElement.value = `Посадка: ${tariffData.boardingFee} сом`;
-                        }
-                        
-                        console.log('Расчет стоимости:', {
-                            тариф: tariff,
-                            расстояние: distance.toFixed(1) + ' км',
-                            время: duration.toFixed(0) + ' мин',
-                            цена: price + ' сом'
-                        });
-                    } catch (error) {
-                        console.error('Ошибка при расчете стоимости:', error);
-                    }
-                }
-
-                // Инициализация карты при загрузке страницы
-                $(window).on('load', function() {
-                    console.log('Страница полностью загружена, инициализация карты...');
-                    setTimeout(function() {
-                        try {
-                            initMap();
-                            console.log('Карта инициализирована после загрузки страницы');
-                        } catch (error) {
-                            console.error('Ошибка инициализации карты после загрузки страницы:', error);
-                        }
-                    }, 500); // Небольшая задержка для гарантии загрузки всех элементов
-                });
-
-                // Обработчики событий
-                $('#driver-select').change(function() {
-                    const selectedOption = $(this).find('option:selected');
-                    const phone = selectedOption.data('phone');
-                    const tariff = selectedOption.data('tariff');
-                    
-                    $('#driver-phone').val(phone);
-                    
-                    // Если тариф указан, выбираем его
-                    if (tariff) {
-                        $('#tariff-select').val(tariff);
-                        
-                        // Принудительно вызываем обработчик изменения тарифа
-                        $('#tariff-select').trigger('change');
-                    }
-                });
-
-                $('#tariff-select').change(function() {
-                    try {
-                        const tariff = $(this).val();
-                        console.log('Изменение тарифа на:', tariff);
-                        
-                        if (tariff) {
-                            // Сначала обновляем отображение тарифа напрямую
-                            const tariffDisplay = document.getElementById('tariff-display');
-                            if (tariffDisplay) {
-                                tariffDisplay.value = tariff;
-                                console.log('Установлен тариф в поле отображения при изменении селекта:', tariff);
-                            }
-                            
-                            // Затем вызываем расчет цены
-                            calculatePrice();
-                        }
-                    } catch (error) {
-                        console.error('Ошибка при изменении тарифа:', error);
-                    }
-                });
-                
-                // Обновление адресов при заполнении домов и районов
-                $('#origin-house, #origin-district').on('change keyup', function() {
-                    updateFullAddress('origin');
-                });
-                
-                $('#destination-house, #destination-district').on('change keyup', function() {
-                    updateFullAddress('destination');
-                });
-                
-                function updateFullAddress(type) {
-                    const street = $(`#${type}-street`).val();
-                    const house = $(`#${type}-house`).val();
-                    const district = $(`#${type}-district`).val();
-                    
-                    let fullAddress = street;
-                    if (house) fullAddress += `, ${house}`;
-                    if (district) fullAddress += `, ${district}`;
-                    
-                    $(`#${type}-full`).val(fullAddress);
-                    
-                    // Пересчитываем маршрут только если оба адреса заданы
+                    // Обновляем маршрут, если оба адреса установлены
                     if (document.getElementById('origin-full').value && document.getElementById('destination-full').value) {
                         calculateRoute();
                     }
+                } else {
+                    console.error('Ошибка геокодирования:', status);
+                    alert('Не удалось определить адрес по выбранной точке.');
+                }
+            });
+        }
+
+        // Расчет маршрута
+        function calculateRoute() {
+            console.log('Расчет маршрута');
+            const origin = document.getElementById('origin-full').value;
+            const destination = document.getElementById('destination-full').value;
+            
+            if (!origin || !destination) {
+                console.log('Не заданы начальная или конечная точки маршрута');
+                return;
+            }
+            
+            console.log('Построение маршрута от', origin, 'до', destination);
+            
+            const request = {
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING,
+                region: 'kg'
+            };
+            
+            directionsService.route(request, function(response, status) {
+                console.log('Ответ от сервиса маршрутов:', status);
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(response);
+                    
+                    // Получаем расстояние и время
+                    const route = response.routes[0];
+                    distance = route.legs[0].distance.value / 1000; // километры
+                    duration = route.legs[0].duration.value / 60; // минуты
+                    
+                    console.log('Расстояние:', distance.toFixed(1), 'км, время:', duration.toFixed(0), 'мин');
+                    
+                    document.getElementById('distance').value = `Расстояние: ${distance.toFixed(1)} км`;
+                    
+                    // Пересчитываем стоимость
+                    calculatePrice();
+                    
+                    // Подстраиваем карту под маршрут
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend(originMarker.getPosition());
+                    bounds.extend(destinationMarker.getPosition());
+                    map.fitBounds(bounds);
+                } else {
+                    console.error('Ошибка расчета маршрута:', status);
+                    alert('Не удалось рассчитать маршрут. Пожалуйста, проверьте адреса.');
+                }
+            });
+        }
+
+        // Расчет стоимости поездки
+        function calculatePrice() {
+            try {
+                const tariff = document.getElementById('tariff-select').value;
+                console.log('Расчет цены для тарифа:', tariff);
+                
+                if (!tariff || !TARIFFS[tariff]) {
+                    console.error('Тариф не выбран или не найден в списке тарифов:', tariff);
+                    return;
+                }
+
+                const tariffData = TARIFFS[tariff];
+                let price = tariffData.boardingFee;
+                
+                // Обновляем отображение тарифа
+                const tariffDisplay = document.getElementById('tariff-display');
+                if (tariffDisplay) {
+                    tariffDisplay.value = tariff;
+                    console.log('Установлен тариф в поле отображения:', tariff);
+                } else {
+                    console.error('Элемент tariff-display не найден');
                 }
                 
-                // Обработка формы
-                $('#order-form').submit(function(e) {
-                    e.preventDefault();
+                // Расчет стоимости в зависимости от расстояния
+                if (distance > 0) {
+                    // По умолчанию используем городской тариф
+                    const pricePerKm = tariffData.cityPricePerKm;
+                    const pricePerMinute = tariffData.cityPricePerMinute;
                     
-                    // Проверка на заполнение обязательных полей
-                    const driverId = $('#driver-select').val();
-                    const tariff = $('#tariff-select').val();
-                    const paymentMethod = $('#payment-method').val();
-                    const origin = $('#origin-full').val();
-                    const destination = $('#destination-full').val();
+                    // Расчет стоимости по километражу и времени
+                    const distancePrice = distance * pricePerKm;
+                    const timePrice = duration * pricePerMinute;
                     
-                    if (!driverId) {
-                        alert('Выберите водителя');
-                        return false;
-                    }
-                    
-                    if (!tariff) {
-                        alert('Выберите тариф');
-                        return false;
-                    }
-                    
-                    if (!paymentMethod) {
-                        alert('Выберите способ оплаты');
-                        return false;
-                    }
-                    
-                    if (!origin) {
-                        alert('Укажите адрес отправления');
-                        return false;
-                    }
-                    
-                    if (!destination) {
-                        alert('Укажите адрес назначения');
-                        return false;
-                    }
-                    
-                    // Отправка формы
-                    $.ajax({
-                        type: 'POST',
-                        url: '/api/orders/',
-                        data: $(this).serialize(),
-                        success: function(response) {
-                            alert('Заказ успешно создан!');
-                            window.location.href = '/disp/';
-                        },
-                        error: function(error) {
-                            alert('Ошибка при создании заказа: ' + (error.responseJSON ? error.responseJSON.detail : 'Проверьте соединение с сервером'));
-                        }
-                    });
-                });
+                    price += distancePrice + timePrice;
+                }
                 
-                // Отмена заказа
-                $('#cancel-btn').click(function() {
-                    if (confirm('Вы уверены, что хотите отменить создание заказа?')) {
-                        window.location.href = '/disp/';
-                    }
-                });
+                // Минимальная стоимость для бизнес-класса
+                if (tariff === 'Бизнес' && price < tariffData.minimumPrice) {
+                    price = tariffData.minimumPrice;
+                }
                 
-                // Нажатие клавиши F2 для создания нового заказа
-                $(document).keydown(function(e) {
-                    if (e.keyCode === 113) { // F2 key
-                        e.preventDefault();
-                        window.location.reload();
-                    }
+                // Округляем до целого числа
+                price = Math.ceil(price);
+                
+                const priceElement = document.getElementById('price');
+                const calculatedPriceElement = document.getElementById('calculated-price');
+                const boardingFeeElement = document.getElementById('boarding-fee');
+                
+                if (priceElement) {
+                    priceElement.value = `Стоимость: ${price} сом`;
+                }
+                
+                if (calculatedPriceElement) {
+                    calculatedPriceElement.value = price;
+                }
+                
+                if (boardingFeeElement) {
+                    boardingFeeElement.value = `Посадка: ${tariffData.boardingFee} сом`;
+                }
+                
+                console.log('Расчет стоимости:', {
+                    тариф: tariff,
+                    расстояние: distance.toFixed(1) + ' км',
+                    время: duration.toFixed(0) + ' мин',
+                    цена: price + ' сом'
                 });
+            } catch (error) {
+                console.error('Ошибка при расчете стоимости:', error);
+            }
+        }
+
+        // Инициализация карты при загрузке страницы
+        $(window).on('load', function() {
+            console.log('Страница полностью загружена, инициализация карты...');
+            setTimeout(function() {
+                try {
+                    initMap();
+                    console.log('Карта инициализирована после загрузки страницы');
+                } catch (error) {
+                    console.error('Ошибка инициализации карты после загрузки страницы:', error);
+                }
+            }, 500); // Небольшая задержка для гарантии загрузки всех элементов
+        });
+
+        // Обработчики событий
+        $('#driver-select').change(function() {
+            const selectedOption = $(this).find('option:selected');
+            const phone = selectedOption.data('phone');
+            const tariff = selectedOption.data('tariff');
+            
+            $('#driver-phone').val(phone);
+            
+            // Если тариф указан, выбираем его
+            if (tariff) {
+                $('#tariff-select').val(tariff);
+                
+                // Принудительно вызываем обработчик изменения тарифа
+                $('#tariff-select').trigger('change');
+            }
+        });
+
+        $('#tariff-select').change(function() {
+            try {
+                const tariff = $(this).val();
+                console.log('Изменение тарифа на:', tariff);
+                
+                if (tariff) {
+                    // Сначала обновляем отображение тарифа напрямую
+                    const tariffDisplay = document.getElementById('tariff-display');
+                    if (tariffDisplay) {
+                        tariffDisplay.value = tariff;
+                        console.log('Установлен тариф в поле отображения при изменении селекта:', tariff);
+                    }
+                    
+                    // Затем вызываем расчет цены
+                    calculatePrice();
+                }
+            } catch (error) {
+                console.error('Ошибка при изменении тарифа:', error);
+            }
+        });
+        
+        // Обновление адресов при заполнении домов и районов
+        $('#origin-house, #origin-district').on('change keyup', function() {
+            updateFullAddress('origin');
+        });
+        
+        $('#destination-house, #destination-district').on('change keyup', function() {
+            updateFullAddress('destination');
+        });
+        
+        function updateFullAddress(type) {
+            const street = $(`#${type}-street`).val();
+            const house = $(`#${type}-house`).val();
+            const district = $(`#${type}-district`).val();
+            
+            let fullAddress = street;
+            if (house) fullAddress += `, ${house}`;
+            if (district) fullAddress += `, ${district}`;
+            
+            $(`#${type}-full`).val(fullAddress);
+            
+            // Пересчитываем маршрут только если оба адреса заданы
+            if (document.getElementById('origin-full').value && document.getElementById('destination-full').value) {
+                calculateRoute();
+            }
+        }
+        
+        // Обработка формы
+        $('#order-form').submit(function(e) {
+            e.preventDefault();
+            
+            // Проверка на заполнение обязательных полей
+            const driverId = $('#driver-select').val();
+            const tariff = $('#tariff-select').val();
+            const paymentMethod = $('#payment-method').val();
+            const origin = $('#origin-full').val();
+            const destination = $('#destination-full').val();
+            
+            if (!driverId) {
+                alert('Выберите водителя');
+                return false;
+            }
+            
+            if (!tariff) {
+                alert('Выберите тариф');
+                return false;
+            }
+            
+            if (!paymentMethod) {
+                alert('Выберите способ оплаты');
+                return false;
+            }
+            
+            if (!origin) {
+                alert('Укажите адрес отправления');
+                return false;
+            }
+            
+            if (!destination) {
+                alert('Укажите адрес назначения');
+                return false;
+            }
+            
+            // Отправка формы
+            $.ajax({
+                type: 'POST',
+                url: '/api/orders/',
+                data: $(this).serialize(),
+                success: function(response) {
+                    alert('Заказ успешно создан!');
+                    window.location.href = '/disp/';
+                },
+                error: function(error) {
+                    alert('Ошибка при создании заказа: ' + (error.responseJSON ? error.responseJSON.detail : 'Проверьте соединение с сервером'));
+                }
             });
-        </script>
-    </body>
+        });
+        
+        // Отмена заказа
+        $('#cancel-btn').click(function() {
+            if (confirm('Вы уверены, что хотите отменить создание заказа?')) {
+                window.location.href = '/disp/';
+            }
+        });
+        
+        // Нажатие клавиши F2 для создания нового заказа
+        $(document).keydown(function(e) {
+            if (e.keyCode === 113) { // F2 key
+                e.preventDefault();
+                window.location.reload();
+            }
+        });
+    });
+</script>
+<style>
+    /* Адаптивные стили */
+    .main__order-wrapper {
+        border-radius: 5px;
+    }
+    .main__order-header {
+        flex-wrap: wrap;
+    }
+    .main__btn {
+        padding: 12px 30px;
+    }
+    .main__order-subheader {
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .main__order-subheader-item {
+        width: 100%;
+    } 
+    .main__subheader-filing {
+        width: 100%;
+    }
+    #tariff-select,
+    #payment-method {
+        width: 100%;
+    }
+    .main__order-subheader-item .main__btn-short {
+        width: 100%;
+    }
+    .main__order-notes {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    } 
+    .main__order-notes-text {
+        width: 65%;
+    }
+    @media (max-width: 1200px) {
+        .main__order-wrapper-blocks {
+            flex-direction: column;
+        }
+        .main__order-settings, .main__order-map {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .main__header-tags ul li {
+            padding: 10px 15px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .main__header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .main__header-logo, .main__header-tags, .main__header-search {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .main__subheader-add {
+            flex-wrap: wrap;
+        }
+        .main__order-header, .main__order-subheader {
+            flex-direction: column;
+        }
+        .main__order-header-item, .main__order-subheader-item {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .main__order-details-item {
+            flex-direction: column;
+        }
+        .main__order-details-item input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .main__order-map-item {
+            height: 300px;
+        }
+    }
+    
+    /* Улучшения существующих стилей */
+    .main__order-map-item {
+        min-height: 400px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .main__btn, .main__btn-short, .main__btn-green {
+        transition: all 0.3s ease;
+    }
+    
+    .main__btn:hover, .main__btn-short:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .main__btn-green:hover {
+        background-color: #35a63a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .main__order-notes-text textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #47484c;
+        background-color: #2d2e33;
+        color: #fff;
+        resize: vertical;
+    }
+    
+    /* Живое время */
+    #current-time {
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+        background-color: #47484c;
+        padding: 8px 12px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-left: 15px;
+    }
+    
+    /* Улучшения для карты и маршрута */
+    .route-info {
+        background-color: #2d2e33;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    
+    .route-info-item {
+        background-color: #47484c;
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        width: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .route-info-item input {
+        width: 90%;
+    }
+    
+    @media (max-width: 576px) {
+        .route-info-item {
+            width: 100%;
+        }
+    }
+</style>
+</body>
+{% endblock %}
 </html>

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, Response, Query, Form, UploadFile, File
+from fastapi import FastAPI, Depends, Request, Response, Query, Form, UploadFile, File, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,6 +13,8 @@ import random
 from pydantic import BaseModel
 import uuid
 from pathlib import Path
+import secrets
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .database import engine, Base, get_db
 from .routers import drivers, cars, orders, messages
@@ -52,6 +54,23 @@ app.include_router(drivers.router)
 app.include_router(cars.router)
 app.include_router(orders.router)
 app.include_router(messages.router)
+
+# Middleware для проверки авторизации
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Разрешаем доступ к статическим файлам и странице логина
+        if request.url.path.startswith("/static") or request.url.path == "/login":
+            return await call_next(request)
+            
+        # Проверяем авторизацию только для маршрутов /disp/
+        if request.url.path.startswith("/disp/"):
+            session = request.cookies.get("session")
+            if not session:
+                return RedirectResponse(url="/login", status_code=303)
+        
+        return await call_next(request)
+
+app.add_middleware(AuthMiddleware)
 
 # Модель для запроса пополнения баланса
 class BalanceAddRequest(BaseModel):
@@ -226,22 +245,6 @@ async def disp_analytics(request: Request, db: Session = Depends(get_db)):
         "disp/analytics.html", 
         {"request": request, **analytics_data}
     )
-
-@app.get("/disp/docs", response_class=HTMLResponse)
-async def disp_docs(request: Request):
-    """Страница документов"""
-    return templates.TemplateResponse("disp/docs.html", {
-        "request": request,
-        "current_page": "docs"
-    })
-
-@app.get("/disp/support", response_class=HTMLResponse)
-async def disp_support(request: Request):
-    """Страница техподдержки"""
-    return templates.TemplateResponse("disp/support.html", {
-        "request": request,
-        "current_page": "support"
-    })
 
 @app.get("/disp/cars", response_class=HTMLResponse)
 async def disp_cars(
@@ -418,15 +421,178 @@ async def disp_drivers(
     )
 
 @app.get("/disp/drivers_control", response_class=HTMLResponse)
-async def disp_drivers_control(request: Request, db: Session = Depends(get_db)):
-    """Страница фото контроля водителей"""
-    all_drivers = crud.get_drivers(db)
+async def disp_drivers_control(
+    request: Request, 
+    db: Session = Depends(get_db),
+    search: Optional[str] = None,
+    status: Optional[str] = None
+):
+    """Страница фото контроля водителей с фильтрацией и поиском"""
+    # Базовый запрос всех водителей
+    query = db.query(models.Driver)
     
-    return templates.TemplateResponse("disp/drivers_control.html", {
-        "request": request,
-        "current_page": "drivers_control",
-        "drivers": all_drivers
-    })
+    # Применяем фильтры, если они указаны
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.Driver.full_name.ilike(search_term),
+                models.Driver.callsign.ilike(search_term),
+                models.Driver.phone.ilike(search_term)
+            )
+        )
+    
+    # Получаем всех водителей для базового списка
+    all_drivers = query.all()
+    
+    # Разделяем водителей на принятых и отклоненных для правильного подсчета
+    accepted_drivers = [d for d in all_drivers if getattr(d, 'status', None) == 'accepted']
+    rejected_drivers = [d for d in all_drivers if getattr(d, 'status', None) == 'rejected']
+    pending_drivers = [d for d in all_drivers if getattr(d, 'status', None) == 'pending' or getattr(d, 'status', None) is None]
+    
+    # Если указан статус, применяем фильтр к исходному запросу
+    if status:
+        query = query.filter(models.Driver.status == status)
+        # Получаем отфильтрованных водителей
+        filtered_drivers = query.all()
+        
+        # В зависимости от статуса, заполняем соответствующий список фильтрованными данными
+        if status == 'accepted':
+            accepted_drivers = filtered_drivers
+        elif status == 'rejected':
+            rejected_drivers = filtered_drivers
+        elif status == 'pending':
+            pending_drivers = filtered_drivers
+    
+    # Получаем статистику
+    total_drivers = len(all_drivers)
+    available_drivers = len([d for d in all_drivers if hasattr(d, 'is_busy') and not d.is_busy])
+    busy_drivers = total_drivers - available_drivers
+    
+    # Рассчитываем общий баланс
+    total_balance = sum(getattr(driver, 'balance', 0) for driver in all_drivers)
+    
+    # Считаем количество отклоненных водителей для отображения
+    rejected_count = len(rejected_drivers)
+    
+    return templates.TemplateResponse(
+        "disp/drivers_control.html",
+        {
+            "request": request,
+            "current_page": "drivers_control",
+            "all_drivers": all_drivers,
+            "accepted_drivers": accepted_drivers,
+            "rejected_drivers": rejected_drivers,
+            "pending_drivers": pending_drivers,
+            "total_drivers": total_drivers,
+            "available_drivers": available_drivers,
+            "busy_drivers": busy_drivers,
+            "total_balance": f"{total_balance:.0f}",
+            "search": search,
+            "status": status,
+            "rejected_count": rejected_count
+        }
+    )
+
+@app.post("/api/drivers/{driver_id}/verify", response_class=JSONResponse)
+async def verify_driver(driver_id: int, status: str = Query(...), db: Session = Depends(get_db)):
+    """API для верификации водителя (принять/отклонить)"""
+    try:
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        if not driver:
+            return JSONResponse(status_code=404, content={"success": False, "detail": "Водитель не найден"})
+        
+        # Обновляем статус верификации
+        if status in ["accepted", "rejected"]:
+            driver.status = status
+            db.commit()
+            return {"success": True}
+        else:
+            return JSONResponse(status_code=400, content={"success": False, "detail": "Недопустимый статус"})
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "detail": str(e)})
+
+@app.get("/api/drivers/{driver_id}/details", response_class=JSONResponse)
+async def get_driver_details(driver_id: int, db: Session = Depends(get_db)):
+    """API для получения полной информации о водителе и его автомобиле"""
+    try:
+        # Получаем водителя с первым автомобилем
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        if not driver:
+            return JSONResponse(status_code=404, content={"detail": "Водитель не найден"})
+        
+        # Получаем автомобиль водителя
+        car = db.query(models.Car).filter(models.Car.driver_id == driver_id).first()
+        
+        # Формируем пути к фотографиям
+        photo_paths = {
+            "passport_front": f"/uploads/drivers/{driver_id}/passport_front.jpg" if hasattr(driver, "passport_front_path") and driver.passport_front_path else None,
+            "passport_back": f"/uploads/drivers/{driver_id}/passport_back.jpg" if hasattr(driver, "passport_back_path") and driver.passport_back_path else None,
+            "license_front": f"/uploads/drivers/{driver_id}/license_front.jpg" if hasattr(driver, "license_front_path") and driver.license_front_path else None,
+            "license_back": f"/uploads/drivers/{driver_id}/license_back.jpg" if hasattr(driver, "license_back_path") and driver.license_back_path else None
+        }
+        
+        # Добавляем фото автомобиля, если есть
+        if car:
+            photo_paths.update({
+                "car_front": car.photo_front,
+                "car_back": car.photo_rear,
+                "car_right": car.photo_right,
+                "car_left": car.photo_left,
+                "car_interior_front": car.photo_interior_front,
+                "car_interior_back": car.photo_interior_rear
+            })
+        
+        # Определяем, создан ли водитель в диспетчерской
+        # Если у водителя отсутствуют фотографии паспорта и вод. удостоверения, 
+        # считаем что он создан в диспетчерской
+        is_disp_created = not any([
+            getattr(driver, "passport_front_path", None), 
+            getattr(driver, "passport_back_path", None),
+            getattr(driver, "license_front_path", None),
+            getattr(driver, "license_back_path", None)
+        ])
+        
+        # Собираем детальную информацию
+        driver_data = {
+            "id": driver.id,
+            "full_name": driver.full_name,
+            "callsign": getattr(driver, "callsign", ""),
+            "phone": getattr(driver, "phone", ""),
+            "city": getattr(driver, "city", ""),
+            "birthdate": str(driver.birthdate) if hasattr(driver, "birthdate") else "",
+            "driver_license": getattr(driver, "driver_license_number", ""),
+            "driver_license_issue_date": str(driver.driver_license_issue_date) if hasattr(driver, "driver_license_issue_date") else "",
+            "balance": getattr(driver, "balance", 0),
+            "tariff": getattr(driver, "tariff", ""),
+            "taxi_park": getattr(driver, "taxi_park", ""),
+            "status": getattr(driver, "status", "pending"),
+            "photos": photo_paths,
+            "is_disp_created": is_disp_created
+        }
+        
+        # Если есть автомобиль, добавляем его данные
+        if car:
+            car_data = {
+                "id": car.id,
+                "brand": car.brand,
+                "model": car.model,
+                "year": car.year,
+                "color": getattr(car, "color", ""),
+                "transmission": car.transmission,
+                "license_plate": car.license_plate,
+                "vin": car.vin,
+                "has_booster": car.has_booster,
+                "has_child_seat": car.has_child_seat,
+                "tariff": car.tariff,
+                "service_type": car.service_type
+            }
+            driver_data["car"] = car_data
+        
+        return driver_data
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/disp/chat", response_class=HTMLResponse)
 async def disp_chat(request: Request, db: Session = Depends(get_db)):
@@ -816,6 +982,7 @@ async def search_drivers(
     except Exception as e:
         return {"success": False, "detail": str(e)}
 
+# Добавляем маршруты для создания водителя
 @app.get("/disp/create_driver", response_class=HTMLResponse)
 async def disp_create_driver(request: Request, db: Session = Depends(get_db)):
     """Страница создания нового водителя (перенаправление на шаг 1)"""
@@ -1085,6 +1252,58 @@ async def create_driver(
             status_code=500,
             content={"status": "error", "detail": str(e), "trace": trace}
         )
+
+@app.post("/api/drivers/accept-all", response_class=JSONResponse)
+async def accept_all_drivers(db: Session = Depends(get_db)):
+    """API для принятия всех водителей"""
+    try:
+        # Получаем всех водителей из БД
+        drivers = db.query(models.Driver).all()
+        
+        # Считаем количество обновленных водителей
+        updated_count = 0
+        
+        # Обновляем статус всех водителей на 'accepted'
+        for driver in drivers:
+            if getattr(driver, 'status', 'pending') != 'accepted':
+                driver.status = 'accepted'
+                updated_count += 1
+        
+        # Сохраняем изменения в БД
+        db.commit()
+        
+        return JSONResponse(
+            status_code=200, 
+            content={
+                "success": True, 
+                "detail": f"Успешно обновлено {updated_count} водителей", 
+                "updated_count": updated_count
+            }
+        )
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(
+            status_code=500, 
+            content={"success": False, "detail": str(e)}
+        )
+
+@app.get("/login", response_class=HTMLResponse)
+async def get_login(request: Request):
+    """Страница входа в систему"""
+    return templates.TemplateResponse("disp/login.html", {"request": request})
+
+@app.post("/login")
+async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    # Простая проверка логина и пароля (в реальном приложении нужно использовать хеширование и т.д.)
+    if username == "admin" and password == "admin":
+        response = RedirectResponse(url="/disp/", status_code=303)
+        # Генерируем сессионный токен и устанавливаем куки
+        session_token = secrets.token_hex(16)
+        # Устанавливаем куки с сроком действия 1 день
+        response.set_cookie(key="session", value=session_token, httponly=True, max_age=86400)
+        return response
+    else:
+        return RedirectResponse(url="/login?error=1", status_code=303)
 
 if __name__ == "__main__":
     import uvicorn
