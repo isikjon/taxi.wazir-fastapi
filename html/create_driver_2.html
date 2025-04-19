@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Водители - taxi.wazir.kg</title>
+        <link rel="stylesheet" href="./assets/css/main.css">
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="navbar__settings navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Информация</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Документы</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Техподдержка</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Техподдержка</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="navbar__menu-info navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Диспетчерская</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="./analytics.html">Статистика</a></li>
+                            <li><a href="./get_balance.html">Запрос на
+                                    баланс</a></li>
+                            <li><a href="./new_order.html">Новый заказ</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Автопарк</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="./drivers_control_edit.html">Создание
+                                    водителя</a></li>
+                            <li><a href="./pay_balance.html">Пополнение
+                                    баланса</a></li>
+                            <li><a href="./drivers.html">Водители</a></li>
+                            <li><a
+                                    href="./cars.html">Автомобили</a></li>
+                            <li><a href="./chat.html">Чат</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Контроль</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="./drivers_control.html">Фото
+                                    контроль</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="navbar__menu-settings navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Основные</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Профиль партнера</a></li>
+                            <li><a href="#">Категория транзакций</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links"
+                    style="position: absolute; bottom: 10%;">
+                    <h4>Интерфейс</h4>
+                    <div class="main__subheader-filing">
+                        <h4>Язык Интерфейса</h4>
+                        <form action="#">
+                            <select name="filing-date"
+                                style="width: 100%;">
+                                <option value="Русский">Русский</option>
+                                <option value="Киргизский">Киргизский</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="main__subheader-filing">
+                        <h4>Тема</h4>
+                        <form action="#">
+                            <select name="filing-date"
+                                style="width: 100%;">
+                                <option value="Ночная Тема">Ночная Тема</option>
+                                <option value="Светлая Тема">Светлая
+                                    Тема</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="navbar">
+                <div class="navbar__content">
+                    <div class="navbar__logo">
+                        <a href="./index.html"><img
+                                src="./assets/img/logo/logo_small.png"
+                                alt="logo"></a>
+                    </div>
+                    <div class="navbar__links">
+                        <div class="navbar__links-content">
+                            <a class="navbar__links-content-active"
+                                href="#"><img
+                                    src="./assets/img/ico/disp.png"
+                                    alt="disp"></a>
+                            <a href="#"><img src="./assets/img/ico/maps.png"
+                                    alt="maps"></a>
+                            <a href="./drivers.html"><img
+                                    src="./assets/img/ico/user.png"
+                                    alt="user"></a>
+                            <a href="./cars.html"><img
+                                    src="./assets/img/ico/car.png"
+                                    alt="car"></a>
+                            <a href="./analytics.html"><img
+                                    src="./assets/img/ico/analytics.png"
+                                    alt="analytics"></a>
+                        </div>
+                    </div>
+                    <div class="navbar__links">
+                        <div class="navbar__links-content">
+                            <a href="#" class="support"><img
+                                    src="./assets/img/ico/info.png"
+                                    alt="info"></a>
+                            <a href="#" class="settings"><img
+                                    src="./assets/img/ico/settings.png"
+                                    alt="settings"></a>
+                            <a href="#" class="menu"><img
+                                    src="./assets/img/ico/menu.png"
+                                    alt="menu"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="main">
+                <div class="main__header">
+                    <div class="main__header-logo"
+                        style="width: 280px;">
+                        <h3 style="font-size: 20px;">Водители - Контроль</h3>
+                    </div>
+                    <div class="main__header-tags">
+                        <ul>
+                            <li><a href="./drivers.html">Водитель</a></li>
+                            <li><a href="./cars.html">Автомобиль</a></li>
+                            <li><a href="./drivers_control.html">Фото
+                                    контроль</a></li>
+                            <li>Тариф</li>
+                            <li><a href="./chat.html">Чат</a></li>
+                        </ul>
+                    </div>
+                    <div class="main__header-search">
+                        <div class="main__header-search-item">
+                            <form action="#">
+                                <input type="search" placeholder="Поиск">
+                                <button><img src="./assets/img/ico/search.png"
+                                        alt="search"></button>
+                            </form>
+                        </div>
+                        <div class="main__header-search-profile">
+                            <div class="main__header-search-profile-item">
+                                <a href="#"><img
+                                        src="./assets/img/ico/notif.png"
+                                        alt="notif"></a>
+                            </div>
+                            <div class="main__header-search-profile-item">
+                                <a href="#"><img
+                                        src="./assets/img/ico/user.png"
+                                        alt="profile"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="main__subheader main__subheader-drivers">
+                    <div class="main__subheader-add">
+                        <div class="main__subheader-filing">
+                            <button
+                                class="main__btn">
+                                <a href="./drivers_control_edit.html">
+                                    Водитель
+                                </a>
+                            </button>
+                        </div>
+                        <div class="main__subheader-filing">
+                            <button class="main__btn main__btn-driver">
+                                <a href="./drivers_num_edit.html">
+                                    Автомобиль
+                                </a>
+                            </button>
+                        </div>
+                        <div class="main__subheader-filing">
+                            <button class="main__btn">
+                                <a href="./drivers_car_edit.html">
+                                    Фото автомобиля
+                                </a>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="main__subheader-drivers">
+                        <div
+                            class="main__header-tags main__subheader-drivers-tags">
+                            <ul>
+                                <li>На линии 26 водителей</li>
+                                <li><span class="status-span free"></span> 12
+                                    свободный</li>
+                                <li><span class="status-span busy"></span> 14
+                                    занят</li>
+                            </ul>
+                        </div>
+                        <div class="main__subheader-balance">
+                            <img src="./assets/img/ico/balance.png"
+                                alt="balance">
+                            <p>
+                                Баланс: 10,000
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="main__subheader-getbalance-title">
+                    <h3>Запросы</h3>
+                </div>
+                <div class="main__driversedit-wrapper">
+                    <h3 class="title">Автомобиль</h3>
+                    <form class="personal-data-form">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="fio">Марка</label>
+                                <input type="text" id="fio" name="fio"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="dob">Модель</label>
+                                <input type="text" id="dob" name="dob"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="personal-number">Цвет</label>
+                                <input type="text" id="personal-number"
+                                    name="personal-number"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="personal-number">Год</label>
+                                <input type="text" id="personal-number"
+                                    name="personal-number"
+                                    placeholder>
+                            </div>
+                            <h3 class="title">Комплектация и брендинг</h3>
+                            <div class="form-group">
+                                <label for="fio">КПП</label>
+                                <input type="text" id="fio" name="fio"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="dob">Бустеры</label>
+                                <input type="text" id="dob" name="dob"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="personal-number">Детское
+                                    кресло</label>
+                                <input type="text" id="personal-number"
+                                    name="personal-number"
+                                    placeholder>
+                            </div>
+                            <h3 class="title">Параметры</h3>
+                            <div class="form-group">
+                                <label for="fio">Парковая машина</label>
+                                <input type="text" id="fio" name="fio"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="dob">Позывной</label>
+                                <input type="text" id="dob" name="dob"
+                                    placeholder>
+                            </div>
+                            <h3 class="title">Тариф</h3>
+                            <div class="form-group">
+                                <label for="fio">Тариф</label>
+                                <input type="text" id="fio" name="fio"
+                                    placeholder>
+                            </div>
+                        </div>
+
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="license-num">Гос.номер</label>
+                                <input type="text" id="license-num"
+                                    name="license-num"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="issue-date">VIN</label>
+                                <input type="text" id="issue-date"
+                                    name="issue-date"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="expiry-date">Номер кузова</label>
+                                <input type="text" id="expiry-date"
+                                    name="expiry-date"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="expiry-date">СТС</label>
+                                <input type="text" id="expiry-date"
+                                    name="expiry-date"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="nakleyka">Наклейка</label>
+                                <div class="custom-checkbox">
+                                    <input type="checkbox" class="custom-input">
+                                    <span class="checkmark"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="nakleyka">Лайтбокс - Шашка</label>
+                                <div class="custom-checkbox">
+                                    <input type="checkbox" class="custom-input">
+                                    <span class="checkmark"></span>
+                                </div>
+                            </div>
+                            <h3 class="title">Услуги</h3>
+                            <div class="form-group">
+                                <label for="expiry-date">Услуга</label>
+                                <input type="text" id="expiry-date"
+                                    name="expiry-date"
+                                    placeholder>
+                            </div>
+                            <div class="form-group">
+                                <label for="expiry-date">Категория</label>
+                                <input type="text" id="expiry-date"
+                                    name="expiry-date"
+                                    placeholder>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="action-buttons">
+                        <button type="submit"
+                            class="main__btn-green">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="./assets/js/script.js"></script>
+    </body>
+</html>

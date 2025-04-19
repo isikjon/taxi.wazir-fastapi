@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Аналитика Диспетчерская - taxi.wazir.kg</title>
+        <link rel="stylesheet" href="./assets/css/main.css">
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="navbar__settings navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Информация</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Документы</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Техподдержка</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Техподдержка</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="navbar__menu-info navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Диспетчерская</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="./analytics.html">Статистика</a></li>
+                            <li><a href="./get_balance.html">Запрос на
+                                    баланс</a></li>
+                            <li><a href="./new_order.html">Новый заказ</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Автопарк</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="./drivers_control_edit.html">Создание
+                                    водителя</a></li>
+                            <li><a href="./pay_balance.html">Пополнение
+                                    баланса</a></li>
+                            <li><a href="./drivers.html">Водители</a></li>
+                            <li><a
+                                    href="./cars.html">Автомобили</a></li>
+                            <li><a href="./chat.html">Чат</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Контроль</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="./drivers_control.html">Фото
+                                    контроль</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="navbar__menu-settings navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Основные</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Профиль партнера</a></li>
+                            <li><a href="#">Категория транзакций</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links"
+                    style="position: absolute; bottom: 10%;">
+                    <h4>Интерфейс</h4>
+                    <div class="main__subheader-filing">
+                        <h4>Язык Интерфейса</h4>
+                        <form action="#">
+                            <select name="filing-date"
+                                style="width: 100%;">
+                                <option value="Русский">Русский</option>
+                                <option value="Киргизский">Киргизский</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="main__subheader-filing">
+                        <h4>Тема</h4>
+                        <form action="#">
+                            <select name="filing-date"
+                                style="width: 100%;">
+                                <option value="Ночная Тема">Ночная Тема</option>
+                                <option value="Светлая Тема">Светлая
+                                    Тема</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="navbar">
+                <div class="navbar__content">
+                    <div class="navbar__logo">
+                        <a href="./index.html"><img
+                                src="./assets/img/logo/logo_small.png"
+                                alt="logo"></a>
+                    </div>
+                    <div class="navbar__links">
+                        <div class="navbar__links-content">
+                            <a class="navbar__links-content-active"
+                                href="#"><img
+                                    src="./assets/img/ico/disp.png"
+                                    alt="disp"></a>
+                            <a href="#"><img src="./assets/img/ico/maps.png"
+                                    alt="maps"></a>
+                            <a href="./drivers.html"><img
+                                    src="./assets/img/ico/user.png"
+                                    alt="user"></a>
+                            <a href="./cars.html"><img
+                                    src="./assets/img/ico/car.png"
+                                    alt="car"></a>
+                            <a href="./analytics.html"><img
+                                    src="./assets/img/ico/analytics.png"
+                                    alt="analytics"></a>
+                        </div>
+                    </div>
+                    <div class="navbar__links">
+                        <div class="navbar__links-content">
+                            <a href="#" class="support"><img
+                                    src="./assets/img/ico/info.png"
+                                    alt="info"></a>
+                            <a href="#" class="settings"><img
+                                    src="./assets/img/ico/settings.png"
+                                    alt="settings"></a>
+                            <a href="#" class="menu"><img
+                                    src="./assets/img/ico/menu.png"
+                                    alt="menu"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="main">
+                <div class="main__header">
+                    <div class="main__header-logo">
+                        <h3>Ош Титан Парк</h3>
+                    </div>
+                    <div class="main__header-tags">
+                        <ul>
+                            <li><a href="./drivers.html">Водитель</a></li>
+                            <li><a href="./cars.html">Автомобиль</a></li>
+                            <li><a href="./drivers_control.html">Фото
+                                    контроль</a></li>
+                            <li>Тариф</li>
+                            <li><a href="./chat.html">Чат</a></li>
+                        </ul>
+                    </div>
+                    <div class="main__header-search">
+                        <div class="main__header-search-item">
+                            <form action="#">
+                                <input type="search" placeholder="Поиск">
+                                <button><img src="./assets/img/ico/search.png"
+                                        alt="search"></button>
+                            </form>
+                        </div>
+                        <div class="main__header-search-profile">
+                            <div class="main__header-search-profile-item">
+                                <a href="#"><img
+                                        src="./assets/img/ico/notif.png"
+                                        alt="notif"></a>
+                            </div>
+                            <div class="main__header-search-profile-item">
+                                <a href="#"><img
+                                        src="./assets/img/ico/user.png"
+                                        alt="profile"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="main__subheader">
+                    <div class="main__subheader-filter">
+                        <a href="#"><img src="./assets/img/ico/burger.png"
+                                alt="burger"></a>
+                        <a href="#"><img src="./assets/img/ico/chart.png"
+                                alt="chart"></a>
+                        <a href="#"><img src="./assets/img/ico/earth.png"
+                                alt="earth"></a>
+                    </div>
+                    <div class="main__subheader-filing">
+                        <form action="#">
+                            <select name="filing-date">
+                                <option value="Дата подачи" disabled
+                                    selected>Дата
+                                    подачи</option>
+                                <option value="08.12.2024">08.12.2024</option>
+                                <option value="09.01.2025">09.01.2025</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="main__subheader-date">
+                        <form action="#">
+                            <input type="date" name="first-date-form"
+                                id="first-date-form" disabled>
+                            <p>-</p>
+                            <input type="date" name="last-date-form"
+                                id="last-date-form" disabled>
+                        </form>
+                    </div>
+                    <div class="main__subheader-add">
+                        <button>+ Новый (F2)</button>
+                        <button>
+                            <span class="free"></span>
+                            Свободные
+                        </button>
+                        <button>
+                            <span class="busy"></span>
+                            Занятые
+                        </button>
+                        <button>
+                            <span class="cancelled"></span>
+                            Отмененные
+                        </button>
+                    </div>
+                    <div class="main__subheader-balance">
+                        <img src="./assets/img/ico/balance.png" alt="balance">
+                        <p>
+                            Баланс: 10,000
+                        </p>
+                    </div>
+                </div>
+                <div class="main__analytics">
+                    <div class="top-bar">
+                        <div class="main__table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Выполнено заказов</th>
+                                        <th>Типы заказов</th>
+                                        <th>Категории заказов</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="charts">
+                        <div class="main__table">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="chart-block">
+                                                <div class="donut-container">
+                                                    <div
+                                                        class="donut-chart donut-1">
+                                                        <div
+                                                            class="donut-center-text">55%</div>
+                                                    </div>
+                                                </div>
+                                                <div class="chart-legend">
+                                                    <div
+                                                        class="chart-legend__total">Всего:
+                                                        <span>100</span></div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--blue"></div>
+                                                        <div>Выполнено</div>
+                                                        <div>55</div>
+                                                    </div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--red"></div>
+                                                        <div>Отменено</div>
+                                                        <div>45</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="chart-block">
+                                                <div class="donut-container">
+                                                    <div
+                                                        class="donut-chart donut-2">
+                                                        <div
+                                                            class="donut-center-text">70%</div>
+                                                    </div>
+                                                </div>
+                                                <div class="chart-legend">
+                                                    <div
+                                                        class="chart-legend__total">Всего:
+                                                        <span>50</span></div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--green"></div>
+                                                        <div>Таксопарк</div>
+                                                        <div>30</div>
+                                                    </div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--blue-dark"></div>
+                                                        <div>Платформа</div>
+                                                        <div>18</div>
+                                                    </div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--green-light"></div>
+                                                        <div>От борта</div>
+                                                        <div>2</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="chart-block">
+                                                <div class="donut-container">
+                                                    <div
+                                                        class="donut-chart donut-3">
+                                                        <div
+                                                            class="donut-center-text">95%</div>
+                                                    </div>
+                                                </div>
+                                                <div class="chart-legend">
+                                                    <div
+                                                        class="chart-legend__total">Всего:
+                                                        <span>50</span></div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--brown"></div>
+                                                        <div>Эконом</div>
+                                                        <div>45</div>
+                                                    </div>
+                                                    <div
+                                                        class="chart-legend__item">
+                                                        <div
+                                                            class="legend-color legend-color--teal"></div>
+                                                        <div>Комфорт</div>
+                                                        <div>5</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="./assets/js/script.js"></script>
+    </body>
+</html>

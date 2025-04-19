@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Автомобили - taxi.wazir.kg{% endblock %}
+
+{% block header_title %}{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" placeholder="Поиск">
+            <button><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader main__cars-list">
+    <div class="main__subheader-filing main__subheader-cars-filter">
+        <form action="#">
+            <select name="filing-date" id="status-filter">
+                <option value="Статусы" disabled {% if not selected_status
+                    %}selected{% endif %}>Статусы</option>
+                <option value="Свободен" {% if selected_status == 'Свободен'
+                    %}selected{% endif %}>Свободен</option>
+                <option value="Занят" {% if selected_status == 'Занят'
+                    %}selected{% endif %}>Занят</option>
+            </select>
+        </form>
+        <form action="#">
+            <select name="filing-date" id="brand-filter">
+                <option value="Марка" disabled {% if not selected_brand
+                    %}selected{% endif %}>Марка</option>
+                {% for brand in brands %}
+                <option value="{{ brand }}" {% if selected_brand == brand
+                    %}selected{% endif %}>{{ brand }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <form action="#">
+            <select name="filing-date" id="model-filter">
+                <option value="Модель" disabled {% if not selected_model
+                    %}selected{% endif %}>Модель</option>
+                {% for model in models %}
+                <option value="{{ model }}" {% if selected_model == model
+                    %}selected{% endif %}>{{ model }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <form action="#">
+            <select name="filing-date" id="color-filter">
+                <option value="Цвет" disabled {% if not selected_color
+                    %}selected{% endif %}>Цвет</option>
+                {% for color in colors %}
+                <option value="{{ color }}" {% if selected_color == color
+                    %}selected{% endif %}>{{ color }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <form action="#">
+            <select name="filing-date" id="year-filter">
+                <option value="Год выпуска" disabled {% if not selected_year
+                    %}selected{% endif %}>Год выпуска</option>
+                {% for year in years %}
+                <option value="{{ year }}" {% if selected_year == year|int
+                    %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <button id="reset-filters" class="main__btn-short" {% if not
+            selected_status and not selected_brand and not selected_model and
+            not selected_color and not selected_year %}style="display: none;" {%
+            endif %}>
+            Сбросить фильтры
+        </button>
+    </div>
+    <div class="main__subheader-balance">
+        <img src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+            alt="balance">
+        <p>
+            Баланс: {{ balance|default('0') }}
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main__table">
+    <table id="cars-table">
+        <thead>
+            <tr>
+                <th>Статусы</th>
+                <th>Марка</th>
+                <th>Модель</th>
+                <th>Цвет</th>
+                <th>Год</th>
+                <th>Гос.номер</th>
+                <th>VIN</th>
+                <th>Номер кузова</th>
+                <th>СТС</th>
+                <th>Проверен</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if total_cars > 0 %}
+            {% for car in cars %}
+            <tr>
+                <td>{{ car.status|default('Работает') }}</td>
+                <td>{{ car.brand }}</td>
+                <td>{{ car.model }}</td>
+                <td>{{ car.color|default('Черный') }}</td>
+                <td>{{ car.year }}</td>
+                <td>{{ car.license_plate }}</td>
+                <td>{{ car.vin }}</td>
+                <td>{{ car.body_number|default(car.vin[:12]) }}</td>
+                <td>{{ car.sts_number|default('12 KG 123456') }}</td>
+                <td>
+                    <form>
+                        <div class="custom-checkbox">
+                            <input type="checkbox" class="custom-input" {% if
+                                car.verified %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr class="no-data">
+                <td colspan="10" class="no-cars-message">
+                    <div class="empty-state">
+                        <img
+                            src="{{ url_for('static', path='/assets/img/ico/car.png') }}"
+                            alt="Нет автомобилей">
+                        <p>
+                            {% if selected_status or selected_brand or
+                            selected_model or selected_color or selected_year %}
+                            Нет автомобилей, соответствующих выбранным фильтрам
+                            {% else %}
+                            Нет доступных автомобилей
+                            {% endif %}
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <div class="main__table-footer" style="padding: 30px 0;">
+        <div class="main__table-driver">
+            <button>Автомобили: {{ total_cars|default('0') }}</button>
+        </div>
+        {% if total_cars > 0 and total_pages > 1 %}
+        <div class="main__table-pagination">
+            <div class="main__table-pagination-prev">
+                <button{% if current_page_num == 1 %} disabled{% endif %}><img
+                        src="{{ url_for('static', path='/assets/img/ico/prev.png') }}"
+                        alt="prev"></button>
+            </div>
+            {% for page in range(1, total_pages + 1) %}
+            <div
+                class="main__table-pagination-item{% if page == current_page_num %} main__table-pagination-active{% endif %}">
+                <button>{{ page }}</button>
+            </div>
+            {% endfor %}
+            <div class="main__table-pagination-next">
+                <button{% if current_page_num == total_pages %} disabled{% endif
+                    %}><img
+                        src="{{ url_for('static', path='/assets/img/ico/next.png') }}"
+                        alt="next"></button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Инициализация меню
+        let menu = $(".menu");
+        let support = $(".support");
+        let settings = $(".settings");
+        let navbar__menu_info = $(".navbar__menu-info");
+        let navbar__settings = $(".navbar__settings");
+        let navbar__menu_settings = $(".navbar__menu-settings");
+
+        menu.click(function() {
+            navbar__menu_info.toggleClass("active");
+            navbar__settings.removeClass("active");
+            navbar__menu_settings.removeClass("active");
+        });
+
+        support.click(function() {
+            navbar__settings.toggleClass("active");
+            navbar__menu_info.removeClass("active");
+            navbar__menu_settings.removeClass("active");
+        });
+
+        settings.click(function() {
+            navbar__menu_settings.toggleClass("active");
+            navbar__settings.removeClass("active");
+            navbar__menu_info.removeClass("active");
+        });
+        
+        // Обработчики фильтров
+        $('#status-filter, #brand-filter, #model-filter, #color-filter, #year-filter').change(function() {
+            applyFilters();
+        });
+        
+        // Обработчик кнопки сброса фильтров
+        $('#reset-filters').click(function(e) {
+            e.preventDefault();
+            // Сбрасываем значения всех фильтров
+            $('#status-filter').prop('selectedIndex', 0);
+            $('#brand-filter').prop('selectedIndex', 0);
+            $('#model-filter').prop('selectedIndex', 0);
+            $('#color-filter').prop('selectedIndex', 0);
+            $('#year-filter').prop('selectedIndex', 0);
+            
+            // Перенаправляем на страницу без параметров
+            window.location.href = '/disp/cars';
+        });
+        
+        function applyFilters() {
+            const statusFilter = $('#status-filter').val();
+            const brandFilter = $('#brand-filter').val();
+            const modelFilter = $('#model-filter').val();
+            const colorFilter = $('#color-filter').val();
+            const yearFilter = $('#year-filter').val();
+            
+            // Формируем параметры запроса
+            let params = {};
+            if (statusFilter && statusFilter !== 'Статусы') params.status = statusFilter;
+            if (brandFilter && brandFilter !== 'Марка') params.brand = brandFilter;
+            if (modelFilter && modelFilter !== 'Модель') params.model = modelFilter;
+            if (colorFilter && colorFilter !== 'Цвет') params.color = colorFilter;
+            if (yearFilter && yearFilter !== 'Год выпуска') params.year = yearFilter;
+            
+            // Перенаправляем на ту же страницу с новыми параметрами
+            const queryString = new URLSearchParams(params).toString();
+            window.location.href = '/disp/cars' + (queryString ? '?' + queryString : '');
+        }
+        
+        // Обработчики кнопок пагинации
+        $('.main__table-pagination-prev button').click(function() {
+            if (!$(this).prop('disabled')) {
+                navigateToPage({{ current_page_num }} - 1);
+            }
+        });
+        
+        $('.main__table-pagination-next button').click(function() {
+            if (!$(this).prop('disabled')) {
+                navigateToPage({{ current_page_num }} + 1);
+            }
+        });
+        
+        $('.main__table-pagination-item button').click(function() {
+            const page = parseInt($(this).text());
+            navigateToPage(page);
+        });
+        
+        function navigateToPage(page) {
+            // Получаем текущие параметры из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Обновляем параметр page
+            urlParams.set('page', page);
+            
+            // Перенаправляем на ту же страницу с обновленным параметром page
+            window.location.href = '/disp/cars?' + urlParams.toString();
+        }
+    });
+</script>
+{% endblock %}

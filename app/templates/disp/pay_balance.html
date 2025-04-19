@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}Пополнение баланса - taxi.wazir.kg{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" id="driver-search" placeholder="Поиск">
+            <button type="button" id="search-btn"><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader main__subheader-paybalance">
+    <div class="main__subheader-add">
+        <button id="filter-active" class="active">Активные</button>
+        <button id="filter-blocked">Заблокированные</button>
+        <button id="filter-waiting">В ожидании</button>
+        <button id="filter-cancelled">Отмененные</button>
+    </div>
+    <div class="main__subheader-balance">
+        <img src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+            alt="balance">
+        <p>
+            Общий баланс: <span id="total-balance">{{ total_balance|default('0')
+                }}</span>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main__paybalance">
+    <div class="main__table main__paybalance-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ф.И.О</th>
+                    <th>Позывной</th>
+                    <th>Телефон</th>
+                    <th>Автомобиль</th>
+                    <th>Марка</th>
+                    <th>Гос.номер</th>
+                    <th>Тариф</th>
+                    <th>Баланс</th>
+                    <th>Статус</th>
+                    <th>Пополнение</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody id="drivers-table">
+                {% if drivers %}
+                {% for driver in drivers %}
+                <tr data-id="{{ driver.id }}" data-status="{{ driver.status }}">
+                    <td>{{ driver.full_name }}</td>
+                    <td>{{ driver.callsign }}</td>
+                    <td><a href="tel:{{ driver.phone }}">{{ driver.phone
+                            }}</a></td>
+                    <td>{{ driver.car.model }}</td>
+                    <td>{{ driver.car.make }}</td>
+                    <td>{{ driver.car.license_plate }}</td>
+                    <td>{{ driver.tariff }}</td>
+                    <td class="driver-balance">{{ driver.balance }}</td>
+                    <td>
+                        {% if driver.status == 'active' %}
+                        <span class="status-free">Активирован</span>
+                        {% elif driver.status == 'blocked' %}
+                        <span class="status-busy">Заблокирован</span>
+                        {% elif driver.status == 'waiting' %}
+                        <span class="status-cancelled">В ожидании</span>
+                        {% else %}
+                        <span class="status-busy">Отменен</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form class="main__paybalance-table-td">
+                            <img
+                                src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+                                alt="balance">
+                            <input type="text" class="balance-input"
+                                placeholder="0">
+                        </form>
+                    </td>
+                    <td>
+                        <button
+                            class="main__btn-short confirm-btn">Подтвердить</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="11" class="no-data">
+                        <div class="empty-state">
+                            <img
+                                src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                                alt="Нет водителей">
+                            <p>Нет доступных водителей</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="main__table-footer">
+            <div class="main__table-driver">
+                <button>Водители: {{ total_drivers|default('0') }}</button>
+            </div>
+            <div class="main__table-pagination">
+                <div class="main__table-pagination-prev">
+                    <button {% if page == 1 %}disabled{% endif %}><img
+                            src="{{ url_for('static', path='/assets/img/ico/prev.png') }}"
+                            alt="prev"></button>
+                </div>
+                {% for p in range(1, total_pages + 1) %}
+                <div
+                    class="main__table-pagination-{% if p == page %}active{% endif %} main__table-pagination-item">
+                    <button>{{ p }}</button>
+                </div>
+                {% endfor %}
+                <div class="main__table-pagination-next">
+                    <button {% if page == total_pages or total_pages == 0
+                        %}disabled{% endif %}><img
+                            src="{{ url_for('static', path='/assets/img/ico/next.png') }}"
+                            alt="next"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения пополнения -->
+<div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Подтверждение пополнения</h3>
+        <p>Вы уверены, что хотите пополнить баланс водителя <span
+                id="driver-name"></span> на сумму <span
+                id="amount"></span> сом?</p>
+        <div class="modal-buttons">
+            <button id="confirm-yes" class="main__btn-green">Да,
+                пополнить</button>
+            <button id="confirm-no" class="main__btn">Отмена</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+            $(document).ready(function() {
+                // Функция для подсчета общего баланса
+                function calculateTotalBalance() {
+                    let totalBalance = 0;
+                    $('#drivers-table tr:visible').each(function() {
+                        const balance = parseInt($(this).find('.driver-balance').text()) || 0;
+                        totalBalance += balance;
+                    });
+                    $('#total-balance').text(totalBalance.toLocaleString());
+                }
+                
+                // Вызываем функцию при загрузке страницы
+                calculateTotalBalance();
+                
+                // Обработчики для фильтров
+                $('#filter-active, #filter-blocked, #filter-waiting, #filter-cancelled').click(function() {
+                    // Удаляем класс active у всех кнопок
+                    $('.main__subheader-add button').removeClass('active');
+                    // Добавляем класс active нажатой кнопке
+                    $(this).addClass('active');
+                    
+                    // Определяем статус для фильтрации
+                    let statusFilter;
+                    if ($(this).attr('id') === 'filter-active') {
+                        statusFilter = 'active';
+                    } else if ($(this).attr('id') === 'filter-blocked') {
+                        statusFilter = 'blocked';
+                    } else if ($(this).attr('id') === 'filter-waiting') {
+                        statusFilter = 'waiting';
+                    } else if ($(this).attr('id') === 'filter-cancelled') {
+                        statusFilter = 'cancelled';
+                    }
+                    
+                    // Фильтруем таблицу
+                    $('#drivers-table tr').each(function() {
+                        const status = $(this).data('status');
+                        if (status === statusFilter) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                    
+                    // Проверяем, есть ли отображаемые строки
+                    if ($('#drivers-table tr:visible').length === 0) {
+                        // Если нет, добавляем строку с сообщением об отсутствии данных
+                        if ($('#no-data-row').length === 0) {
+                            $('#drivers-table').append(
+                                '<tr id="no-data-row"><td colspan="11" class="no-data">' +
+                                '<div class="empty-state">' +
+                                '<img src="{{ url_for("static", path="/assets/img/ico/user.png") }}" alt="Нет водителей">' +
+                                '<p>Нет доступных водителей</p>' +
+                                '</div></td></tr>'
+                            );
+                        } else {
+                            $('#no-data-row').show();
+                        }
+                    } else {
+                        // Если есть, скрываем строку с сообщением
+                        $('#no-data-row').hide();
+                    }
+                    
+                    // Пересчитываем общий баланс
+                    calculateTotalBalance();
+                });
+                
+                // Обработчик поля ввода - только числа
+                $('.balance-input').on('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+                
+                // Обработчик кнопки подтверждения - открытие модального окна
+                $('.confirm-btn').click(function() {
+                    const row = $(this).closest('tr');
+                    const amount = row.find('.balance-input').val();
+                    const driverName = row.find('td:first-child').text();
+                    
+                    if (amount && parseInt(amount) > 0) {
+                        // Заполняем данные модального окна
+                        $('#driver-name').text(driverName);
+                        $('#amount').text(amount);
+                        
+                        // Показываем модальное окно
+                        $('#confirm-modal').css('display', 'block');
+                        
+                        // Сохраняем ссылку на строку для использования при подтверждении
+                        $('#confirm-yes').data('row', row);
+                    } else {
+                        alert('Пожалуйста, введите сумму пополнения!');
+                    }
+                });
+                
+                // Закрытие модального окна по клику на крестик
+                $('.close').click(function() {
+                    $('#confirm-modal').css('display', 'none');
+                });
+                
+                // Закрытие модального окна по клику вне окна
+                $(window).click(function(event) {
+                    if (event.target.id === 'confirm-modal') {
+                        $('#confirm-modal').css('display', 'none');
+                    }
+                });
+                
+                // Обработка подтверждения пополнения
+                $('#confirm-yes').click(function() {
+                    const row = $(this).data('row');
+                    const driverId = row.data('id');
+                    const amount = parseInt(row.find('.balance-input').val());
+                    
+                    // Отправляем AJAX запрос на сервер
+                    $.ajax({
+                        url: '/api/balance/add/',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            driver_id: driverId,
+                            amount: amount
+                        }),
+                        success: function(response) {
+                            // Обновляем баланс в таблице
+                            const currentBalance = parseInt(row.find('.driver-balance').text()) || 0;
+                            const newBalance = currentBalance + amount;
+                            row.find('.driver-balance').text(newBalance);
+                            
+                            // Очищаем поле ввода
+                            row.find('.balance-input').val('');
+                            
+                            // Закрываем модальное окно
+                            $('#confirm-modal').css('display', 'none');
+                            
+                            // Показываем уведомление об успехе
+                            alert('Баланс успешно пополнен!');
+                            
+                            // Пересчитываем общий баланс
+                            calculateTotalBalance();
+                        },
+                        error: function(xhr) {
+                            // Закрываем модальное окно
+                            $('#confirm-modal').css('display', 'none');
+                            
+                            // Показываем сообщение об ошибке
+                            alert('Ошибка при пополнении баланса: ' + (xhr.responseJSON ? xhr.responseJSON.detail : 'Неизвестная ошибка'));
+                        }
+                    });
+                });
+                
+                // Отмена пополнения
+                $('#confirm-no').click(function() {
+                    $('#confirm-modal').css('display', 'none');
+                });
+                
+                // Поиск водителей
+                $('#search-btn').click(function() {
+                    searchDrivers();
+                });
+                
+                $('#driver-search').keypress(function(e) {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        searchDrivers();
+                    }
+                });
+                
+                // Функция поиска водителей
+                function searchDrivers() {
+                    const searchQuery = $('#driver-search').val().toLowerCase();
+                    
+                    if (searchQuery.length < 3 && searchQuery.length > 0) {
+                        alert('Пожалуйста, введите минимум 3 символа для поиска');
+                        return;
+                    }
+                    
+                    // Отправляем AJAX запрос на сервер для поиска
+                    $.ajax({
+                        url: '/api/drivers/search',
+                        type: 'GET',
+                        data: {
+                            query: searchQuery
+                        },
+                        success: function(response) {
+                            // Обновляем таблицу с полученными данными
+                            updateTable(response.drivers);
+                            
+                            // Обновляем пагинацию
+                            updatePagination(response.page, response.total_pages);
+                            
+                            // Пересчитываем общий баланс
+                            calculateTotalBalance();
+                        },
+                        error: function() {
+                            alert('Ошибка при поиске водителей');
+                        }
+                    });
+                }
+                
+                // Функция обновления таблицы
+                function updateTable(drivers) {
+                    const tbody = $('#drivers-table');
+                    tbody.empty();
+                    
+                    if (drivers && drivers.length > 0) {
+                        drivers.forEach(function(driver) {
+                            let statusClass = '';
+                            let statusText = '';
+                            
+                            if (driver.status === 'active') {
+                                statusClass = 'status-free';
+                                statusText = 'Активирован';
+                            } else if (driver.status === 'blocked') {
+                                statusClass = 'status-busy';
+                                statusText = 'Заблокирован';
+                            } else if (driver.status === 'waiting') {
+                                statusClass = 'status-cancelled';
+                                statusText = 'В ожидании';
+                            } else {
+                                statusClass = 'status-busy';
+                                statusText = 'Отменен';
+                            }
+                            
+                            const row = `
+                                <tr data-id="${driver.id}" data-status="${driver.status}">
+                                    <td>${driver.full_name}</td>
+                                    <td>${driver.callsign}</td>
+                                    <td><a href="tel:${driver.phone}">${driver.phone}</a></td>
+                                    <td>${driver.car.model}</td>
+                                    <td>${driver.car.make}</td>
+                                    <td>${driver.car.license_plate}</td>
+                                    <td>${driver.tariff}</td>
+                                    <td class="driver-balance">${driver.balance}</td>
+                                    <td><span class="${statusClass}">${statusText}</span></td>
+                                    <td>
+                                        <form class="main__paybalance-table-td">
+                                            <img src="{{ url_for('static', path='/assets/img/ico/balance.png') }}" alt="balance">
+                                            <input type="text" class="balance-input" placeholder="0">
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <button class="main__btn-short confirm-btn">Подтвердить</button>
+                                    </td>
+                                </tr>
+                            `;
+                            
+                            tbody.append(row);
+                        });
+                        
+                        // Повторно привязываем обработчики к новым элементам
+                        $('.balance-input').on('input', function() {
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                        });
+                        
+                        $('.confirm-btn').click(function() {
+                            const row = $(this).closest('tr');
+                            const amount = row.find('.balance-input').val();
+                            const driverName = row.find('td:first-child').text();
+                            
+                            if (amount && parseInt(amount) > 0) {
+                                $('#driver-name').text(driverName);
+                                $('#amount').text(amount);
+                                $('#confirm-modal').css('display', 'block');
+                                $('#confirm-yes').data('row', row);
+                            } else {
+                                alert('Пожалуйста, введите сумму пополнения!');
+                            }
+                        });
+                    } else {
+                        tbody.append(`
+                            <tr id="no-data-row">
+                                <td colspan="11" class="no-data">
+                                    <div class="empty-state">
+                                        <img src="{{ url_for('static', path='/assets/img/ico/user.png') }}" alt="Нет водителей">
+                                        <p>Нет доступных водителей</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                }
+                
+                // Функция обновления пагинации
+                function updatePagination(currentPage, totalPages) {
+                    const pagination = $('.main__table-pagination');
+                    pagination.find('.main__table-pagination-item').remove();
+                    
+                    for (let i = 1; i <= totalPages; i++) {
+                        const pageItem = `
+                            <div class="main__table-pagination-${i === currentPage ? 'active' : ''} main__table-pagination-item">
+                                <button>${i}</button>
+                            </div>
+                        `;
+                        
+                        pagination.find('.main__table-pagination-next').before(pageItem);
+                    }
+                    
+                    // Обновляем состояние кнопок prev/next
+                    pagination.find('.main__table-pagination-prev button').prop('disabled', currentPage === 1);
+                    pagination.find('.main__table-pagination-next button').prop('disabled', currentPage === totalPages || totalPages === 0);
+                    
+                    // Привязываем обработчики к новым кнопкам пагинации
+                    $('.main__table-pagination-item button').click(function() {
+                        const page = $(this).text();
+                        navigateToPage(page);
+                    });
+                }
+                
+                // Обработчики пагинации
+                $('.main__table-pagination-item button').click(function() {
+                    const page = $(this).text();
+                    navigateToPage(page);
+                });
+                
+                $('.main__table-pagination-prev button').click(function() {
+                    if (!$(this).prop('disabled')) {
+                        const currentPage = parseInt($('.main__table-pagination-active button').text());
+                        navigateToPage(currentPage - 1);
+                    }
+                });
+                
+                $('.main__table-pagination-next button').click(function() {
+                    if (!$(this).prop('disabled')) {
+                        const currentPage = parseInt($('.main__table-pagination-active button').text());
+                        navigateToPage(currentPage + 1);
+                    }
+                });
+                
+                // Функция перехода на страницу
+                function navigateToPage(page) {
+                    // Собираем текущие параметры фильтрации
+                    const status = $('.main__subheader-add button.active').attr('id').replace('filter-', '');
+                    const searchQuery = $('#driver-search').val();
+                    
+                    // Формируем URL с параметрами
+                    let url = `/disp/pay_balance?page=${page}`;
+                    if (status) url += `&status=${status}`;
+                    if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+                    
+                    // Переходим на страницу
+                    window.location.href = url;
+                }
+                
+                // Добавляем стили для модального окна
+                $('<style>')
+                    .prop('type', 'text/css')
+                    .html(`
+                        .modal {
+                            display: none;
+                            position: fixed;
+                            z-index: 1000;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            height: 100%;
+                            overflow: auto;
+                            background-color: rgba(0,0,0,0.7);
+                        }
+                        
+                        .modal-content {
+                            background-color: #2d2e33;
+                            margin: 15% auto;
+                            padding: 20px;
+                            border: 1px solid #47484c;
+                            border-radius: 8px;
+                            width: 50%;
+                            max-width: 500px;
+                            color: white;
+                        }
+                        
+                        .close {
+                            color: #aaa;
+                            float: right;
+                            font-size: 28px;
+                            font-weight: bold;
+                            cursor: pointer;
+                        }
+                        
+                        .close:hover {
+                            color: white;
+                        }
+                        
+                        .modal h3 {
+                            margin-top: 0;
+                            margin-bottom: 20px;
+                        }
+                        
+                        .modal p {
+                            margin-bottom: 20px;
+                        }
+                        
+                        .modal-buttons {
+                            display: flex;
+                            justify-content: space-between;
+                        }
+                        
+                        .modal-buttons button {
+                            margin: 0 10px;
+                            padding: 10px 20px;
+                        }
+                        
+                        .main__btn-green {
+                            background-color: #28a745;
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            transition: background-color 0.3s;
+                        }
+                        
+                        .main__btn-green:hover {
+                            background-color: #218838;
+                        }
+                    `)
+                    .appendTo('head');
+            });
+        </script>
+{% endblock %}

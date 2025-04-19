@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}WAZIR MTT - Документы{% endblock %}
+
+{% block header_title %}Документы{% endblock %}
+
+{% block content %}
+<div class="main__content">
+    <div class="main__content-section">
+        <h2>Документация системы</h2>
+        <p>Здесь вы найдете различные документы, инструкции и регламенты работы
+            с системой WAZIR MTT.</p>
+
+        <div class="main__content-cards">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Инструкции для диспетчеров</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="doc-list">
+                        <li><a href="#" class="doc-link">Руководство по работе с
+                                заказами</a></li>
+                        <li><a href="#" class="doc-link">Работа с
+                                водителями</a></li>
+                        <li><a href="#" class="doc-link">Обработка запросов на
+                                пополнение баланса</a></li>
+                        <li><a href="#" class="doc-link">Порядок решения
+                                конфликтных ситуаций</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Регламенты и стандарты</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="doc-list">
+                        <li><a href="#" class="doc-link">Стандарты обслуживания
+                                клиентов</a></li>
+                        <li><a href="#" class="doc-link">Регламент проверки
+                                водителей</a></li>
+                        <li><a href="#" class="doc-link">Требования к
+                                автомобилям</a></li>
+                        <li><a href="#" class="doc-link">Порядок подключения
+                                водителей</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Шаблоны документов</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="doc-list">
+                        <li><a href="#" class="doc-link">Заявление на
+                                подключение</a></li>
+                        <li><a href="#" class="doc-link">Договор с
+                                водителем</a></li>
+                        <li><a href="#" class="doc-link">Акт приема-передачи
+                                оборудования</a></li>
+                        <li><a href="#" class="doc-link">Заявление на
+                                выплату</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main__content-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .card-header h3 {
+        margin: 0;
+        color: #333;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .doc-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .doc-list li {
+        margin-bottom: 10px;
+    }
+    
+    .doc-link {
+        display: flex;
+        align-items: center;
+        color: #0056b3;
+        text-decoration: none;
+    }
+    
+    .doc-link:hover {
+        text-decoration: underline;
+    }
+    
+    .doc-link:before {
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+        background-image: url("{{ url_for('static', path='/assets/img/ico/document.png') }}");
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+</style>
+{% endblock %}

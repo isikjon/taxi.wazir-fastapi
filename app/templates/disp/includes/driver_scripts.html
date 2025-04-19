@@ -1,0 +1,129 @@
+<script>
+    // Общие функции для всех шагов создания водителя
+    
+    // Валидация формы
+    function validateForm(formId) {
+        console.log(`Валидируем форму: ${formId}`);
+        
+        const $form = $(`#${formId}`);
+        const errors = [];
+        
+        // Проверяем все обязательные поля
+        $form.find('[required]').each(function() {
+            const $field = $(this);
+            const fieldId = $field.attr('id');
+            const fieldType = $field.attr('type');
+            
+            // Пропускаем проверку всех полей загрузки файлов - делаем их необязательными для отладки
+            if (fieldType === 'file') {
+                return true; // пропускаем проверку файлов
+            }
+            
+            let isValid = true;
+            
+            if (fieldType === 'checkbox') {
+                isValid = $field.prop('checked');
+            } else {
+                isValid = $field.val() !== '' && $field.val() !== null;
+            }
+            
+            if (!isValid) {
+                console.log(`Ошибка в поле: ${fieldId} `);
+                errors.push({
+                    field: fieldId,
+                    message: $field.data('error') || 'Поле обязательно к заполнению'
+                });
+                $field.addClass('is-invalid');
+            } else {
+                $field.removeClass('is-invalid');
+            }
+        });
+        
+        // Отображаем все ошибки
+        const $errorContainer = $('#error-message');
+        
+        if (errors.length > 0) {
+            const errorMessages = errors.map(err => `<div>${err.message}</div>`).join('');
+            $errorContainer.html(errorMessages).show();
+            setTimeout(() => {
+                $errorContainer.fadeOut(1000);
+            }, 5000);
+        } else {
+            $errorContainer.hide();
+        }
+        
+        console.log(`Форма валидна: ${errors.length === 0}`, errors);
+        
+        return errors.length === 0;
+    }
+    
+    // Функция для получения данных из формы
+    function getFormData(formId) {
+        const data = {};
+        $(`#${formId} input, #${formId} select`).each(function() {
+            const fieldId = $(this).attr('id');
+            const fieldName = $(this).attr('name');
+            
+            if (!fieldName) return; // Пропускаем поля без имени
+            
+            if ($(this).attr('type') === 'checkbox') {
+                data[fieldName] = $(this).prop('checked');
+            } else if ($(this).attr('type') === 'file') {
+                // Файлы обрабатываются отдельно при отправке
+                if ($(this)[0].files && $(this)[0].files[0]) {
+                    data[fieldName] = true; // Помечаем, что файл выбран
+                }
+            } else {
+                data[fieldName] = $(this).val();
+            }
+        });
+        return data;
+    }
+    
+    // Функция для отображения ошибок
+    function showError(message) {
+        $('#error-message').text(message).show();
+        setTimeout(function() {
+            $('#error-message').fadeOut();
+        }, 5000);
+    }
+    
+    // Функция для заполнения формы данными из localStorage
+    function fillFormFromLocalStorage(formId, prefix) {
+        $(`#${formId} input:not([type="file"]), #${formId} select`).each(function() {
+            const fieldName = $(this).attr('name');
+            if (!fieldName) return;
+            
+            const savedValue = localStorage.getItem(`${prefix}_${fieldName}`);
+            if (savedValue !== null) {
+                if ($(this).is(':checkbox')) {
+                    $(this).prop('checked', savedValue === 'true');
+                } else {
+                    $(this).val(savedValue);
+                }
+            }
+        });
+    }
+    
+    // Функция для показа индикатора загрузки
+    function showLoading(message) {
+        if ($('#loading-overlay').length) {
+            return;
+        }
+        
+        // Создаем и добавляем элемент индикатора загрузки
+        const loadingHtml = `
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">${message || 'Загрузка...'}</div>
+            </div>
+        `;
+        
+        $('body').append(loadingHtml);
+    }
+    
+    // Функция для скрытия индикатора загрузки
+    function hideLoading() {
+        $('#loading-overlay').remove();
+    }
+</script>

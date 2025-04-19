@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Аналитика Диспетчерская - taxi.wazir.kg{% endblock %}
+
+{% block header_title %}{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" placeholder="Поиск">
+            <button><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader">
+    <div class="main__subheader-filter">
+        <a href="#"><img
+                src="{{ url_for('static', path='/assets/img/ico/burger.png') }}"
+                alt="burger"></a>
+        <a href="#"><img
+                src="{{ url_for('static', path='/assets/img/ico/chart.png') }}"
+                alt="chart"></a>
+        <a href="#"><img
+                src="{{ url_for('static', path='/assets/img/ico/earth.png') }}"
+                alt="earth"></a>
+    </div>
+    <div class="main__subheader-filing">
+        <form action="#">
+            <select name="filing-date">
+                <option value="Дата подачи" disabled selected>Дата
+                    подачи</option>
+                <option value="08.12.2024">08.12.2024</option>
+                <option value="09.01.2025">09.01.2025</option>
+            </select>
+        </form>
+    </div>
+    <div class="main__subheader-date">
+        <form action="#">
+            <input type="date" name="first-date-form" id="first-date-form"
+                disabled>
+            <p>-</p>
+            <input type="date" name="last-date-form" id="last-date-form"
+                disabled>
+        </form>
+    </div>
+    <div class="main__subheader-add">
+        <button>+ Новый (F2)</button>
+        <button>
+            <span class="free"></span>
+            Свободные
+        </button>
+        <button>
+            <span class="busy"></span>
+            Занятые
+        </button>
+        <button>
+            <span class="cancelled"></span>
+            Отмененные
+        </button>
+    </div>
+    <div class="main__subheader-balance">
+        <img src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+            alt="balance">
+        <p>
+            Баланс: {{ balance|default('0') }}
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main__analytics analytics-dashboard">
+    <div class="analytics-header">
+        <div class="main__table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Водители</th>
+                        <th>Машины</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <div class="analytics-charts">
+        <div class="main__table">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="chart-block">
+                                <div class="donut-container">
+                                    <div class="donut-chart donut-1">
+                                        <div class="donut-center-text">{{
+                                            total_drivers|default('0')
+                                            }}</div>
+                                    </div>
+                                </div>
+                                <div class="chart-legend">
+                                    <div class="chart-legend__total">Всего
+                                        водителей:
+                                        <span>{{ total_drivers|default('0')
+                                            }}</span></div>
+                                    <div class="chart-legend__item">
+                                        <div
+                                            class="legend-color legend-color--blue"></div>
+                                        <div>Активные</div>
+                                        <div>{{ total_drivers|default('0')
+                                            }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="chart-block">
+                                <div class="donut-container">
+                                    <div class="donut-chart donut-2">
+                                        <div class="donut-center-text">{{
+                                            total_cars|default('0')
+                                            }}</div>
+                                    </div>
+                                </div>
+                                <div class="chart-legend">
+                                    <div class="chart-legend__total">Всего
+                                        машин:
+                                        <span>{{ total_cars|default('0')
+                                            }}</span></div>
+                                    <div class="chart-legend__item">
+                                        <div
+                                            class="legend-color legend-color--green"></div>
+                                        <div>Активные</div>
+                                        <div>{{ total_cars|default('0')
+                                            }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Инициализация меню
+        let menu = $(".menu");
+        let support = $(".support");
+        let settings = $(".settings");
+        let navbar__menu_info = $(".navbar__menu-info");
+        let navbar__settings = $(".navbar__settings");
+        let navbar__menu_settings = $(".navbar__menu-settings");
+
+        menu.click(function() {
+            navbar__menu_info.toggleClass("active");
+            navbar__settings.removeClass("active");
+            navbar__menu_settings.removeClass("active");
+        });
+
+        support.click(function() {
+            navbar__settings.toggleClass("active");
+            navbar__menu_info.removeClass("active");
+            navbar__menu_settings.removeClass("active");
+        });
+
+        settings.click(function() {
+            navbar__menu_settings.toggleClass("active");
+            navbar__settings.removeClass("active");
+            navbar__menu_info.removeClass("active");
+        });
+        
+        // Стилизация диаграмм
+        function setupDonutCharts() {
+            // Настройка градиента и анимация первой диаграммы для водителей
+            const donut1 = document.querySelector('.donut-1');
+            if (donut1) {
+                donut1.style.background = `conic-gradient(#1E6BC7 0% 100%, transparent 100% 100%)`;
+            }
+            
+            // Настройка градиента и анимация второй диаграммы для машин
+            const donut2 = document.querySelector('.donut-2');
+            if (donut2) {
+                donut2.style.background = `conic-gradient(#2A9D8F 0% 100%, transparent 100% 100%)`;
+            }
+        }
+        
+        // Вызываем функцию настройки диаграмм
+        setupDonutCharts();
+    });
+</script>
+{% endblock %}

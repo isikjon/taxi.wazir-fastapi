@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>{% block title %}WAZIR MTT - Панель диспетчера{% endblock
+            %}</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/assets/css/main.css') }}">
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/assets/css/charts.css') }}">
+        {% block extra_css %}{% endblock %}
+    </head>
+    <body>
+        <div class="wrapper">
+            <!-- Разные типы меню -->
+            <div class="navbar__settings navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Информация</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="/disp/docs">Документы</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Техподдержка</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="/disp/support">Техподдержка</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="navbar__menu-info navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Диспетчерская</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="/disp">Статистика</a></li>
+                            <li><a href="/disp/analytics">Аналитика</a></li>
+                            <li><a href="/disp/new_order">Новый заказ</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Автопарк</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="/disp/create_driver">Создание
+                                    водителя</a></li>
+                            <li><a href="/disp/pay_balance">Пополнение
+                                    баланса</a></li>
+                            <li><a href="/disp/drivers">Водители</a></li>
+                            <li><a href="/disp/cars">Автомобили</a></li>
+                            <li><a href="/disp/chat">Чат</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links">
+                    <h4>Контроль</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="/disp/drivers_control">Фото
+                                    контроль</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="navbar__menu-settings navbar__menu">
+                <div class="navbar__menu-links">
+                    <h4>Основные</h4>
+                    <nav>
+                        <ul>
+                            <li><a href="#">Профиль партнера</a></li>
+                            <li><a href="#">Категория транзакций</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="navbar__menu-links"
+                    style="position: absolute; bottom: 10%;">
+                    <h4>Интерфейс</h4>
+                    <div class="main__subheader-filing">
+                        <h4>Язык Интерфейса</h4>
+                        <form action="#">
+                            <select name="filing-date" style="width: 100%;">
+                                <option value="Русский">Русский</option>
+                                <option value="Киргизский">Киргизский</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="main__subheader-filing">
+                        <h4>Тема</h4>
+                        <form action="#">
+                            <select name="filing-date" style="width: 100%;">
+                                <option value="Ночная Тема">Ночная Тема</option>
+                                <option value="Светлая Тема">Светлая
+                                    Тема</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="navbar">
+                <div class="navbar__content">
+                    <div class="navbar__logo">
+                        <a href="/disp"><img
+                                src="{{ url_for('static', path='/assets/img/logo/logo_small.png') }}"
+                                alt="logo"></a>
+                    </div>
+                    <div class="navbar__links">
+                        <div class="navbar__links-content">
+                            <a
+                                class="{% if current_page in ['analytics', 'get_balance', 'new_order'] %}navbar__links-content-active{% endif %}"
+                                href="/disp"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/disp.png') }}"
+                                    alt="disp"></a>
+                            <a href="/disp/new_order"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/maps.png') }}"
+                                    alt="maps"></a>
+                            <a
+                                class="{% if current_page in ['drivers', 'drivers_num_edit', 'drivers_car_edit'] %}navbar__links-content-active{% endif %}"
+                                href="/disp/drivers"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                                    alt="user"></a>
+                            <a
+                                class="{% if current_page == 'cars' %}navbar__links-content-active{% endif %}"
+                                href="/disp/cars"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/car.png') }}"
+                                    alt="car"></a>
+                            <a
+                                class="{% if current_page == 'analytics' %}navbar__links-content-active{% endif %}"
+                                href="/disp/analytics"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/analytics.png') }}"
+                                    alt="analytics"></a>
+                        </div>
+                    </div>
+                    <div class="navbar__links">
+                        <div class="navbar__links-content">
+                            <a href="#" class="support"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/info.png') }}"
+                                    alt="info"></a>
+                            <a href="#" class="settings"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/settings.png') }}"
+                                    alt="settings"></a>
+                            <a href="#" class="menu"><img
+                                    src="{{ url_for('static', path='/assets/img/ico/menu.png') }}"
+                                    alt="menu"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="main">
+                <div class="main__header">
+                    <div class="main__header-logo">
+                        <h3>Ош Титан Парк</h3>
+                    </div>
+                    <div class="main__header-tags">
+                        <ul>
+                            <li><a href="/disp/drivers">Водитель</a></li>
+                            <li><a href="/disp/cars">Автомобиль</a></li>
+                            <li><a href="/disp/drivers_control">Фото
+                                    контроль</a></li>
+                            <li><a href="/disp">Тариф</a></li>
+                            <li><a href="/disp/chat">Чат</a></li>
+                        </ul>
+                    </div>
+                    {% block header_right %}{% endblock %}
+                </div>
+
+                <div class="page-title">
+                    <h1>{% block header_title %}{% endblock %}</h1>
+                </div>
+
+                {% block subheader %}{% endblock %}
+
+                <!-- Main content area -->
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script
+            src="{{ url_for('static', path='/assets/js/script.js') }}"></script>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html>

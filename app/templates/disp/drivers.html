@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Водители - taxi.wazir.kg{% endblock %}
+
+{% block header_title %}{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" placeholder="Поиск" id="header-search"
+                value="{{ search|default('') }}">
+            <button><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader main__subheader-drivers">
+    <div class="main__subheader-add">
+        <div class="main__header-search-item">
+            <form action="#" style="background-color: #47484c;">
+                <input type="search" id="driver-search" placeholder="Поиск"
+                    value="{{ search|default('') }}">
+                <button style="padding: 0px;"><img
+                        src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                        alt="search"></button>
+            </form>
+        </div>
+        <div class="main__subheader-filing">
+            <form action="#">
+                <select name="filing-date" id="status-filter">
+                    <option value="Статусы" disabled {% if not status
+                        %}selected{% endif %}>Статусы</option>
+                    <option value="Занят" {% if status == "Занят" %}selected{%
+                        endif %}>Занят</option>
+                    <option value="Свободен" {% if status == "Свободен"
+                        %}selected{% endif %}>Свободен</option>
+                </select>
+            </form>
+        </div>
+        <div class="main__subheader-filing">
+            <form action="#">
+                <select name="filing-date" id="state-filter">
+                    <option value="Состояние" disabled {% if not state
+                        %}selected{% endif %}>Состояние</option>
+                    <option value="Работает" {% if state == "Работает"
+                        %}selected{% endif %}>Работает</option>
+                    <option value="Не работает" {% if state == "Не работает"
+                        %}selected{% endif %}>Не работает</option>
+                </select>
+            </form>
+        </div>
+        {% if is_filtered %}
+        <div class="main__subheader-filing">
+            <a href="{{ url_for('disp_drivers') }}"
+                class="main__btn-short">Сбросить фильтры</a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="main__subheader-drivers">
+        <div class="main__header-tags main__subheader-drivers-tags">
+            <ul>
+                <li>На линии {{ total_drivers|default('0') }} водителей</li>
+                <li><span class="status-span free"></span> {{
+                    available_drivers|default('0') }}
+                    свободный</li>
+                <li><span class="status-span busy"></span> {{
+                    busy_drivers|default('0') }}
+                    занят</li>
+            </ul>
+        </div>
+        <div class="main__subheader-balance">
+            <img
+                src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+                alt="balance">
+            <p>
+                Баланс: {{ total_balance|default('0') }}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main__drivers-table">
+    <div class="main__table main__paybalance-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Состояние</th>
+                    <th>Позывной</th>
+                    <th>Ф.И.О</th>
+                    <th>Телефон</th>
+                    <th>Баланс</th>
+                    <th>Лимит</th>
+                    <th>ВУ</th>
+                    <th>Уникальный ID</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="drivers-table-body">
+                {% if drivers %}
+                {% for driver in drivers %}
+                <tr class="driver-row" data-id="{{ driver.id }}">
+                    <td class="status">
+                        <span
+                            class="status-{{ 'busy' if driver.is_busy|default(True) else 'free' }}">{{
+                            'Занят' if driver.is_busy|default(True) else
+                            'Свободен' }}</span>
+                    </td>
+                    <td>{{ driver.callsign }}</td>
+                    <td>{{ driver.full_name }}</td>
+                    <td>{{ driver.phone|default('+996 XXX XX-XX-XX') }}</td>
+                    <td>{{ driver.balance }}</td>
+                    <td>{{ driver.limit|default(driver.balance) }}</td>
+                    <td>{{ driver.driver_license_number }}</td>
+                    <td>{{ driver.unique_id }}</td>
+                    <td>
+                        <button class="main__btn-short delete-driver"
+                            data-id="{{ driver.id }}">Удалить</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="9" class="no-data">
+                        <div class="empty-state">
+                            <img
+                                src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                                alt="Нет водителей">
+                            <p>Нет доступных водителей</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="main__table-footer">
+            <div class="main__table-driver">
+                <button>Водители: {{ total_drivers|default('0') }}</button>
+                <button>Баланс: {{ total_balance|default('0') }}</button>
+            </div>
+            <div class="main__table-pagination">
+                <div class="main__table-pagination-prev">
+                    <button {% if page == 1 %}disabled{% endif %}><img
+                            src="{{ url_for('static', path='/assets/img/ico/prev.png') }}"
+                            alt="prev"></button>
+                </div>
+                {% for p in range(1, total_pages + 1) %}
+                <div
+                    class="main__table-pagination-{% if p == page %}active{% endif %} main__table-pagination-item">
+                    <button>{{ p }}</button>
+                </div>
+                {% endfor %}
+                <div class="main__table-pagination-next">
+                    <button {% if page == total_pages %}disabled{% endif %}><img
+                            src="{{ url_for('static', path='/assets/img/ico/next.png') }}"
+                            alt="next"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        console.log('Скрипт инициализирован'); // Для отладки
+        
+        // Поиск и фильтрация водителей
+        function filterDrivers() {
+            console.log('Применение фильтров'); // Для отладки
+            
+            const searchValue = $('#driver-search').val().toLowerCase();
+            const statusFilter = $('#status-filter').val();
+            const stateFilter = $('#state-filter').val();
+            
+            console.log('Значения фильтров:', {
+                search: searchValue,
+                status: statusFilter,
+                state: stateFilter
+            }); // Для отладки
+            
+            let anyFilterApplied = false;
+            let anyDataVisible = false;
+            
+            $('.driver-row').each(function() {
+                const row = $(this);
+                const status = row.find('td.status span').text().trim().toLowerCase();
+                const name = row.find('td:nth-child(3)').text().trim().toLowerCase();
+                const callsign = row.find('td:nth-child(2)').text().trim().toLowerCase();
+                const phone = row.find('td:nth-child(4)').text().trim().toLowerCase();
+                const uniqueId = row.find('td:nth-child(8)').text().trim().toLowerCase();
+                
+                console.log('Строка данных:', {
+                    status: status,
+                    name: name,
+                    callsign: callsign,
+                    uniqueId: uniqueId
+                }); // Для отладки
+                
+                let showRow = true;
+                
+                // Применяем фильтр по поисковому запросу
+                if (searchValue) {
+                    anyFilterApplied = true;
+                    if (!name.includes(searchValue) && 
+                        !callsign.includes(searchValue) && 
+                        !phone.includes(searchValue) &&
+                        !status.includes(searchValue) &&
+                        !uniqueId.includes(searchValue)) {
+                        showRow = false;
+                    }
+                }
+                
+                // Применяем фильтр по статусу
+                if (statusFilter && statusFilter !== 'Статусы') {
+                    anyFilterApplied = true;
+                    if (!status.includes(statusFilter.toLowerCase())) {
+                        showRow = false;
+                    }
+                }
+                
+                // Применяем фильтр по состоянию
+                if (stateFilter && stateFilter !== 'Состояние') {
+                    anyFilterApplied = true;
+                    if (!status.includes(stateFilter.toLowerCase())) {
+                        showRow = false;
+                    }
+                }
+                
+                // Показываем или скрываем строку в зависимости от результатов фильтрации
+                if (showRow) {
+                    row.show();
+                    anyDataVisible = true;
+                } else {
+                    row.hide();
+                }
+            });
+            
+            // Если есть фильтры и нет видимых данных, показываем сообщение о пустом результате
+            if (anyFilterApplied && !anyDataVisible) {
+                if ($('#no-results-message').length === 0) {
+                    const noResultsRow = `
+                        <tr id="no-results-message">
+                            <td colspan="9" class="no-data">
+                                <div class="empty-state">
+                                    <img src="{{ url_for('static', path='/assets/img/ico/search.png') }}" alt="Нет результатов">
+                                    <p>Нет водителей, соответствующих заданным критериям</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    // Если нет водителей изначально, удаляем старое сообщение
+                    $('.no-data').closest('tr').hide();
+                    
+                    // Добавляем сообщение о пустом результате поиска
+                    $('#drivers-table-body').append(noResultsRow);
+                }
+            } else {
+                // Если есть видимые данные или нет фильтров, удаляем сообщение о пустом результате
+                $('#no-results-message').remove();
+                
+                // Если вообще нет водителей, показываем стандартное сообщение
+                if ($('.driver-row').length === 0) {
+                    $('.no-data').closest('tr').show();
+                }
+            }
+            
+            // Обновляем URL с параметрами фильтрации, если они есть
+            if (anyFilterApplied) {
+                const params = new URLSearchParams(window.location.search);
+                
+                if (searchValue) {
+                    params.set('search', searchValue);
+                } else {
+                    params.delete('search');
+                }
+                
+                if (statusFilter && statusFilter !== 'Статусы') {
+                    params.set('status', statusFilter);
+                } else {
+                    params.delete('status');
+                }
+                
+                if (stateFilter && stateFilter !== 'Состояние') {
+                    params.set('state', stateFilter);
+                } else {
+                    params.delete('state');
+                }
+                
+                const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+                
+                // Показываем кнопку сброса фильтров, если еще не показана
+                if ($('.reset-filters-btn').length === 0) {
+                    $('.main__subheader-add').append('<div class="main__subheader-filing"><a href="' + window.location.pathname + '" class="main__btn-short reset-filters-btn">Сбросить фильтры</a></div>');
+                }
+            } else {
+                // Удаляем параметры из URL и скрываем кнопку сброса фильтров
+                window.history.replaceState({}, '', window.location.pathname);
+                $('.reset-filters-btn').parent().remove();
+            }
+        }
+        
+        // Обработчики событий для поиска и фильтрации
+        $('#driver-search').on('input', function() {
+            console.log('Событие поиска'); // Для отладки
+            filterDrivers();
+        });
+        
+        $('#status-filter').on('change', function() {
+            console.log('Событие изменения статуса'); // Для отладки
+            filterDrivers();
+        });
+        
+        $('#state-filter').on('change', function() {
+            console.log('Событие изменения состояния'); // Для отладки
+            filterDrivers();
+        });
+        
+        $('#header-search').on('input', function() {
+            console.log('Событие поиска в шапке'); // Для отладки
+            $('#driver-search').val($(this).val());
+            filterDrivers();
+        });
+        
+        // Применяем параметры фильтрации из URL при загрузке страницы
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('search')) {
+            $('#driver-search, #header-search').val(urlParams.get('search'));
+        }
+        if (urlParams.has('status')) {
+            $('#status-filter').val(urlParams.get('status'));
+        }
+        if (urlParams.has('state')) {
+            $('#state-filter').val(urlParams.get('state'));
+        }
+        
+        // Если параметры фильтрации есть в URL, применяем их
+        if (urlParams.has('search') || urlParams.has('status') || urlParams.has('state')) {
+            filterDrivers();
+        }
+        
+        // Обработка пагинации
+        $('.main__table-pagination-item button').click(function() {
+            const page = $(this).text();
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', page);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+        
+        $('.main__table-pagination-prev button').click(function() {
+            if (!$(this).prop('disabled')) {
+                const currentPage = parseInt($('.main__table-pagination-active button').text());
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', currentPage - 1);
+                window.location.href = window.location.pathname + '?' + params.toString();
+            }
+        });
+        
+        $('.main__table-pagination-next button').click(function() {
+            if (!$(this).prop('disabled')) {
+                const currentPage = parseInt($('.main__table-pagination-active button').text());
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', currentPage + 1);
+                window.location.href = window.location.pathname + '?' + params.toString();
+            }
+        });
+        
+        // Обработка удаления водителя
+        $('.delete-driver').click(function() {
+            const driverId = $(this).data('id');
+            if (confirm('Вы уверены, что хотите удалить этого водителя?')) {
+                // Отправляем AJAX запрос на удаление водителя
+                $.ajax({
+                    url: `/api/drivers/${driverId}`,
+                    type: 'DELETE',
+                    success: function(result) {
+                        // Удаляем строку из таблицы
+                        $(`.driver-row[data-id="${driverId}"]`).remove();
+                        
+                        // Обновляем счетчики
+                        const totalDrivers = $('.driver-row').length;
+                        const availableDrivers = $('.status-free').length;
+                        const busyDrivers = $('.status-busy').length;
+                        
+                        // Обновляем информацию в интерфейсе
+                        $('li:contains("На линии")').text(`На линии ${totalDrivers} водителей`);
+                        $('li:contains("свободный")').html(`<span class="status-span free"></span> ${availableDrivers} свободный`);
+                        $('li:contains("занят")').html(`<span class="status-span busy"></span> ${busyDrivers} занят`);
+                        
+                        // Если водителей не осталось, показываем сообщение о пустой таблице
+                        if (totalDrivers === 0) {
+                            $('#drivers-table-body').html(`
+                                <tr>
+                                    <td colspan="9" class="no-data">
+                                        <div class="empty-state">
+                                            <img src="${$('meta[name="base-url"]').attr('content')}/static/assets/img/ico/user.png" alt="Нет водителей">
+                                            <p>Нет доступных водителей</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                        }
+                        
+                        alert('Водитель успешно удален');
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Произошла ошибка при удалении водителя: ' + error);
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

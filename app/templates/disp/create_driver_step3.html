@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}Создание водителя - Шаг 3 - taxi.wazir.kg{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="icon" type="image/png"
+    href="{{ url_for('static', path='/assets/img/ico/favicon.png') }}">
+<!-- Подключаем jQuery как первый скрипт -->
+<script
+    src="{{ url_for('static', path='/assets/js/jquery-3.7.1.min.js') }}"></script>
+<!-- Подключаем FontAwesome локально -->
+<link rel="stylesheet"
+    href="{{ url_for('static', path='/assets/css/all.min.css') }}">
+{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" id="driver-search" placeholder="Поиск">
+            <button type="button" id="search-btn"><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader main__subheader-drivers">
+    <div class="main__subheader-add">
+        <div class="main__subheader-filing">
+            <button id="tab-driver"
+                class="main__btn tab-btn">Водитель</button>
+        </div>
+        <div class="main__subheader-filing">
+            <button id="tab-car" class="main__btn tab-btn">Автомобиль</button>
+        </div>
+        <div class="main__subheader-filing">
+            <button id="tab-photos"
+                class="main__btn main__btn-driver tab-btn">Фото
+                автомобиля</button>
+        </div>
+    </div>
+    <div class="main__subheader-drivers">
+        <div class="main__header-tags main__subheader-drivers-tags">
+            <ul>
+                <li>На линии {{ total_drivers|default('0') }} водителей</li>
+                <li><span class="status-span free"></span> {{
+                    available_drivers|default('0') }} свободный</li>
+                <li><span class="status-span busy"></span> {{
+                    busy_drivers|default('0') }} занят</li>
+            </ul>
+        </div>
+        <div class="main__subheader-balance">
+            <img
+                src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+                alt="balance">
+            <p>Баланс: {{ total_balance|default('0') }}</p>
+        </div>
+    </div>
+</div>
+<div class="main__subheader-getbalance-title">
+    <h3>Создание нового водителя</h3>
+    <div class="progress-bar-container">
+        <div class="progress-bar">
+            <div class="progress" id="progress-indicator"
+                style="width: 100%"></div>
+        </div>
+        <div class="progress-steps">
+            <div class="progress-step">Шаг 1</div>
+            <div class="progress-step">Шаг 2</div>
+            <div class="progress-step active">Шаг 3</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="error-message" class="alert alert-danger"
+    style="display: none; color: white; background-color: #e74c3c; padding: 10px; margin-bottom: 20px; border-radius: 5px;"></div>
+
+<!-- Форма 3: Фото автомобиля -->
+<div id="form-photos" class="main__driversedit-wrapper form-section">
+    <h3 class="title">Фотографии автомобиля</h3>
+    <form id="photos-form" class="personal-data-form">
+        <div class="form-column">
+            <div class="form-group upload-photo">
+                <label for="car_front">Фото автомобиля*<br>(Автомобиль
+                    спереди)</label>
+                <div class="photo-upload-container">
+                    <input type="file" id="car_front" name="car_front"
+                        accept="image/*" required
+                        data-error="Загрузите фото автомобиля спереди" />
+                    <div class="photo-preview" id="car_front_preview">
+                        <span class="upload-icon">+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group upload-photo">
+                <label for="car_back">Фото автомобиля*<br>(Автомобиль
+                    сзади)</label>
+                <div class="photo-upload-container">
+                    <input type="file" id="car_back" name="car_back"
+                        accept="image/*" required
+                        data-error="Загрузите фото автомобиля сзади" />
+                    <div class="photo-preview" id="car_back_preview">
+                        <span class="upload-icon">+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group upload-photo">
+                <label for="driver_with_license">Фото с ВУ*<br>(Водительское
+                    удостоверение)</label>
+                <div class="photo-upload-container">
+                    <input type="file" id="driver_with_license"
+                        name="driver_with_license" accept="image/*" required
+                        data-error="Загрузите фото водителя с ВУ" />
+                    <div class="photo-preview" id="driver_with_license_preview">
+                        <span class="upload-icon">+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-column">
+            <div class="form-group upload-photo">
+                <label for="car_right">Фото автомобиля*<br>(Автомобиль
+                    справа)</label>
+                <div class="photo-upload-container">
+                    <input type="file" id="car_right" name="car_right"
+                        accept="image/*" required
+                        data-error="Загрузите фото автомобиля справа" />
+                    <div class="photo-preview" id="car_right_preview">
+                        <span class="upload-icon">+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group upload-photo">
+                <label for="car_left">Фото автомобиля*<br>(Автомобиль
+                    слева)</label>
+                <div class="photo-upload-container">
+                    <input type="file" id="car_left" name="car_left"
+                        accept="image/*" required
+                        data-error="Загрузите фото автомобиля слева" />
+                    <div class="photo-preview" id="car_left_preview">
+                        <span class="upload-icon">+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group main__drivers-car-salon">
+                <label for="car_interior_front">Фото Салона*<br>Спереди и
+                    сзади</label>
+                <div class="main__drivers-car">
+                    <div class="photo-upload-container">
+                        <input type="file" id="car_interior_front"
+                            name="car_interior_front" accept="image/*" required
+                            data-error="Загрузите фото салона спереди" />
+                        <div class="photo-preview"
+                            id="car_interior_front_preview">
+                            <span class="upload-icon">+</span>
+                        </div>
+                    </div>
+                    <div class="photo-upload-container">
+                        <input type="file" id="car_interior_back"
+                            name="car_interior_back" accept="image/*" required
+                            data-error="Загрузите фото салона сзади" />
+                        <div class="photo-preview"
+                            id="car_interior_back_preview">
+                            <span class="upload-icon">+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="action-buttons">
+        <button id="photos-back" class="main__btn">Назад</button>
+        <button id="save-all" class="main__btn-green">Создать водителя</button>
+    </div>
+</div>
+
+<!-- Модальное окно успешного создания -->
+<div id="success-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Водитель успешно создан</h3>
+        <p>Водитель <span id="created-driver-name"></span> успешно добавлен в
+            систему.</p>
+        <div class="modal-buttons">
+            <button id="view-driver"
+                class="main__btn-green">Просмотреть</button>
+            <button id="create-new" class="main__btn">Создать ещё</button>
+        </div>
+    </div>
+</div>
+
+{% include "disp/includes/driver_styles.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% include "disp/includes/driver_scripts.html" %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Проверяем, были ли загружены файлы ранее
+        function checkUploadedFiles() {
+            $('#photos-form input[type="file"]').each(function() {
+                const fileId = $(this).attr('id');
+                const wasUploaded = localStorage.getItem(`photo_${fileId}_uploaded`);
+                
+                if (wasUploaded === 'true') {
+                    const previewContainer = $(this).siblings('.photo-preview');
+                    
+                    // Показываем индикатор, что файл уже загружен
+                    previewContainer.find('.upload-icon').hide();
+                    previewContainer.css('border', '2px solid #4CAF50');
+                    
+                    // Добавляем индикатор успешной загрузки
+                    if (previewContainer.find('.upload-success-icon').length === 0) {
+                        previewContainer.append('<div class="upload-success-icon" style="position: absolute; top: 10px; right: 10px; color: #4CAF50; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 50%;"><i class="fas fa-check"></i></div>');
+                        previewContainer.append('<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px;">Файл загружен</div>');
+                    }
+                }
+            });
+        }
+        
+        // Проверяем загруженные файлы при загрузке страницы
+        checkUploadedFiles();
+        
+        // Обработка загрузки изображений
+        $('input[type="file"]').change(function() {
+            const fileInput = this;
+            const fileId = $(fileInput).attr('id');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                
+                // Создаем контейнер для прогресс-бара, если его еще нет
+                const previewContainer = $(fileInput).siblings('.photo-preview');
+                
+                // Удаляем старый прогресс-бар, если он есть
+                previewContainer.find('.car-upload-progress-container').remove();
+                
+                // Добавляем новый прогресс-бар
+                previewContainer.append('<div class="car-upload-progress-container" style="position: absolute; bottom: 10px; left: 10px; right: 10px; height: 8px; background-color: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;"><div class="car-upload-progress-bar" style="height: 100%; width: 0%; background-color: #4CAF50; transition: width 0.3s;"></div></div>');
+                
+                const progressContainer = previewContainer.find('.car-upload-progress-container');
+                const progressBar = progressContainer.find('.car-upload-progress-bar');
+                
+                progressContainer.show();
+                progressBar.css('width', '0%');
+                
+                // Эмулируем загрузку с прогрессом
+                let progress = 0;
+                const progressInterval = setInterval(function() {
+                    progress += 5;
+                    progressBar.css('width', progress + '%');
+                    
+                    if (progress >= 100) {
+                        clearInterval(progressInterval);
+                        setTimeout(function() {
+                            // Не скрываем прогресс-бар, а меняем его цвет на зеленый
+                            progressBar.css({
+                                'width': '100%',
+                                'background-color': '#00FF00'
+                            });
+                        }, 500);
+                    }
+                }, 50);
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    
+                    // Обработка загрузки фото автомобиля
+                    if (previewContainer.find('img.preview-img').length === 0) {
+                        previewContainer.append('<img class="preview-img" src="" alt="" style="position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; z-index: 1;">');
+                    }
+                    
+                    previewContainer.find('img.preview-img')
+                        .attr('src', imageData)
+                        .css('display', 'block');
+                    
+                    previewContainer.find('.upload-icon').hide();
+                    previewContainer.css('border', '2px solid #4CAF50');
+                    
+                    // Добавляем индикатор успешной загрузки
+                    if (previewContainer.find('.upload-success-icon').length === 0) {
+                        previewContainer.append('<div class="upload-success-icon" style="position: absolute; top: 10px; right: 10px; color: #4CAF50; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 50%; z-index: 2;"><i class="fas fa-check"></i></div>');
+                    }
+                    
+                    // Сохраняем в localStorage отметку о загрузке файла
+                    localStorage.setItem(`photo_${fileId}_uploaded`, 'true');
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Обработчик кнопки "Назад"
+        $('#photos-back').click(function() {
+            // Сохраняем данные формы перед переходом
+            savePhotosFormData();
+            
+            // Перенаправляем на предыдущий шаг
+            window.location.href = "/disp/create_driver_step2";
+        });
+        
+        // Функция для сохранения данных формы фотографий
+        function savePhotosFormData() {
+            // Отмечаем в localStorage, какие файлы были загружены
+            $('#photos-form input[type="file"]').each(function() {
+                const fileId = $(this).attr('id');
+                if (this.files && this.files[0]) {
+                    localStorage.setItem(`photo_${fileId}_uploaded`, 'true');
+                    
+                    // Здесь можно было бы сохранить сами файлы в IndexedDB, 
+                    // но для простоты примера мы просто отмечаем, что файл был загружен
+                }
+            });
+        }
+        
+        // Обработчик клика по табу "Водитель"
+        $('#tab-driver').click(function() {
+            savePhotosFormData();
+            window.location.href = "/disp/create_driver_step1";
+        });
+        
+        // Обработчик клика по табу "Автомобиль"
+        $('#tab-car').click(function() {
+            savePhotosFormData();
+            window.location.href = "/disp/create_driver_step2";
+        });
+        
+        // Обработчик кнопки "Создать водителя"
+        $('#save-all').click(function() {
+            // Показываем индикатор загрузки
+            showLoading('Создание водителя...');
+            
+            // Получаем данные из localStorage
+            function getDataFromLocalStorage() {
+                let driverData = {
+                    full_name: localStorage.getItem('driver_full_name') || '',
+                    birth_date: localStorage.getItem('driver_birth_date') || '',
+                    personal_number: localStorage.getItem('driver_personal_number') || '',
+                    phone: localStorage.getItem('driver_phone') || '',
+                    driver_license: localStorage.getItem('driver_driver_license') || '',
+                    license_issue_date: localStorage.getItem('driver_license_issue_date') || '',
+                    license_expiry_date: localStorage.getItem('driver_license_expiry_date') || '',
+                    address: localStorage.getItem('driver_address') || '',
+                    callsign: localStorage.getItem('car_callsign') || '',
+                    car_make: localStorage.getItem('car_car_make') || '',
+                    car_model: localStorage.getItem('car_car_model') || '',
+                    car_color: localStorage.getItem('car_car_color') || '',
+                    car_year: localStorage.getItem('car_car_year') || '',
+                    transmission: localStorage.getItem('car_transmission') || '',
+                    boosters: localStorage.getItem('car_boosters') || '0',
+                    child_seats: localStorage.getItem('car_child_seats') || '0',
+                    autopark: localStorage.getItem('car_autopark') || '',
+                    city: localStorage.getItem('car_city') || '',
+                    is_park_car: localStorage.getItem('car_is_park_car') === '1' ? '1' : '0',
+                    license_plate: localStorage.getItem('car_license_plate') || '',
+                    vin: localStorage.getItem('car_vin') || '',
+                    body_number: localStorage.getItem('car_body_number') || '',
+                    registration: localStorage.getItem('car_registration') || '',
+                    has_sticker: localStorage.getItem('car_has_sticker') === '1' ? '1' : '0',
+                    has_lightbox: localStorage.getItem('car_has_lightbox') === '1' ? '1' : '0',
+                    tariff: localStorage.getItem('car_tariff') || '',
+                    category: localStorage.getItem('car_category') || ''
+                };
+                
+                // Если номер телефона не содержит префикс +996, добавляем его
+                if (driverData.phone && !driverData.phone.startsWith('+996')) {
+                    driverData.phone = '+996' + driverData.phone;
+                }
+                
+                return driverData;
+            }
+            
+            try {
+                // Создаем объект FormData для отправки данных и файлов
+                const formData = new FormData();
+                
+                // Получаем собранные данные
+                const allData = getDataFromLocalStorage();
+                
+                // Проверяем обязательные поля перед отправкой
+                const requiredFields = ['full_name', 'personal_number', 'driver_license', 
+                                       'car_make', 'car_model', 'car_color', 
+                                       'callsign', 'license_plate', 'vin', 'tariff'];
+                
+                let missingFields = [];
+                
+                for (const field of requiredFields) {
+                    if (!allData[field]) {
+                        missingFields.push(field);
+                    }
+                }
+                
+                if (missingFields.length > 0) {
+                    hideLoading();
+                    $('#error-message').text(`Не заполнены обязательные поля: ${missingFields.join(', ')}`).show();
+                    setTimeout(function() {
+                        $('#error-message').fadeOut();
+                    }, 5000);
+                    return;
+                }
+                
+                // Добавляем все данные из localStorage
+                for (const key in allData) {
+                    formData.append(key, allData[key]);
+                }
+                
+                // Журналируем отправленные данные
+                console.log('Отправляемые данные формы:');
+                for (const [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+                
+                // Добавляем файлы
+                const fileInputs = [
+                    'passport_front', 'passport_back', 'license_front', 'license_back',
+                    'car_front', 'car_back', 'car_right', 'car_left', 
+                    'car_interior_front', 'car_interior_back', 'driver_with_license'
+                ];
+                
+                for (const fileId of fileInputs) {
+                    const fileInput = document.getElementById(fileId);
+                    if (fileInput && fileInput.files && fileInput.files[0]) {
+                        formData.append(fileId, fileInput.files[0]);
+                        console.log(`Файл ${fileId} добавлен в форму`);
+                    } else {
+                        console.log(`Файл ${fileId} не выбран`);
+                    }
+                }
+                
+                // Отправляем запрос на сервер для создания водителя
+                $.ajax({
+                    url: '/api/drivers/create',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        hideLoading();
+                        
+                        console.log('Успешный ответ от сервера:', response);
+                        
+                        // Показываем модальное окно успешного создания
+                        $('#created-driver-name').text(allData.full_name || 'Имя не указано');
+                        $('#view-driver').data('driver-id', response.driver_id);
+                        $('#success-modal').show();
+                        
+                        // Очищаем localStorage после успешного создания
+                        clearLocalStorage();
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        
+                        console.error('Ошибка запроса:', xhr.status, xhr.responseText);
+                        
+                        // Показываем сообщение об ошибке
+                        let errorMsg;
+                        
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMsg = response.detail || 'Произошла ошибка при создании водителя';
+                        } catch (e) {
+                            errorMsg = xhr.responseText || 'Произошла неизвестная ошибка';
+                        }
+                        
+                        $('#error-message').text(`Ошибка ${xhr.status}: ${errorMsg}`).show();
+                        
+                        setTimeout(function() {
+                            $('#error-message').fadeOut();
+                        }, 5000);
+                    }
+                });
+            } catch (e) {
+                hideLoading();
+                $('#error-message').text(`Ошибка: ${e.message}`).show();
+                console.error('Ошибка при подготовке данных:', e);
+                setTimeout(function() {
+                    $('#error-message').fadeOut();
+                }, 5000);
+            }
+        });
+        
+        // Функция для очистки localStorage
+        function clearLocalStorage() {
+            for (const key in localStorage) {
+                if (key.startsWith('driver_') || key.startsWith('car_') || key.startsWith('photo_')) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+        
+        // Функция для показа индикатора загрузки
+        function showLoading(message) {
+            // Создаем и добавляем элемент индикатора загрузки
+            const loadingHtml = `
+                <div id="loading-overlay" class="loading-overlay">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">${message || 'Загрузка...'}</div>
+                </div>
+            `;
+            
+            $('body').append(loadingHtml);
+        }
+        
+        // Функция для скрытия индикатора загрузки
+        function hideLoading() {
+            $('#loading-overlay').remove();
+        }
+        
+        // Обработчики для модального окна
+        $('.close').click(function() {
+            $('#success-modal').hide();
+        });
+        
+        $(window).click(function(event) {
+            if (event.target.id === 'success-modal') {
+                $('#success-modal').hide();
+            }
+        });
+        
+        // Кнопка просмотра созданного водителя
+        $('#view-driver').click(function() {
+            const driverId = $(this).data('driver-id') || '1';
+            window.location.href = `/disp/drivers?id=${driverId}`;
+        });
+        
+        // Кнопка создания нового водителя
+        $('#create-new').click(function() {
+            // Перенаправляем на первый шаг
+            window.location.href = "/disp/create_driver_step1";
+        });
+    });
+</script>
+{% endblock %}

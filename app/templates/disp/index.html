@@ -1,0 +1,750 @@
+{% extends "base.html" %}
+
+{% block title %}Главная Диспетчерская - taxi.wazir.kg{% endblock %}
+
+{% block header_title %}{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" placeholder="Поиск" id="header-search"
+                value="{{ search|default('') }}">
+            <button><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader">
+    <div class="main__subheader-filter">
+        <a href="#"><img
+                src="{{ url_for('static', path='/assets/img/ico/burger.png') }}"
+                alt="burger"></a>
+        <a href="#"><img
+                src="{{ url_for('static', path='/assets/img/ico/chart.png') }}"
+                alt="chart"></a>
+        <a href="#"><img
+                src="{{ url_for('static', path='/assets/img/ico/earth.png') }}"
+                alt="earth"></a>
+    </div>
+    <div class="main__subheader-filing">
+        <form action="#">
+            <select name="filing-date" id="date-filter">
+                <option value="all" {% if not date_filter %}selected{% endif
+                    %}>Дата подачи</option>
+                {% for date in available_dates %}
+                <option value="{{ date }}" {% if date_filter == date
+                    %}selected{% endif %}>{{ date }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    <div class="main__subheader-date">
+        <div class="date-range-selector">
+            <input type="text" id="date-range-display" readonly
+                placeholder="дд.мм.гггг - дд.мм.гггг"
+                value="{{ start_date|default('') + ' - ' + end_date|default('') if start_date and end_date else '' }}">
+            <input type="hidden" name="start_date" id="start-date"
+                value="{{ start_date|default('') }}">
+            <input type="hidden" name="end_date" id="end-date"
+                value="{{ end_date|default('') }}">
+            <button type="button" id="clear-dates"
+                title="Очистить даты">×</button>
+        </div>
+    </div>
+    <div class="main__subheader-add">
+        <button><a href="{{ url_for('disp_new_order') }}"> + Новый
+                (F2)</a></button>
+        <button id="filter-free"
+            class="{% if status_filter == 'Свободен' %}active{% endif %}">
+            <span class="free"></span>
+            Свободные
+        </button>
+        <button id="filter-busy"
+            class="{% if status_filter == 'Занят' %}active{% endif %}">
+            <span class="busy"></span>
+            Занятые
+        </button>
+        <button id="filter-cancelled"
+            class="{% if status_filter == 'Отменен' %}active{% endif %}">
+            <span class="cancelled"></span>
+            Отмененные
+        </button>
+        {% if is_filtered %}
+        <button id="reset-filters" class="main__btn-short">Сбросить
+            фильтры</button>
+        {% endif %}
+    </div>
+    <div class="main__subheader-balance">
+        <img src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+            alt="balance">
+        <p>
+            Баланс: {{ total_balance|default('0') }}
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main__table">
+    <table>
+        <thead>
+            <tr>
+                <th>Заказ</th>
+                <th>Дата</th>
+                <th>Время</th>
+                <th>Телефон</th>
+                <th>Откуда</th>
+                <th>Куда</th>
+                <th>Позывной</th>
+                <th>Стоимость</th>
+                <th>Тариф</th>
+            </tr>
+        </thead>
+        <tbody id="orders-table-body">
+            {% if orders %}
+            {% for order in orders %}
+            <tr class="order-row" data-id="{{ order.id }}">
+                <td>{{ order.id }}</td>
+                <td>{{ order.created_at.strftime('%d.%m.%y') }}</td>
+                <td>{{ order.time }}</td>
+                <td>{{ order.driver.phone|default('+996 XXX XX-XX-XX') }}</td>
+                <td>{{ order.origin }}</td>
+                <td>{{ order.destination }}</td>
+                <td>{{ order.driver.callsign }}</td>
+                <td>{{ order.price|default('') }}</td>
+                <td>{{ order.driver.tariff }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="9" class="no-data">
+                    <div class="empty-state">
+                        <img
+                            src="{{ url_for('static', path='/assets/img/ico/car.png') }}"
+                            alt="Нет заказов">
+                        <p>Нет доступных заказов</p>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <div class="main__table-footer">
+        <div class="main__table-driver">
+            <button>Водители: {{ total_drivers|default('0') }}</button>
+        </div>
+        <div class="main__table-pagination">
+            <div class="main__table-pagination-prev">
+                <button {% if page == 1 %}disabled{% endif %}><img
+                        src="{{ url_for('static', path='/assets/img/ico/prev.png') }}"
+                        alt="prev"></button>
+            </div>
+            {% for p in range(1, total_pages + 1) %}
+            <div
+                class="main__table-pagination-{% if p == page %}active{% endif %} main__table-pagination-item">
+                <button>{{ p }}</button>
+            </div>
+            {% endfor %}
+            <div class="main__table-pagination-next">
+                <button {% if page == total_pages %}disabled{% endif %}><img
+                        src="{{ url_for('static', path='/assets/img/ico/next.png') }}"
+                        alt="next"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main__map">
+    <iframe
+        src="https://yandex.ru/map-widget/v1/?um=constructor%3A2b7df6c3be7c21f4b9b40358032ecb2eac507471af87e1e198ff8b2a3b79d300&amp;source=constructor"
+        width="100%"
+        height="400"
+        frameborder="0"></iframe>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Создаем календарь
+        let datePickerVisible = false;
+        let selectedStartDate = $('#start-date').val() ? new Date($('#start-date').val()) : null;
+        let selectedEndDate = $('#end-date').val() ? new Date($('#end-date').val()) : null;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        
+        // Функция для форматирования даты
+        function formatDate(date) {
+            if (!date) return '';
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+        
+        // Функция для преобразования даты в формат YYYY-MM-DD
+        function toISODateString(date) {
+            if (!date) return '';
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Обновляем отображение выбранных дат
+        function updateDateDisplay() {
+            if (selectedStartDate && selectedEndDate) {
+                $('#date-range-display').val(`${formatDate(selectedStartDate)} - ${formatDate(selectedEndDate)}`);
+                $('#start-date').val(toISODateString(selectedStartDate));
+                $('#end-date').val(toISODateString(selectedEndDate));
+            } else {
+                $('#date-range-display').val('');
+                $('#start-date').val('');
+                $('#end-date').val('');
+            }
+        }
+        
+        // Создаем и показываем/скрываем календарь
+        function toggleCalendar() {
+            if (datePickerVisible) {
+                $('.date-picker-wrapper').remove();
+                datePickerVisible = false;
+                return;
+            }
+            
+            // Создаем календарь
+            const datePickerHtml = `
+                <div class="date-picker-wrapper">
+                    <div class="date-header">
+                        <div class="month-selector">
+                            <button class="prev-month">&lt;</button>
+                            <div class="month-title">${new Date(currentYear, currentMonth).toLocaleString('ru', { month: 'long', year: 'numeric' })}</div>
+                            <button class="next-month">&gt;</button>
+                        </div>
+                    </div>
+                    <div class="date-range-info">
+                        ${!selectedStartDate && !selectedEndDate ? 'Выберите диапазон дат' : 
+                           selectedStartDate && !selectedEndDate ? 'Начальная дата: ' + formatDate(selectedStartDate) : 
+                           'Диапазон: ' + formatDate(selectedStartDate) + ' - ' + formatDate(selectedEndDate)}
+                    </div>
+                    <div class="calendar">
+                        <div class="day-header">Пн</div>
+                        <div class="day-header">Вт</div>
+                        <div class="day-header">Ср</div>
+                        <div class="day-header">Чт</div>
+                        <div class="day-header">Пт</div>
+                        <div class="day-header">Сб</div>
+                        <div class="day-header">Вс</div>
+                        ${generateDays()}
+                    </div>
+                    <div class="controls">
+                        <button class="apply-dates">Применить</button>
+                        <button class="cancel-dates">Отмена</button>
+                    </div>
+                </div>
+            `;
+            
+            $('.date-range-selector').append(datePickerHtml);
+            datePickerVisible = true;
+            
+            // Обработчики событий календаря
+            $('.prev-month').click(function(e) {
+                e.stopPropagation();
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar();
+            });
+            
+            $('.next-month').click(function(e) {
+                e.stopPropagation();
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar();
+            });
+            
+            // Выбор дат
+            $('.day:not(.disabled)').click(function(e) {
+                e.stopPropagation();
+                const day = parseInt($(this).text());
+                const date = new Date(currentYear, currentMonth, day);
+                
+                if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                    // Начинаем новый выбор
+                    selectedStartDate = date;
+                    selectedEndDate = null;
+                } else {
+                    // Добавляем конечную дату
+                    if (date < selectedStartDate) {
+                        selectedEndDate = selectedStartDate;
+                        selectedStartDate = date;
+                    } else {
+                        selectedEndDate = date;
+                    }
+                }
+                
+                updateCalendar();
+                updateRangeInfo();
+            });
+            
+            // Применение или отмена выбора
+            $('.apply-dates').click(function(e) {
+                e.stopPropagation();
+                updateDateDisplay();
+                $('.date-picker-wrapper').remove();
+                datePickerVisible = false;
+                
+                // Если обе даты выбраны, применяем фильтр
+                if (selectedStartDate && selectedEndDate) {
+                    filterOrders();
+                }
+            });
+            
+            $('.cancel-dates').click(function(e) {
+                e.stopPropagation();
+                $('.date-picker-wrapper').remove();
+                datePickerVisible = false;
+            });
+            
+            // Предотвращаем всплытие клика внутри календаря
+            $('.date-picker-wrapper').click(function(e) {
+                e.stopPropagation();
+            });
+        }
+        
+        function updateRangeInfo() {
+            let infoText = '';
+            if (!selectedStartDate && !selectedEndDate) {
+                infoText = 'Выберите диапазон дат';
+            } else if (selectedStartDate && !selectedEndDate) {
+                infoText = 'Начальная дата: ' + formatDate(selectedStartDate);
+            } else {
+                infoText = 'Диапазон: ' + formatDate(selectedStartDate) + ' - ' + formatDate(selectedEndDate);
+            }
+            $('.date-range-info').text(infoText);
+        }
+        
+        // Генерация дней календаря
+        function generateDays() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            // Получаем день недели первого дня (0 - воскресенье, 1 - понедельник, ...)
+            let firstDayOfWeek = firstDay.getDay();
+            firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Преобразуем в формат (0 - понедельник, ..., 6 - воскресенье)
+            
+            let html = '';
+            
+            // Пустые ячейки до первого дня месяца
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                html += '<div class="day disabled"></div>';
+            }
+            
+            // Дни месяца
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const isSelected = selectedStartDate && day === selectedStartDate.getDate() && 
+                                currentMonth === selectedStartDate.getMonth() && 
+                                currentYear === selectedStartDate.getFullYear();
+                const isEndSelected = selectedEndDate && day === selectedEndDate.getDate() && 
+                                  currentMonth === selectedEndDate.getMonth() && 
+                                  currentYear === selectedEndDate.getFullYear();
+                const isInRange = selectedStartDate && selectedEndDate && 
+                             date > selectedStartDate && date < selectedEndDate;
+                
+                let classes = 'day';
+                if (isSelected || isEndSelected) classes += ' selected';
+                if (isInRange) classes += ' in-range';
+                
+                html += `<div class="${classes}">${day}</div>`;
+            }
+            
+            return html;
+        }
+        
+        // Обновление календаря
+        function updateCalendar() {
+            $('.month-title').text(new Date(currentYear, currentMonth).toLocaleString('ru', { month: 'long', year: 'numeric' }));
+            $('.calendar .day').remove();
+            $('.calendar').append(generateDays());
+            
+            // Переназначаем обработчики событий
+            $('.day:not(.disabled)').click(function(e) {
+                e.stopPropagation();
+                const day = parseInt($(this).text());
+                const date = new Date(currentYear, currentMonth, day);
+                
+                if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                    // Начинаем новый выбор
+                    selectedStartDate = date;
+                    selectedEndDate = null;
+                } else {
+                    // Добавляем конечную дату
+                    if (date < selectedStartDate) {
+                        selectedEndDate = selectedStartDate;
+                        selectedStartDate = date;
+                    } else {
+                        selectedEndDate = date;
+                    }
+                }
+                
+                updateCalendar();
+                updateRangeInfo();
+            });
+        }
+        
+        // Показываем/скрываем календарь по клику на поле даты
+        $('#date-range-display').click(function(e) {
+            e.stopPropagation();
+            toggleCalendar();
+        });
+        
+        // Закрываем календарь при клике вне его
+        $(document).click(function() {
+            if (datePickerVisible) {
+                $('.date-picker-wrapper').remove();
+                datePickerVisible = false;
+            }
+        });
+        
+        // Очистка дат
+        $('#clear-dates').click(function(e) {
+            e.stopPropagation();
+            selectedStartDate = null;
+            selectedEndDate = null;
+            updateDateDisplay();
+            
+            // Удаляем параметры дат из URL и перезагружаем страницу
+            const params = new URLSearchParams(window.location.search);
+            params.delete('start_date');
+            params.delete('end_date');
+            
+            // Если есть другие параметры, сохраняем их
+            if (params.toString()) {
+                window.location.href = window.location.pathname + '?' + params.toString();
+            } else {
+                window.location.href = window.location.pathname;
+            }
+        });
+
+        // Функция фильтрации заказов
+        function filterOrders() {
+            const searchValue = $('#header-search').val().toLowerCase();
+            const statusFilter = getActiveStatusFilter();
+            const dateFilter = $('#date-filter').val();
+            const startDate = $('#start-date').val();
+            const endDate = $('#end-date').val();
+            
+            // Собираем параметры
+            const params = new URLSearchParams(window.location.search);
+            
+            if (searchValue) {
+                params.set('search', searchValue);
+            } else {
+                params.delete('search');
+            }
+            
+            if (statusFilter) {
+                params.set('status', statusFilter);
+            } else {
+                params.delete('status');
+            }
+            
+            if (dateFilter && dateFilter !== 'all') {
+                params.set('date', dateFilter);
+            } else {
+                params.delete('date');
+            }
+            
+            if (startDate) {
+                params.set('start_date', startDate);
+            } else {
+                params.delete('start_date');
+            }
+            
+            if (endDate) {
+                params.set('end_date', endDate);
+            } else {
+                params.delete('end_date');
+            }
+            
+            // Сохраняем текущую страницу
+            if (params.has('page')) {
+                const currentPage = params.get('page');
+                params.set('page', currentPage);
+            } else {
+                params.set('page', '1');
+            }
+            
+            // Перенаправляем на URL с фильтрами
+            window.location.href = window.location.pathname + '?' + params.toString();
+        }
+        
+        // Получаем активный статусный фильтр
+        function getActiveStatusFilter() {
+            if ($('#filter-free').hasClass('active')) {
+                return 'Свободен';
+            } else if ($('#filter-busy').hasClass('active')) {
+                return 'Занят';
+            } else if ($('#filter-cancelled').hasClass('active')) {
+                return 'Отменен';
+            }
+            return null;
+        }
+        
+        // Обработчики фильтров
+        $('#header-search').on('keypress', function(e) {
+            if (e.which === 13) {
+                filterOrders();
+                e.preventDefault();
+            }
+        });
+        
+        $('#date-filter').on('change', function() {
+            filterOrders();
+        });
+        
+        // Обработчики статусных фильтров
+        $('#filter-free, #filter-busy, #filter-cancelled').on('click', function() {
+            // Если кнопка уже активна, отключаем фильтр
+            if ($(this).hasClass('active')) {
+                $(this).removeClass('active');
+            } else {
+                // Иначе снимаем активность с других кнопок и активируем выбранную
+                $('#filter-free, #filter-busy, #filter-cancelled').removeClass('active');
+                $(this).addClass('active');
+            }
+            filterOrders();
+        });
+        
+        // Сброс фильтров
+        $('#reset-filters').on('click', function() {
+            window.location.href = window.location.pathname;
+        });
+        
+        // Обработка пагинации
+        $('.main__table-pagination-item button').click(function() {
+            const page = $(this).text();
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', page);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+        
+        $('.main__table-pagination-prev button').click(function() {
+            if (!$(this).prop('disabled')) {
+                const currentPage = parseInt($('.main__table-pagination-active button').text());
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', currentPage - 1);
+                window.location.href = window.location.pathname + '?' + params.toString();
+            }
+        });
+        
+        $('.main__table-pagination-next button').click(function() {
+            if (!$(this).prop('disabled')) {
+                const currentPage = parseInt($('.main__table-pagination-active button').text());
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', currentPage + 1);
+                window.location.href = window.location.pathname + '?' + params.toString();
+            }
+        });
+
+        $('<style>')
+            .prop('type', 'text/css')
+            .html(`
+                .date-range-selector {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+                
+                #date-range-display {
+                    width: 200px;
+                    padding: 14px 30px;
+                    cursor: pointer;
+                    background: #47484c;
+                    color: white;
+                    border: 1px solid #333;
+                    border-radius: 4px;
+                    font-size: 14px;
+                }
+                
+                #clear-dates {
+                    position: absolute;
+                    right: 8px;
+                    background: none;
+                    border: none;
+                    color: #999;
+                    cursor: pointer;
+                    font-size: 18px;
+                    padding: 0 5px;
+                    line-height: 1;
+                }
+                
+                #clear-dates:hover {
+                    color: white;
+                }
+                
+                .date-picker-wrapper {
+                    position: absolute;
+                    z-index: 9999;
+                    background: #252525;
+                    border: 1px solid #333;
+                    border-radius: 4px;
+                    padding: 15px;
+                    color: white;
+                    top: 42px;
+                    left: 0;
+                    width: 280px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                    font-family: Arial, sans-serif;
+                }
+                
+                .date-picker-wrapper .date-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    padding-bottom: 8px;
+                    border-bottom: 1px solid #333;
+                }
+                
+                .date-picker-wrapper .month-selector {
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
+                    justify-content: space-between;
+                }
+                
+                .date-picker-wrapper .month-selector button {
+                    background: #333;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 16px;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: background-color 0.2s;
+                }
+                
+                .date-picker-wrapper .month-selector button:hover {
+                    background: #444;
+                }
+                
+                .date-picker-wrapper .month-title {
+                    font-weight: bold;
+                    font-size: 14px;
+                    text-align: center;
+                    text-transform: capitalize;
+                }
+                
+                .date-picker-wrapper .calendar {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    gap: 2px;
+                    margin-bottom: 12px;
+                }
+                
+                .date-picker-wrapper .day-header {
+                    text-align: center;
+                    font-weight: bold;
+                    padding: 4px 0;
+                    color: #888;
+                    font-size: 12px;
+                }
+                
+                .date-picker-wrapper .day {
+                    text-align: center;
+                    padding: 6px 0;
+                    cursor: pointer;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    transition: background-color 0.2s;
+                }
+                
+                .date-picker-wrapper .day:hover {
+                    background: #333;
+                }
+                
+                .date-picker-wrapper .day.selected {
+                    background: #007bff;
+                    color: white;
+                }
+                
+                .date-picker-wrapper .day.in-range {
+                    background: rgba(0, 123, 255, 0.2);
+                }
+                
+                .date-picker-wrapper .day.disabled {
+                    color: #444;
+                    cursor: not-allowed;
+                }
+                
+                .date-picker-wrapper .controls {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 10px;
+                    padding-top: 8px;
+                    border-top: 1px solid #333;
+                }
+                
+                .date-picker-wrapper .controls button {
+                    padding: 6px 12px;
+                    background: #333;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                    font-size: 13px;
+                }
+                
+                .date-picker-wrapper .controls button.apply-dates {
+                    background: #007bff;
+                }
+                
+                .date-picker-wrapper .controls button:hover {
+                    background: #444;
+                }
+                
+                .date-picker-wrapper .controls button.apply-dates:hover {
+                    background: #0069d9;
+                }
+                
+                .date-range-info {
+                    margin-bottom: 8px;
+                    font-size: 12px;
+                    color: #bbb;
+                    text-align: center;
+                }
+            `)
+            .appendTo('head');
+    });
+</script>
+{% endblock %}

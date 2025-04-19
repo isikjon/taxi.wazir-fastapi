@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+
+{% block title %}Создание водителя - Шаг 2 - taxi.wazir.kg{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="icon" type="image/png"
+    href="{{ url_for('static', path='/assets/img/ico/favicon.png') }}">
+<!-- Подключаем jQuery как первый скрипт -->
+<script
+    src="{{ url_for('static', path='/assets/js/jquery-3.7.1.min.js') }}"></script>
+<!-- Подключаем FontAwesome локально -->
+<link rel="stylesheet"
+    href="{{ url_for('static', path='/assets/css/all.min.css') }}">
+{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" id="driver-search" placeholder="Поиск">
+            <button type="button" id="search-btn"><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<div class="main__subheader main__subheader-drivers">
+    <div class="main__subheader-add">
+        <div class="main__subheader-filing">
+            <button id="tab-driver"
+                class="main__btn tab-btn">Водитель</button>
+        </div>
+        <div class="main__subheader-filing">
+            <button id="tab-car"
+                class="main__btn main__btn-driver tab-btn">Автомобиль</button>
+        </div>
+        <div class="main__subheader-filing">
+            <button id="tab-photos" class="main__btn tab-btn" disabled>Фото
+                автомобиля</button>
+        </div>
+    </div>
+    <div class="main__subheader-drivers">
+        <div class="main__header-tags main__subheader-drivers-tags">
+            <ul>
+                <li>На линии {{ total_drivers|default('0') }} водителей</li>
+                <li><span class="status-span free"></span> {{
+                    available_drivers|default('0') }} свободный</li>
+                <li><span class="status-span busy"></span> {{
+                    busy_drivers|default('0') }} занят</li>
+            </ul>
+        </div>
+        <div class="main__subheader-balance">
+            <img
+                src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
+                alt="balance">
+            <p>Баланс: {{ total_balance|default('0') }}</p>
+        </div>
+    </div>
+</div>
+<div class="main__subheader-getbalance-title">
+    <h3>Создание нового водителя</h3>
+    <div class="progress-bar-container">
+        <div class="progress-bar">
+            <div class="progress" id="progress-indicator"
+                style="width: 66%"></div>
+        </div>
+        <div class="progress-steps">
+            <div class="progress-step">Шаг 1</div>
+            <div class="progress-step active">Шаг 2</div>
+            <div class="progress-step">Шаг 3</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="error-message" class="alert alert-danger"
+    style="display: none; color: white; background-color: #e74c3c; padding: 10px; margin-bottom: 20px; border-radius: 5px;"></div>
+
+<!-- Форма 2: Данные автомобиля -->
+<div id="form-car" class="main__driversedit-wrapper form-section">
+    <h3 class="title">Данные автомобиля</h3>
+    <form id="car-form" class="personal-data-form">
+        <div class="form-column">
+            <div class="form-group">
+                <label for="car_make">Марка*</label>
+                <select id="car_make" name="car_make" required
+                    data-error="Выберите марку автомобиля">
+                    <option value>Выберите марку</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="car_model">Модель*</label>
+                <select id="car_model" name="car_model" required
+                    data-error="Выберите модель автомобиля">
+                    <option value>Выберите модель</option>
+                    <!-- Будет заполнено из JSON на основе выбранной марки -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="car_color">Цвет*</label>
+                <select id="car_color" name="car_color" required
+                    data-error="Выберите цвет автомобиля">
+                    <option value>Выберите цвет</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="car_year">Год выпуска*</label>
+                <select id="car_year" name="car_year" required
+                    data-error="Выберите год выпуска автомобиля">
+                    <option value>Выберите год</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+
+            <h3 class="title">Комплектация и брендинг</h3>
+            <div class="form-group">
+                <label for="transmission">КПП*</label>
+                <select id="transmission" name="transmission" required
+                    data-error="Выберите тип КПП">
+                    <option value>Выберите тип КПП</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="boosters">Бустеры</label>
+                <select id="boosters" name="boosters">
+                    <option value>Выберите количество</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="child_seats">Детское кресло</label>
+                <select id="child_seats" name="child_seats">
+                    <option value="0">Нет</option>
+                    <option value="1">Да</option>
+                </select>
+            </div>
+
+            <h3 class="title">Параметры</h3>
+            <div class="form-group">
+                <label for="autopark">Автопарк*</label>
+                <select id="autopark" name="autopark" required
+                    data-error="Выберите автопарк">
+                    <option value>Выберите автопарк</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="city">Город*</label>
+                <select id="city" name="city" required
+                    data-error="Выберите город">
+                    <option value>Выберите город</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="is_park_car">Парковая машина</label>
+                <select id="is_park_car" name="is_park_car">
+                    <option value="0">Нет</option>
+                    <option value="1">Да</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="callsign">Позывной*</label>
+                <input type="text" id="callsign" name="callsign" required
+                    data-error="Укажите позывной" />
+            </div>
+        </div>
+
+        <div class="form-column">
+            <div class="form-group">
+                <label for="license_plate">Гос.номер*</label>
+                <input type="text" id="license_plate" name="license_plate"
+                    required data-error="Укажите гос.номер автомобиля" />
+            </div>
+            <div class="form-group">
+                <label for="vin">VIN*</label>
+                <input type="text" id="vin" name="vin" required
+                    data-error="Укажите VIN-номер автомобиля" />
+            </div>
+            <div class="form-group">
+                <label for="body_number">Номер кузова</label>
+                <input type="text" id="body_number" name="body_number" />
+            </div>
+            <div class="form-group">
+                <label for="registration">СТС (№)*</label>
+                <input type="text" id="registration" name="registration"
+                    required data-error="Укажите номер СТС" />
+            </div>
+
+            <div class="form-group">
+                <label for="has_sticker">Наклейка</label>
+                <select id="has_sticker" name="has_sticker">
+                    <option value="0">Нет</option>
+                    <option value="1">Да</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="has_lightbox">Лайтбокс - Шашка</label>
+                <select id="has_lightbox" name="has_lightbox">
+                    <option value="0">Нет</option>
+                    <option value="1">Да</option>
+                </select>
+            </div>
+
+            <h3 class="title">Тариф и категория</h3>
+            <div class="form-group">
+                <label for="tariff">Тариф*</label>
+                <select id="tariff" name="tariff" required
+                    data-error="Выберите тариф">
+                    <option value>Выберите тариф</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="category">Категория</label>
+                <select id="category" name="category">
+                    <option value>Выберите категорию</option>
+                    <!-- Будет заполнено из JSON -->
+                </select>
+            </div>
+        </div>
+    </form>
+    <div class="action-buttons">
+        <button id="car-back" class="main__btn">Назад</button>
+        <button id="car-next" class="main__btn-green">Продолжить</button>
+    </div>
+</div>
+
+{% include "disp/includes/driver_styles.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% include "disp/includes/driver_scripts.html" %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация масок для полей ввода
+        function initializeMasks() {
+            // Проверяем наличие плагина inputmask
+            if (typeof $.fn.inputmask === 'undefined') {
+                console.error('InputMask плагин не загружен, пробуем загрузить динамически');
+                // Пробуем подключить inputmask динамически
+                const script = document.createElement('script');
+                script.src = "{{ url_for('static', path='/assets/js/jquery.inputmask.min.js') }}";
+                script.onload = function() {
+                    console.log('InputMask успешно загружен, применяем маски');
+                    applyMasks();
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log('InputMask плагин загружен, применяем маски');
+                applyMasks();
+            }
+        }
+        
+        // Функция применения масок к полям
+        function applyMasks() {
+            // Маска для госномера в формате XX.XXX.YYY
+            $('#license_plate').inputmask('99.999.AAA', {
+                placeholder: 'XX.XXX.YYY',
+                casing: 'upper',
+                definitions: {
+                    'A': {
+                        validator: "[А-ЯA-Z]"
+                    }
+                },
+                showMaskOnHover: true,
+                showMaskOnFocus: true,
+                clearMaskOnLostFocus: false
+            });
+            
+            // Маска для VIN-номера (17 символов по стандарту)
+            $('#vin').inputmask('SSSSSSSSSSSSSSSSS', {
+                casing: 'upper',
+                definitions: {
+                    'S': {
+                        validator: "[0-9A-HJ-NPR-Za-hj-npr-z]"
+                    }
+                },
+                showMaskOnHover: true,
+                showMaskOnFocus: true,
+                clearMaskOnLostFocus: false
+            });
+            
+            // Маска для номера кузова (вариативная длина, до 17 символов)
+            $('#body_number').inputmask('*****************', {
+                casing: 'upper',
+                definitions: {
+                    '*': {
+                        validator: "[0-9A-Za-z-]"
+                    }
+                },
+                showMaskOnHover: true,
+                showMaskOnFocus: true,
+                clearMaskOnLostFocus: false
+            });
+            
+            // Маска для номера СТС (Свидетельство о регистрации ТС) в формате AA 999999
+            $('#registration').inputmask('AA 999999', {
+                placeholder: 'AA XXXXXX',
+                casing: 'upper',
+                definitions: {
+                    'A': {
+                        validator: "[А-ЯA-Z]"
+                    }
+                },
+                showMaskOnHover: true,
+                showMaskOnFocus: true,
+                clearMaskOnLostFocus: false
+            });
+            
+            console.log('Маски успешно применены ко всем полям');
+        }
+        
+        // Загрузка сохраненных данных из локального хранилища
+        function restoreFormData() {
+            // Получаем поля формы
+            const formFields = $('#car-form').find('input, select').not(':file');
+            
+            formFields.each(function() {
+                const fieldId = $(this).attr('id');
+                if (!fieldId) return;
+                
+                const savedValue = localStorage.getItem(`car_${fieldId}`);
+                console.log(`Проверяем поле ${fieldId}, сохраненное значение: ${savedValue}`);
+                
+                if (savedValue !== null) {
+                    if ($(this).is(':checkbox')) {
+                        $(this).prop('checked', savedValue === 'true' || savedValue === '1');
+                    } else if ($(this).is('select')) {
+                        // Для select сначала проверим, загружены ли опции
+                        if ($(this).find('option').length > 1) {
+                            $(this).val(savedValue);
+                            // Если это марка автомобиля, запускаем событие change для загрузки моделей
+                            if (fieldId === 'car_make') {
+                                $(this).trigger('change');
+                                
+                                // После загрузки моделей устанавливаем выбранную модель
+                                setTimeout(function() {
+                                    const savedModel = localStorage.getItem('car_car_model');
+                                    if (savedModel) {
+                                        $('#car_model').val(savedModel);
+                                    }
+                                }, 100);
+                            }
+                        }
+                    } else {
+                        $(this).val(savedValue);
+                    }
+                }
+            });
+            
+            console.log('Данные формы восстановлены из localStorage');
+        }
+        
+        // Загрузка данных о марках и моделях автомобилей
+        const carData = {
+            "carBrands": [
+                "Toyota", "Honda", "Hyundai", "Kia", "Chevrolet", "Nissan", "Lexus", 
+                "Mazda", "Mitsubishi", "Volkswagen", "BMW", "Mercedes-Benz", "Audi", 
+                "Ford", "Renault", "Lada", "UAZ", "Daewoo", "Skoda", "Subaru"
+            ],
+            "carModels": {
+                "Toyota": ["Camry", "Corolla", "RAV4", "Land Cruiser", "Prius", "Highlander", "Yaris", "Avalon"],
+                "Honda": ["Civic", "Accord", "CR-V", "Pilot", "Fit", "HR-V", "Odyssey"],
+                "Hyundai": ["Solaris", "Elantra", "Tucson", "Santa Fe", "Creta", "Sonata", "i30", "Accent"],
+                "Kia": ["Rio", "Optima", "Sportage", "Sorento", "Cerato", "Soul", "Seltos", "K5"],
+                "Chevrolet": ["Cruze", "Aveo", "Spark", "Captiva", "Orlando", "Malibu", "Niva"],
+                "Nissan": ["Qashqai", "X-Trail", "Juke", "Almera", "Teana", "Patrol", "Note", "Tiida"],
+                "Lexus": ["RX", "ES", "NX", "LX", "IS", "GX", "UX"],
+                "Mazda": ["3", "6", "CX-5", "CX-7", "CX-9", "CX-30", "MX-5"],
+                "Mitsubishi": ["Outlander", "Pajero", "ASX", "Lancer", "L200", "Eclipse Cross", "Galant"],
+                "Volkswagen": ["Polo", "Passat", "Tiguan", "Touareg", "Golf", "Jetta", "Touran"],
+                "BMW": ["3 Series", "5 Series", "X3", "X5", "X6", "7 Series", "X1"],
+                "Mercedes-Benz": ["E-Class", "C-Class", "S-Class", "GLE", "GLC", "A-Class", "GLA"],
+                "Audi": ["A4", "A6", "Q5", "Q7", "A3", "Q3", "A5"],
+                "Ford": ["Focus", "Mondeo", "Kuga", "Explorer", "Fiesta", "EcoSport", "Transit"],
+                "Renault": ["Logan", "Duster", "Kaptur", "Sandero", "Arkana", "Fluence", "Megane"],
+                "Lada": ["Granta", "Vesta", "XRAY", "Largus", "Kalina", "Priora", "Niva"],
+                "UAZ": ["Patriot", "Hunter", "Pickup", "Profi", "Буханка", "Хантер"],
+                "Daewoo": ["Nexia", "Matiz", "Gentra", "Lanos", "Lacetti"],
+                "Skoda": ["Octavia", "Rapid", "Kodiaq", "Superb", "Karoq", "Fabia"],
+                "Subaru": ["Forester", "Outback", "Impreza", "XV", "Legacy", "WRX"]
+            },
+            "carColors": [
+                "Белый", "Черный", "Серебристый", "Серый", "Красный", "Синий", "Зеленый", 
+                "Коричневый", "Бежевый", "Желтый", "Оранжевый", "Фиолетовый", "Золотой", 
+                "Бордовый", "Голубой"
+            ],
+            "productionYears": [
+                "2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", 
+                "2015", "2014", "2013", "2012", "2011", "2010", "2009", "2008", "2007",
+                "2006", "2005", "2004", "2003", "2002", "2001", "2000"
+            ],
+            "transmissionTypes": ["Механическая", "Автоматическая"],
+            "boosterOptions": [0, 1, 2, 3, 4, 5],
+            "tariffs": ["Эконом", "Комфорт", "Комфорт+", "Бизнес", "Премиум"],
+            "categories": ["A", "B", "C", "D", "BE", "CE", "DE"],
+            "autoparkCompanies": [
+                "ОсОО Титан", "ОсОО Лидер Такси", "ИП Иванов Taxi", "ОсОО ВИП Сервис",
+                "ОсОО Комфорт Авто", "ОсОО Автопарк №1", "ОсОО Премиум Транспорт", 
+                "ОсОО Бишкек Такси", "ОсОО АвтоМир", "ИП Петров Т.А."
+            ],
+            "kyrgyzCities": [
+                "Бишкек", "Ош", "Джалал-Абад", "Каракол", "Токмок", "Нарын", "Талас",
+                "Балыкчы", "Кызыл-Кия", "Узген", "Кара-Балта", "Кант", "Сулюкта",
+                "Баткен", "Чолпон-Ата", "Кемин", "Кара-Суу", "Майлуу-Суу", "Исфана", "Кочкор"
+            ]
+        };
+        
+        // Заполнение селектов данными
+        function populateSelects() {
+            // Заполняем марки автомобилей
+            const carMakeSelect = $('#car_make');
+            carData.carBrands.forEach(brand => {
+                carMakeSelect.append(`<option value="${brand}">${brand}</option>`);
+            });
+            
+            // Обработчик изменения марки для заполнения моделей
+            carMakeSelect.on('change', function() {
+                const brand = $(this).val();
+                const carModelSelect = $('#car_model');
+                
+                // Очищаем текущие модели
+                carModelSelect.find('option:not(:first)').remove();
+                
+                if (brand && carData.carModels[brand]) {
+                    // Добавляем модели выбранной марки
+                    carData.carModels[brand].forEach(model => {
+                        carModelSelect.append(`<option value="${model}">${model}</option>`);
+                    });
+                    
+                    carModelSelect.prop('disabled', false);
+                } else {
+                    carModelSelect.prop('disabled', true);
+                }
+            });
+            
+            // Заполняем цвета
+            const carColorSelect = $('#car_color');
+            carData.carColors.forEach(color => {
+                carColorSelect.append(`<option value="${color}">${color}</option>`);
+            });
+            
+            // Заполняем годы выпуска
+            const carYearSelect = $('#car_year');
+            carData.productionYears.forEach(year => {
+                carYearSelect.append(`<option value="${year}">${year}</option>`);
+            });
+            
+            // Заполняем типы КПП
+            const transmissionSelect = $('#transmission');
+            carData.transmissionTypes.forEach(type => {
+                transmissionSelect.append(`<option value="${type}">${type}</option>`);
+            });
+            
+            // Заполняем кол-во бустеров
+            const boostersSelect = $('#boosters');
+            carData.boosterOptions.forEach(count => {
+                boostersSelect.append(`<option value="${count}">${count}</option>`);
+            });
+            
+            // Заполняем тарифы
+            const tariffSelect = $('#tariff');
+            carData.tariffs.forEach(tariff => {
+                tariffSelect.append(`<option value="${tariff}">${tariff}</option>`);
+            });
+            
+            // Заполняем категории
+            const categorySelect = $('#category');
+            carData.categories.forEach(category => {
+                categorySelect.append(`<option value="${category}">${category}</option>`);
+            });
+            
+            // Заполняем автопарки
+            const autoparkSelect = $('#autopark');
+            carData.autoparkCompanies.forEach(company => {
+                autoparkSelect.append(`<option value="${company}">${company}</option>`);
+            });
+            
+            // Заполняем города
+            const citySelect = $('#city');
+            carData.kyrgyzCities.forEach(city => {
+                citySelect.append(`<option value="${city}">${city}</option>`);
+            });
+        }
+        
+        // Функция форматирования дат
+        function setupDateInputMask() {
+            $('.date-input').on('input', function(e) {
+                let value = $(this).val().replace(/\D/g, '');
+                
+                // Форматируем в ДД.ММ.ГГГГ
+                if (value.length > 0) {
+                    if (value.length <= 2) {
+                        value = value;
+                    } else if (value.length <= 4) {
+                        value = value.slice(0, 2) + '.' + value.slice(2);
+                    } else if (value.length <= 8) {
+                        value = value.slice(0, 2) + '.' + value.slice(2, 4) + '.' + value.slice(4);
+                    } else {
+                        value = value.slice(0, 2) + '.' + value.slice(2, 4) + '.' + value.slice(4, 8);
+                    }
+                    
+                    $(this).val(value);
+                }
+            });
+            
+            // Проверка формата даты при потере фокуса
+            $('.date-input').on('blur', function() {
+                const value = $(this).val();
+                if (value) {
+                    // Проверяем формат ДД.ММ.ГГГГ с использованием регулярного выражения
+                    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+                    
+                    if (!dateRegex.test(value)) {
+                        $(this).addClass('error');
+                        $(this).attr('data-error-message', 'Неверный формат даты. Используйте ДД.ММ.ГГГГ');
+                    } else {
+                        const parts = value.match(dateRegex);
+                        const day = parseInt(parts[1], 10);
+                        const month = parseInt(parts[2], 10);
+                        const year = parseInt(parts[3], 10);
+                        
+                        const isValidDate = day > 0 && day <= 31 && month > 0 && month <= 12 && year >= 1900 && year <= 2100;
+                        
+                        if (!isValidDate) {
+                            $(this).addClass('error');
+                            $(this).attr('data-error-message', 'Некорректная дата');
+                        } else {
+                            $(this).removeClass('error');
+                            $(this).removeAttr('data-error-message');
+                        }
+                    }
+                }
+            });
+            
+            // При клике на иконку календаря фокусируемся на поле ввода
+            $('.calendar-icon').on('click', function() {
+                $(this).siblings('.date-input').focus();
+            });
+        }
+        
+        // После заполнения всех селектов восстанавливаем данные формы и инициализируем маски
+        populateSelects();
+        setTimeout(function() {
+            restoreFormData();
+            initializeMasks(); // Инициализируем маски
+            setupDateInputMask();
+        }, 300); // Небольшая задержка для уверенности, что все селекты загружены
+        
+        // Обработчик кнопки "Назад"
+        $('#car-back').click(function() {
+            // Сохраняем данные формы перед переходом
+            const formData = new FormData(document.getElementById('car-form'));
+            
+            // Сохраняем данные в localStorage для использования при возвращении
+            for (const [key, value] of formData.entries()) {
+                if (typeof value !== 'object') { // Не сохраняем файлы
+                    localStorage.setItem(`car_${key}`, value);
+                }
+            }
+            
+            // Перенаправляем на предыдущий шаг
+            window.location.href = "/disp/create_driver_step1";
+        });
+        
+        // Обработчик кнопки "Продолжить"
+        $('#car-next').click(function() {
+            // Получаем и сохраняем данные формы
+            const formData = new FormData(document.getElementById('car-form'));
+            
+            // Сохраняем данные в localStorage для использования на следующем шаге
+            for (const [key, value] of formData.entries()) {
+                if (typeof value !== 'object') { // Не сохраняем файлы
+                    localStorage.setItem(`car_${key}`, value);
+                }
+            }
+            
+            // Перенаправляем на следующий шаг
+            window.location.href = "/disp/create_driver_step3";
+        });
+        
+        // Обработчик клика по табу "Водитель"
+        $('#tab-driver').click(function() {
+            window.location.href = "/disp/create_driver_step1";
+        });
+    });
+</script>
+{% endblock %}
