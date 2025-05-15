@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Доступ временно приостановлен</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="/driver/profile">
+                        <div class="profile__back">
+                            <img
+                                src="/static/driver/assets/img/ico/prev_profile.svg"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <div class="title-left">Доступ временно приостановлен</div>
+
+                <div class="settings-section">
+                    <p>Чтобы снова выполнить заказы, устраните эти проблемы:</p>
+
+                    {% if not has_tariff %}
+                    <a href="/driver/tarifs/1">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>Включите хотя бы один тариф</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="/static/driver/assets/img/ico/next.svg"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                    {% endif %}
+
+                    {% if not sts_photo_passed %}
+                    <a href="/driver/photocontrol/1">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>Пройдите фотоконтроль СТС</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="/static/driver/assets/img/ico/next.svg"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                    {% endif %}
+
+                    {% if not license_photo_passed %}
+                    <a href="/driver/photocontrol/2">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>Пройдите фотоконтроль ВУ</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="/static/driver/assets/img/ico/next.svg"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                    {% endif %}
+
+                    {% if balance < min_balance %}
+                    <a href="/driver/diagnostics/2">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>Низкий баланс</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="/static/driver/assets/img/ico/next.svg"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                    {% endif %}
+
+                    {% if has_limitations %}
+                    <a href="/driver/diagnostics/3">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>Влияет на заказы</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="/static/driver/assets/img/ico/next.svg"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                    {% endif %}
+
+                    {% if not has_tariff and not sts_photo_passed and not
+                    license_photo_passed and balance >= min_balance and not
+                    has_limitations %}
+                    <div class="settings-item">
+                        <div class="settings-item__left">
+                            <span>Нет проблем с доступом к заказам</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

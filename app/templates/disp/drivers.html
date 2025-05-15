@@ -180,6 +180,33 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+    .main__table td, .main__paybalance-table td {
+        display: table-cell !important;
+        align-items: normal !important;
+        vertical-align: middle;
+        text-align: left;
+        padding: 10px;
+    }
+    
+    .status {
+        display: block !important;
+        align-items: initial !important;
+    }
+    
+    .main__table th, .main__paybalance-table th {
+        text-align: left;
+        padding: 10px;
+    }
+    
+    .main__table tr, .main__paybalance-table tr {
+        display: table-row !important;
+    }
+    
+    .main__table tbody, .main__paybalance-table tbody {
+        display: table-row-group !important;
+    }
+</style>
 <script>
     $(document).ready(function() {
         console.log('Скрипт инициализирован'); // Для отладки

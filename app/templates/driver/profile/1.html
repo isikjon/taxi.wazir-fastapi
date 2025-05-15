@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Профиль - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .profile__date-selector {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin: 10px 0;
+            }
+            
+            .profile__date-selector button {
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 0 10px;
+            }
+            
+            .profile__date-selector span {
+                font-weight: bold;
+            }
+            
+            .profile__days {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: 5px;
+                margin-top: 10px;
+            }
+            
+            .profile__days-item {
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .profile__days-item:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+            
+            .calendar-wrapper {
+                margin: 5px 0 15px 0;
+                border: 1px solid #eaeaea;
+                border-radius: 10px;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            
+            .calendar-header {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                margin-bottom: 10px;
+                text-align: center;
+                font-size: 14px;
+                color: #666;
+            }
+            
+            .calendar-carousel {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+            }
+            
+            .calendar-day {
+                aspect-ratio: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                border-radius: 50%;
+                font-size: 16px;
+                transition: all 0.2s ease;
+                width: 35px;
+                height: 35px;
+                margin: 0 auto;
+            }
+            
+            .calendar-day:hover {
+                background-color: #f0f0f0;
+            }
+            
+            .calendar-day.active {
+                background-color: #333;
+                color: white;
+                font-weight: bold;
+            }
+            
+            .calendar-day.today {
+                border: 1px solid #999;
+            }
+            
+            .calendar-day.other-month {
+                color: #ccc;
+            }
+            
+            .calendar-day.future {
+                color: #ccc;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+            
+            .profile__balance {
+                margin-top: 15px;
+            }
+            
+            .profile__balance-active {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            
+            .profile__balance-active h3 {
+                font-size: 18px;
+                margin: 0;
+            }
+            
+            .profile__balance-active p {
+                color: #666;
+                margin: 0;
+            }
+            
+            .profile__balance-order {
+                text-align: center;
+                color: #666;
+                margin: 10px 0;
+            }
+            
+            .profile__order-wrapper {
+                margin-top: 15px;
+            }
+            
+            .profile__order-info-item {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+            
+            .profile__balance-block {
+                background-color: #FEF3F3;
+                border: 1px solid #E73B3B;
+                border-radius: 10px;
+                padding: 10px 15px;
+                margin: 15px 0;
+                text-align: center;
+            }
+            
+            .profile__balance-sum {
+                margin-bottom: 5px;
+            }
+            
+            .profile__balance-sum h3 {
+                font-size: 20px;
+                font-weight: bold;
+                margin: 0;
+                display: inline-block;
+            }
+            
+            .profile__balance-sum p {
+                font-size: 14px;
+                color: #666;
+                margin: 0;
+                display: inline-block;
+                margin-left: 5px;
+            }
+            
+            .profile__balance-message {
+                color: #666;
+                font-size: 14px;
+                margin-top: 10px;
+            }
+            
+            /* Новые стили для баланса */
+            .profile__balance-box {
+                border: 1px solid #eaeaea;
+                background-color: #f9f9f9;
+                border-radius: 10px;
+                padding: 15px;
+                margin: 15px 0;
+                text-align: center;
+            }
+            
+            .balance-info {
+                margin-bottom: 5px;
+            }
+            
+            .balance-value {
+                font-size: 20px;
+                font-weight: bold;
+                margin-right: 5px;
+                padding: 5px 10px;
+                border-radius: 5px;
+                display: inline-block;
+            }
+            
+            .orders-count {
+                font-size: 16px;
+                color: #666;
+                font-weight: normal;
+            }
+            
+            .balance-message {
+                color: #666;
+                font-size: 14px;
+                margin-top: 10px;
+            }
+            
+            /* Профиль и инфо о машине */
+            .profile__name {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .profile__name h1 {
+                font-size: 22px;
+                margin-bottom: 5px;
+                margin-top: 0;
+            }
+            
+            .profile__name p {
+                margin: 5px 0;
+                color: #666;
+                font-size: 14px;
+            }
+            
+            .car-info {
+                font-weight: bold;
+            }
+            
+            .park-info {
+                color: #555;
+            }
+            
+            /* Стили для индикатора ошибок */
+            .issues-badge {
+                background-color: #E73B3B;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: auto;
+                margin-right: 10px;
+            }
+            
+            /* Корректируем отображение пункта Диагностика */
+            .profile__action-item {
+                display: flex;
+                align-items: center;
+            }
+            
+            /* Стили для неактивных элементов меню */
+            .inactive-item {
+                opacity: 0.5;
+                cursor: default;
+            }
+        </style>
+    </head>
+    <body data-driver-id="{{ driver_id }}">
+        <main>
+            <section class="profile">
+                <div class="container">
+                    <div class="profile__header">
+                        <div class="profile__back">
+                            <!-- Удаляем кнопку Назад и кнопку Настройки -->
+                        </div>
+                        <div class="profile__stats">
+                            <div class="profile__stat-item">
+                                <span>0</span>
+                                <p>Активность</p>
+                            </div>
+                            <div class="profile__avatar inactive-item">
+                                <div>
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/profile.svg') }}"
+                                        alt="profile">
+                                </div>
+                            </div>
+                            <div class="profile__stat-item">
+                                <span>0</span>
+                                <p>Рейтинг</p>
+                            </div>
+                        </div>
+
+                        <div class="profile__name">
+                            <h1 class="title">{{
+                                driver.full_name|default('Evgeniy Prigojhin')
+                                }}</h1>
+                            <p class="car-info">{% if driver and driver.car %}{{
+                                driver.car.brand|default('Toyota') }} {{
+                                driver.car.model|default('Land Cruiser') }}, {{
+                                driver.car.license_plate|default('02 222 ZZZ')
+                                }}{% elif
+                                car %}{{ car.brand|default('Toyota') }} {{
+                                car.model|default('Land Cruiser') }}, {{
+                                car.license_plate|default('02 222 ZZZ') }}{%
+                                else
+                                %}Toyota Land Cruiser, 02 222 ZZZ{% endif %}</p>
+                            <p class="park-info">{{
+                                driver.taxi_park|default('ООО Тумар Такси')
+                                }}</p>
+                        </div>
+
+                        <div class="profile__calendar">
+                            <div class="profile__today">
+                                <h3>Сегодня</h3>
+                                <div class="profile__date-selector">
+                                    <button class="prev-week">&lt;</button>
+                                    <span id="currentMonth">Май 2025</span>
+                                    <button class="next-week">&gt;</button>
+                                </div>
+                            </div>
+                            <div class="calendar-wrapper">
+                                <div class="calendar-header">
+                                    <div>Пн</div>
+                                    <div>Вт</div>
+                                    <div>Ср</div>
+                                    <div>Чт</div>
+                                    <div>Пт</div>
+                                    <div>Сб</div>
+                                    <div>Вс</div>
+                                </div>
+                                <div class="calendar-carousel"
+                                    id="calendarCarousel">
+                                    <!-- Дни календаря будут добавлены через JavaScript -->
+                                </div>
+                            </div>
+                            <div class="profile__balance-box">
+                                <div class="balance-info">
+                                    <span class="balance-value"
+                                        id="balance-value">0.0 сом</span><span
+                                        class="orders-count" id="orders-count">0
+                                        заказов</span>
+                                </div>
+                                <div class="balance-message">
+                                    <p id="no-trips-message">За этот период
+                                        поездок не было</p>
+                                </div>
+                            </div>
+                            <div class="profile__order-wrapper">
+                                <div class="profile__order-item">
+                                    <div class="profile__order-info-item">
+                                        <p>По безналу</p>
+                                        <span id="payment-card">0 сом</span>
+                                    </div>
+                                    <div class="profile__order-info-item">
+                                        <p>Наличными</p>
+                                        <span id="payment-cash">0 сом</span>
+                                    </div>
+                                    <div class="profile__order-info-item">
+                                        <p>Сервис (вычеты)</p>
+                                        <span id="payment-service">0 сом
+                                            (0%)</span>
+                                    </div>
+                                    <div class="profile__order-info-item">
+                                        <p>Парк (вычеты)</p>
+                                        <span id="payment-park">0 сом
+                                            (0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile__actions">
+                        <a href="{{ url_for('driver_balance_page') }}">
+                            <div class="profile__action-item">
+                                <p>Баланс</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <div class="profile__action-item inactive-item">
+                            <p>Оплата</p>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </div>
+                        <a href="{{ url_for('driver_data_page') }}">
+                            <div class="profile__action-item">
+                                <p>Личные данные о вас</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <a href="/driver/activity">
+                            <div class="profile__action-item">
+                                <p>История активности</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="profile__actions">
+                        <h3 class="title-left">Тарифы и опции</h3>
+                        <a
+                            href="{{ url_for('driver_tarifs') }}">
+                            <div class="profile__action-item">
+                                <p>Тарифы</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <a
+                            href="{{ url_for('driver_tarif_options') }}">
+                            <div class="profile__action-item">
+                                <p>Опции для тарифов</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <a
+                            href="{{ url_for('driver_support') }}">
+                            <div class="profile__action-item">
+                                <p>Поддержка</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <a
+                            href="/driver/diagnostics/1">
+                            <div class="profile__action-item">
+                                <p>Диагностика</p>
+                                {% if issues_count > 0 %}
+                                <div class="issues-badge">{{ issues_count
+                                    }}</div>
+                                {% endif %}
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <a
+                            href="{{ url_for('driver_photocontrol') }}">
+                            <div class="profile__action-item">
+                                <p>Фотоконтроль</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <div class="profile__action-item inactive-item">
+                            <p>Промокоды</p>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </div>
+                        <div class="profile__action-item inactive-item">
+                            <p>От борта</p>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </div>
+                        <div class="profile__action-item inactive-item">
+                            <p>Сообщения</p>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </div>
+                        <a
+                            href="{{ url_for('driver_board') }}">
+                            <div class="profile__action-item">
+                                <p>Полезные советы</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                        <div class="profile__action-item inactive-item">
+                            <p>Выполнить тестовый заказ</p>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </div>
+                        <a href="{{ url_for('driver_logout') }}">
+                            <div class="profile__action-item">
+                                <p>Выход из Wazir</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Получаем ID водителя из атрибута data-driver-id
+                window.driverId = document.body.dataset.driverId;
+                console.log('ID водителя:', window.driverId);
+                
+                // Флаг для определения первого запуска
+                let isFirstRun = true;
+                
+                // Текущая дата - используем системную дату
+                const today = new Date(); // Используем текущую дату системы
+                console.log("Текущая дата:", today.toDateString());
+                
+                let selectedDate = new Date(today);
+                let currentWeekStart = getWeekStart(today); // Начало текущей недели
+                
+                console.log("Инициализация календаря:");
+                console.log("- Сегодня:", today.toDateString());
+                console.log("- Начало недели:", currentWeekStart.toDateString());
+                
+                // Инициализация календаря
+                updateCalendar();
+                
+                // Немедленно загружаем актуальный баланс
+                getBalanceFromAdminPanel();
+                
+                // Запускаем периодическое обновление баланса 
+                const updateInterval = setInterval(getBalanceFromAdminPanel, 5000);
+                
+                // Останавливаем обновление когда пользователь покидает страницу
+                window.addEventListener('beforeunload', () => {
+                    clearInterval(updateInterval);
+                });
+                
+                // Для тестирования в консоли
+                window.updateDriverBalance = function(newBalance) {
+                    document.getElementById('balance-value').textContent = `${newBalance} сом`;
+                    showBalanceUpdateAnimation();
+                    console.log(`Баланс обновлен вручную: ${newBalance} сом`);
+                    return true;
+                };
+                
+                // Обработчики событий для кнопок навигации по неделям
+                document.querySelector('.prev-week').addEventListener('click', function() {
+                    // Создаем новую дату для предыдущей недели (7 дней назад от текущего начала недели)
+                    const newWeekStart = new Date(currentWeekStart);
+                    newWeekStart.setDate(newWeekStart.getDate() - 7);
+                    
+                    console.log("Переход на предыдущую неделю:");
+                    console.log("- Текущее начало недели:", currentWeekStart.toDateString());
+                    console.log("- Новое начало недели:", newWeekStart.toDateString());
+                    
+                    // Обновляем текущую неделю и перерисовываем календарь
+                    currentWeekStart = newWeekStart;
+                    updateCalendar();
+                });
+                
+                document.querySelector('.next-week').addEventListener('click', function() {
+                    // Создаем новую дату для следующей недели
+                    const newWeekStart = new Date(currentWeekStart);
+                    newWeekStart.setDate(newWeekStart.getDate() + 7);
+                    
+                    // Начало текущей недели (на основе сегодняшней даты)
+                    const todayWeekStart = getWeekStart(today);
+                    
+                    console.log("Переход на следующую неделю:");
+                    console.log("- Текущее начало недели:", currentWeekStart.toDateString());
+                    console.log("- Новое начало недели:", newWeekStart.toDateString());
+                    console.log("- Начало текущей недели (сегодня):", todayWeekStart.toDateString());
+                    
+                    // Если новая неделя не позже текущей (не в будущем)
+                    if (newWeekStart.getTime() <= todayWeekStart.getTime()) {
+                        currentWeekStart = newWeekStart;
+                        updateCalendar();
+                    } else {
+                        console.log("Отказ: попытка перехода в будущее");
+                    }
+                });
+                
+                // Функция получения начала недели (понедельник)
+                function getWeekStart(dateInput) {
+                    const date = new Date(dateInput);
+                    const day = date.getDay(); // 0 = воскресенье, 1 = понедельник, ...
+                    
+                    // Сдвиг до понедельника
+                    // Если сегодня воскресенье (0), отнимаем 6 дней до предыдущего понедельника
+                    // Иначе отнимаем (day - 1) дней
+                    const daysToSubtract = day === 0 ? 6 : day - 1;
+                    
+                    // Создаем новую дату - начало недели (понедельник)
+                    const weekStart = new Date(date);
+                    weekStart.setDate(date.getDate() - daysToSubtract);
+                    
+                    // Сбрасываем время до 00:00:00
+                    weekStart.setHours(0, 0, 0, 0);
+                    
+                    return weekStart;
+                }
+                
+                // Функция обновления календаря
+                function updateCalendar() {
+                    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                    
+                    // Обновляем заголовок с текущим месяцем и годом
+                    document.getElementById('currentMonth').textContent = 
+                        `${monthNames[currentWeekStart.getMonth()]} ${currentWeekStart.getFullYear()}`;
+                    
+                    // Очищаем текущий календарь
+                    const calendarCarousel = document.getElementById('calendarCarousel');
+                    calendarCarousel.innerHTML = '';
+                    
+                    // Создаем дни для текущей недели
+                    for (let i = 0; i < 7; i++) {
+                        // Создаем новую дату для каждого дня недели
+                        const date = new Date(currentWeekStart);
+                        date.setDate(date.getDate() + i);
+                        
+                        // Сбрасываем время для корректного сравнения
+                        date.setHours(0, 0, 0, 0);
+                        
+                        // Определяем, находится ли день в другом месяце
+                        const isOtherMonth = date.getMonth() !== currentWeekStart.getMonth();
+                        
+                        // Проверяем, является ли день текущим
+                        const isToday = date.toDateString() === today.toDateString();
+                        
+                        // Проверяем, является ли день выбранным
+                        const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
+                        
+                        // Проверяем, является ли день будущим
+                        const isFuture = date > today;
+                        
+                        // Создаем элемент дня
+                        const dayEl = document.createElement('div');
+                        dayEl.className = 'calendar-day';
+                        dayEl.dataset.date = date.toISOString(); // Сохраняем дату в атрибуте
+                        
+                        if (isOtherMonth) dayEl.classList.add('other-month');
+                        if (isSelected) dayEl.classList.add('active');
+                        if (isToday) dayEl.classList.add('today');
+                        if (isFuture) dayEl.classList.add('future');
+                        
+                        dayEl.textContent = date.getDate();
+                        
+                        // Добавляем обработчик клика только для прошлых и текущего дня
+                        if (!isFuture) {
+                            dayEl.addEventListener('click', function() {
+                                // Снимаем выделение со всех дней
+                                document.querySelectorAll('.calendar-day').forEach(el => {
+                                    el.classList.remove('active');
+                                });
+                                
+                                // Выделяем текущий день
+                                this.classList.add('active');
+                                
+                                // Обновляем выбранную дату из сохраненного атрибута
+                                selectedDate = new Date(this.dataset.date);
+                                
+                                console.log("Выбрана дата:", selectedDate.toDateString());
+                                
+                                // Обновляем данные для выбранной даты
+                                updateDataForDate(selectedDate);
+                            });
+                        }
+                        
+                        calendarCarousel.appendChild(dayEl);
+                    }
+                    
+                    // При первой загрузке выбираем сегодняшний день
+                    if (isFirstRun) {
+                        isFirstRun = false; // Сбрасываем флаг первого запуска
+                        
+                        const todayElem = document.querySelector('.calendar-day.today');
+                        if (todayElem) {
+                            todayElem.classList.add('active');
+                            updateDataForDate(today);
+                        }
+                    }
+                }
+                
+                // Функция получения баланса из админ-панели
+                function getBalanceFromAdminPanel() {
+                    // Получаем ID водителя из глобальной переменной
+                    const driverId = window.driverId || document.body.dataset.driverId;
+                    
+                    if (!driverId) {
+                        console.error('ID водителя не найден');
+                        return;
+                    }
+                    
+                    // Делаем запрос к API для получения баланса
+                    fetch(`/api/driver/${driverId}/balance`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Не удалось получить данные о балансе');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const foundBalance = data.balance;
+                                const currentBalance = extractNumberFromString(document.getElementById('balance-value').textContent);
+                                
+                                // Обновляем только если баланс изменился
+                                if (currentBalance !== foundBalance) {
+                                    document.getElementById('balance-value').textContent = `${foundBalance} сом`;
+                                    showBalanceUpdateAnimation();
+                                    console.log(`Баланс обновлен: ${currentBalance} -> ${foundBalance} сом`);
+                                }
+                            } else {
+                                console.warn('Не удалось получить баланс:', data.detail);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка при получении баланса:', error);
+                        });
+                }
+                
+                // Показать анимацию обновления баланса
+                function showBalanceUpdateAnimation() {
+                    const balanceEl = document.getElementById('balance-value');
+                    balanceEl.style.transition = 'background-color 1s';
+                    balanceEl.style.backgroundColor = '#ffffcc';
+                    
+                    setTimeout(() => {
+                        balanceEl.style.backgroundColor = '';
+                    }, 1000);
+                }
+                
+                // Извлечение числа из строки
+                function extractNumberFromString(str) {
+                    if (!str) return null;
+                    
+                    const match = str.match(/(\d+(\.\d+)?)/);
+                    return match ? parseFloat(match[1]) : null;
+                }
+                
+                // Функция обновления данных для выбранной даты
+                function updateDataForDate(date) {
+                    // Обновляем статистику и доп. информацию на выбранную дату
+                    document.getElementById('orders-count').textContent = "0 заказов";
+                    document.getElementById('no-trips-message').textContent = "За этот период поездок не было";
+                    
+                    document.getElementById('payment-card').textContent = "0 сом";
+                    document.getElementById('payment-cash').textContent = "0 сом";
+                    document.getElementById('payment-service').textContent = "0 сом (0%)";
+                    document.getElementById('payment-park').textContent = "0 сом (0%)";
+                    
+                    console.log("Данные обновлены для даты:", date.toDateString());
+                    
+                    // Также обновляем баланс
+                    getBalanceFromAdminPanel();
+                }
+            });
+        </script>
+    </body>
+</html>

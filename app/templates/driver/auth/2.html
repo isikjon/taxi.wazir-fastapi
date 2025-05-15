@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Регистрация водитель Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    </head>
+    <body>
+        <header>
+            <div class="brand">
+                <div class="container">
+                    <div class="brand__content">
+                        <div class="logo">
+                            <a href="{{ url_for('driver_auth_step1') }}">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/logo.png') }}"
+                                    alt="logo">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main>
+            <section class="register">
+                <div class="container">
+                    <div class="register__content">
+                        <div class="register__intro">
+                            <h1 class="title">
+                                Введите код из смс. Мы отправили его на номер
+                                <span class="active-phone-number">{{ phone
+                                    }}</span>
+                            </h1>
+                        </div>
+                        <div class="register__form">
+                            <form id="smsForm">
+                                <div class="sms-code-wrapper">
+                                    <input type="text" maxlength="1"
+                                        class="sms-code">
+                                    <input type="text" maxlength="1"
+                                        class="sms-code">
+                                    <input type="text" maxlength="1"
+                                        class="sms-code">
+                                    <input type="text" maxlength="1"
+                                        class="sms-code">
+                                </div>
+                                <p class="timer-sms">Код не пришел</p>
+                                <p class="invalid-text">Неверный код</p>
+                                <a class="resend-sms" href="#">Отправить код
+                                    повторно</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const phoneNumber = urlParams.get('phone');
+                
+                // Берем телефон из URL или из localStorage
+                let phoneToUse;
+                if (phoneNumber) {
+                    phoneToUse = decodeURIComponent(phoneNumber);
+                    // Убедимся, что телефон начинается с +
+                    if (!phoneToUse.startsWith('+')) {
+                        phoneToUse = '+' + phoneToUse;
+                    }
+                    // Дополнительно сохраняем в localStorage на случай обновления страницы
+                    localStorage.setItem('driver_phone', phoneToUse);
+                    console.log('Телефон получен из URL и сохранен в localStorage:', phoneToUse);
+                } else {
+                    // Если в URL нет, берем из localStorage
+                    phoneToUse = localStorage.getItem('driver_phone');
+                    console.log('Телефон получен из localStorage:', phoneToUse);
+                }
+
+                if (phoneToUse) {
+                    $('.active-phone-number').text(phoneToUse);
+                }
+
+                const $smsInputs = $('.sms-code');
+
+                $smsInputs.on('input', function (e) {
+                    const $this = $(this);
+
+                    this.value = this.value.replace(/[^\d]/g, '');
+
+                    if (this.value.length === 1) {
+                        $this.next('.sms-code').focus();
+                    }
+
+                    if ($smsInputs.last().is($this)) {
+                        validateCode();
+                    }
+                });
+
+                $smsInputs.on('keydown', function (e) {
+                    const $this = $(this);
+
+                    if (e.keyCode === 8 && !this.value) {
+                        $this.prev('.sms-code').focus();
+                    }
+                });
+
+                let timeLeft = 59;
+                const timerElement = $('.timer-sms');
+                const resendLink = $('.resend-sms');
+                const invalidText = $('.invalid-text');
+                const $form = $('.register__form form');
+
+                resendLink.hide();
+                invalidText.hide();
+
+                function startTimer() {
+                    const timer = setInterval(function () {
+                        if (timeLeft <= 0) {
+                            clearInterval(timer);
+                            timerElement.hide();
+                            resendLink.show();
+                        } else {
+                            timerElement.text(`Код не пришел (0:${timeLeft.toString().padStart(2, '0')})`);
+                            timeLeft--;
+                        }
+                    }, 1000);
+                }
+
+                function validateCode() {
+                    const enteredCode = Array.from($smsInputs).map(input => input.value).join('');
+                    const phone = $('.active-phone-number').text() || localStorage.getItem('driver_phone');
+                    
+                    // Убедимся, что телефон начинается с +
+                    let formattedPhone = phone;
+                    if (!formattedPhone.startsWith('+')) {
+                        formattedPhone = '+' + formattedPhone;
+                    }
+                    
+                    console.log('Отправка кода на сервер, телефон:', formattedPhone, 'код:', enteredCode);
+                    
+                    // Отправляем запрос на API для проверки кода
+                    $.ajax({
+                        url: '/api/driver/verify-code',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ 
+                            phone: formattedPhone,
+                            code: enteredCode 
+                        }),
+                        success: function(response) {
+                            // Отладочный вывод всего ответа
+                            console.log('API ответ:', response);
+                            
+                            // Сохраняем токен и данные в localStorage с правильными ключами
+                            localStorage.setItem('access_token', response.access_token);
+                            localStorage.setItem('user_id', response.user_id);
+                            
+                            // Сохраняем для совместимости со старым кодом
+                            localStorage.setItem('driver_token', response.access_token);
+                            localStorage.setItem('driver_id', response.user_id); 
+                            
+                            console.log('Успешная верификация. Сохранены данные:', {
+                                user_id: response.user_id,
+                                has_driver: response.has_driver,
+                                driver_id: response.driver_id
+                            });
+                            
+                            // Проверяем, заполнена ли у пользователя анкета
+                            if (response.has_driver) {
+                                console.log('Пользователь имеет заполненную анкету, перенаправляем на профиль');
+                                // Если есть привязанный водитель, перенаправляем сразу на профиль
+                                window.location.href = '/driver/profile';
+                            } else {
+                                console.log('Пользователь не заполнил анкету, перенаправляем на заполнение данных');
+                                // Если нет, перенаправляем на заполнение анкеты
+                                window.location.href = '/driver/auth/step3?phone=' + encodeURIComponent(phone);
+                            }
+                        },
+                        error: function(xhr) {
+                            $form.addClass('invalid');
+                            invalidText.show();
+                            resendLink.show();
+                        }
+                    });
+                }
+
+                resendLink.on('click', function (e) {
+                    e.preventDefault();
+                    const phone = $('.active-phone-number').text() || localStorage.getItem('driver_phone');
+                    
+                    // Отправляем запрос на повторную отправку кода
+                    $.ajax({
+                        url: '/api/driver/login',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ phone: phone }),
+                        success: function() {
+                            timeLeft = 59;
+                            resendLink.hide();
+                            timerElement.show();
+                            $form.removeClass('invalid');
+                            $smsInputs.val('');
+                            $smsInputs.first().focus();
+                            invalidText.hide();
+                            startTimer();
+                        }
+                    });
+                });
+
+                startTimer();
+
+                // Функция для отображения ошибок
+                function showError(message) {
+                    // Создаем элемент с ошибкой, если его нет
+                    if (!$('#error-message').length) {
+                        $('<div>').attr('id', 'error-message')
+                            .css({
+                                'color': 'red',
+                                'margin-bottom': '15px',
+                                'text-align': 'center'
+                            })
+                            .insertBefore($('#verifyForm'));
+                    }
+                    
+                    // Показываем сообщение об ошибке
+                    $('#error-message').text(message).show();
+                    
+                    // Скрываем сообщение через 3 секунды
+                    setTimeout(() => {
+                        $('#error-message').hide();
+                    }, 3000);
+                }
+            });
+        </script>
+    </body>
+</html>

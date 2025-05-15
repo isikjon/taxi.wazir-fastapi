@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Информация о смене документов</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+        <style>
+    .help-content {
+      margin-top: 20px;
+    }
+    .help-item {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    .help-item:last-child {
+      border-bottom: none;
+    }
+    .help-item h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .help-item p {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .help-item ul {
+      padding-left: 20px;
+      margin-bottom: 10px;
+    }
+    .help-item li {
+      margin-bottom: 5px;
+    }
+  </style>
+    </head>
+    <body>
+        <header>
+            <div class="back">
+                <div class="container">
+                    <div class="back__content">
+                        <a href="{{ url_for('driver_support') }}"><img
+                                src="/static/driver/assets/img/ico/back.svg"
+                                alt="Назад"></a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <section class="survey-3">
+            <div class="container">
+                <div class="survey__content">
+                    <h1 class="title-left">Информация о смене документов</h1>
+
+                    <div class="help-content">
+                        <div class="help-item">
+                            <h2>Что делать, если я поменял водительское
+                                удостоверение?</h2>
+                            <p>Если вы поменяли водительское удостоверение,
+                                необходимо:</p>
+                            <ol>
+                                <li>Войти в свой профиль</li>
+                                <li>Выбрать раздел "Документы"</li>
+                                <li>Нажать на кнопку "Обновить"</li>
+                                <li>Загрузить фотографии нового водительского
+                                    удостоверения (с двух сторон)</li>
+                                <li>Подождать, пока модератор проверит ваши
+                                    документы (обычно это занимает от 1 до 24
+                                    часов)</li>
+                            </ol>
+                            <p>Обратите внимание: до подтверждения модератором,
+                                вы
+                                не сможете выполнять заказы.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h2>Что делать, если я поменял документы на
+                                автомобиль?</h2>
+                            <p>Если вы поменяли документы на автомобиль (СТС,
+                                страховку), необходимо:</p>
+                            <ol>
+                                <li>Войти в свой профиль</li>
+                                <li>Выбрать раздел "Автомобили"</li>
+                                <li>Выбрать нужный автомобиль</li>
+                                <li>Нажать на кнопку "Обновить документы"</li>
+                                <li>Загрузить фотографии новых документов на
+                                    автомобиль</li>
+                                <li>Подождать, пока модератор проверит ваши
+                                    документы (обычно это занимает от 1 до 24
+                                    часов)</li>
+                            </ol>
+                            <p>Обратите внимание: до подтверждения модератором,
+                                вы
+                                не сможете выполнять заказы на данном
+                                автомобиле.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h2>Смена других документов и данных</h2>
+                            <p>Если вам необходимо обновить другие данные или у
+                                вас
+                                возникли вопросы по обновлению документов,
+                                обратитесь в службу поддержки:</p>
+                            <ul>
+                                <li>По телефону: 8-800-123-45-67</li>
+                                <li>По электронной почте:
+                                    support@wazir.taxi</li>
+                                <li>Через форму обратной связи в приложении</li>
+                            </ul>
+                            <p>Наши специалисты помогут вам решить любые
+                                вопросы,
+                                связанные с обновлением документов и данных.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </body>
+    </html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .survey__cities-list {
+                display: none;
+                margin-top: 20px;
+            }
+            .survey__cities-list.active {
+                display: block;
+            }
+            .survey__cities {
+                max-height: 300px;
+                overflow-y: auto;
+                margin: 20px 0;
+            }
+            .city-item {
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                cursor: pointer;
+            }
+            .city-item:hover {
+                background-color: #f8f8f8;
+            }
+            .city-item.selected {
+                background-color: #f0f0f0;
+                font-weight: bold;
+            }
+            .survey__input-wrapper {
+                border: 1px solid #ccc;
+                padding: 12px;
+                border-radius: 5px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+            }
+            .arrow-icon {
+                transform: rotate(90deg);
+                font-weight: bold;
+            }
+            .survey__selected-city {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+            }
+            .cancel-icon {
+                cursor: pointer;
+                width: 20px;
+                height: 20px;
+            }
+            .survey__search {
+                margin-bottom: 15px;
+            }
+            .survey__search input {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+            .survey__city-input label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: 500;
+            }
+            .city-info {
+                margin-top: 30px;
+            }
+            .driver-info {
+                background-color: #f5f5f5;
+                padding: 15px;
+                border-radius: 8px;
+                margin-top: 15px;
+            }
+            .driver-info h3 {
+                margin-top: 0;
+            }
+            .back {
+                padding: 15px 0;
+            }
+            .back__content {
+                display: flex;
+                align-items: center;
+            }
+            .back__content a {
+                display: flex;
+                align-items: center;
+            }
+            .back__content img {
+                width: 124px;
+                height: 44px;
+            }
+            .title-left {
+                text-align: left;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            .continue-btn {
+                margin: 50px auto;
+                display: block;
+                width: 100%;
+                padding: 12px;
+                color: white;
+                border: none;
+                cursor: pointer;
+                font-size: 16px;
+                text-align: center;
+                text-decoration: none;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="{{ url_for('driver_survey_step1') }}">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/back.svg') }}"
+                                    alt="back">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Заполните анкету
+                        </h1>
+                        <div class="survey__profile-wrapper">
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    1
+                                </div>
+                                <p>Про вас</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item">
+                                    2
+                                </div>
+                                <p>Про авто</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item">
+                                    3
+                                </div>
+                                <p>Условия</p>
+                            </div>
+                        </div>
+
+                        <div class="survey__city-input">
+                            <label>Укажите город</label>
+                            <div class="survey__input-wrapper">
+                                <input type="text" readonly
+                                    placeholder="В каком городе вы хотите работать">
+                                <span class="arrow-icon">></span>
+                            </div>
+                        </div>
+
+                        <div class="survey__cities-list">
+                            <div class="survey__search">
+                                <input type="text" placeholder="Поиск">
+                            </div>
+                            <div class="survey__cities">
+                                <!-- Города будут загружены из JSON -->
+                            </div>
+                            <button class="main__btn"
+                                style="margin: 30px auto;">Подтвердить</button>
+                        </div>
+
+                        <div class="city-info" style="display: none;">
+                            <p class="available-options"></p>
+                            <div class="driver-info">
+                                <h3>Водитель</h3>
+                                <p>На своем или арендованном автомобиле сможете
+                                    помогать пассажирам добираться из одной
+                                    точки в другую. А еще доставлять посылки и
+                                    грузы до 20 килограмм, если в вашем городе
+                                    доступен соответствующи тариф.</p>
+                            </div>
+                        </div>
+
+                        <div id="continueButtonContainer"
+                            style="display: none;">
+                            <a href="{{ url_for('driver_survey_step3') }}"
+                                class="continue-btn main__btn-active">Продолжить</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Загружаем список городов из JSON файла
+                $.getJSON("{{ url_for('static', path='/driver/assets/data/cities.json') }}", function(data) {
+                    const citiesContainer = $('.survey__cities');
+                    citiesContainer.empty();
+                    
+                    // Добавляем города из JSON
+                    data.cities.forEach(city => {
+                        citiesContainer.append(`<div class="city-item" data-services='${JSON.stringify(city.available_services)}'>${city.name}</div>`);
+                    });
+                    
+                    // Проверяем, был ли ранее выбран город
+                    const savedCity = localStorage.getItem('driver_city');
+                    if (savedCity) {
+                        const savedCityData = JSON.parse(savedCity);
+                        displaySelectedCity(savedCityData.name, savedCityData.services);
+                    }
+                    
+                    // Обновляем обработчики событий
+                    bindCityEvents();
+                });
+                
+                function displaySelectedCity(cityName, services) {
+                    $('.survey__input-wrapper').html(`
+                        <div class="survey__selected-city">
+                            <span>${cityName}</span>
+                            <img src="{{ url_for('static', path='/driver/assets/img/ico/cancel.svg') }}" alt="cancel" class="cancel-icon">
+                        </div>
+                    `);
+                    
+                    $('.city-info').show();
+                    
+                    // Формируем текст о доступных услугах
+                    let servicesText = services.join(', ');
+                    $('.available-options').text(`В городе ${cityName} доступны следующие варианты: ${servicesText}`);
+                    
+                    // Показываем кнопку для продолжения
+                    $('#continueButtonContainer').show();
+                }
+
+                function bindCityEvents() {
+                    $('.city-item').on('click', function() {
+                        $('.city-item').removeClass('selected');
+                        $(this).addClass('selected');
+                        $('.main__btn').addClass('main__btn-active');
+                    });
+
+                    $('.main__btn').on('click', function() {
+                        if ($('.city-item.selected').length) {
+                            const cityName = $('.city-item.selected').text();
+                            const services = JSON.parse($('.city-item.selected').attr('data-services'));
+                            
+                            // Сохраняем выбор пользователя в localStorage
+                            localStorage.setItem('driver_city', JSON.stringify({
+                                name: cityName,
+                                services: services
+                            }));
+                            
+                            console.log('Город сохранен в localStorage:', {
+                                name: cityName,
+                                services: services
+                            });
+                            
+                            // Отображаем выбранный город
+                            displaySelectedCity(cityName, services);
+                            
+                            // Скрываем список городов
+                            $('.survey__cities-list').removeClass('active').fadeOut(300);
+                        }
+                    });
+
+                    $('.survey__search input').on('input', function() {
+                        const searchText = $(this).val().toLowerCase();
+                        $('.city-item').each(function() {
+                            const cityText = $(this).text().toLowerCase();
+                            $(this).toggle(cityText.includes(searchText));
+                        });
+                    });
+                }
+
+                $('.survey__input-wrapper').on('click', function() {
+                    $('.survey__cities-list').show().addClass('active');
+                });
+
+                $(document).on('click', '.cancel-icon', function(e) {
+                    e.stopPropagation();
+                    
+                    // Удаляем выбранный город из localStorage
+                    localStorage.removeItem('driver_city');
+                    console.log('Выбор города удален из localStorage');
+                    
+                    // Сбрасываем интерфейс
+                    $('.survey__input-wrapper').html(`
+                        <input type="text" readonly placeholder="В каком городе вы хотите работать">
+                        <span class="arrow-icon">></span>
+                    `);
+                    
+                    // Показываем список городов снова
+                    $('.survey__cities-list').show().addClass('active');
+                    
+                    // Скрываем кнопку "Продолжить"
+                    $('#continueButtonContainer').hide();
+                    
+                    // Скрываем информацию о городе
+                    $('.city-info').hide();
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('.survey__cities-list').length && 
+                        !$(e.target).closest('.survey__input-wrapper').length) {
+                        $('.survey__cities-list').removeClass('active').fadeOut(300);
+                    }
+                });
+                
+                // Проверяем, есть ли данные пользователя в localStorage
+                const firstName = localStorage.getItem('driver_first_name');
+                const lastName = localStorage.getItem('driver_last_name');
+                const phone = localStorage.getItem('driver_phone');
+                
+                console.log('Данные пользователя на странице анкеты (шаг 2):', {
+                    firstName: firstName,
+                    lastName: lastName,
+                    phone: phone
+                });
+            });
+        </script>
+    </body>
+</html>

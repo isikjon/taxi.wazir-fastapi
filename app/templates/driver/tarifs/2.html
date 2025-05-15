@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <style>
+            .debug-info {
+                display: none;
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+                padding: 10px;
+                margin-top: 20px;
+                font-family: monospace;
+                font-size: 12px;
+            }
+            
+            .debug-toggle {
+                margin-top: 30px;
+                background-color: #eee;
+                border: 1px solid #ccc;
+                padding: 8px 15px;
+                font-size: 14px;
+                cursor: pointer;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="/driver/profile"><img
+                                    src="/static/driver/assets/img/ico/back.svg"
+                                    alt="back"></a>
+                        </div>
+                        <h3 class="title-left">Опции</h3>
+                    </div>
+                </div>
+            </header>
+            <div class="settings">
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-left-desc">
+                            <span>Перевозка домашних животных</span>
+                        </div>
+                        <div class="settings-item__right">
+                            <input type="checkbox" id="pets"
+                                data-option-id="pets" disabled />
+                        </div>
+                    </div>
+                    <p>
+                        Выполните 10 заказов за неделю, и мы покажем вам отзывы
+                        пользователей и наши наблюдения.
+                    </p>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-left-desc">
+                            <span>Детское кресло</span>
+                        </div>
+                        <div class="settings-item__right">
+                            <input type="checkbox" id="child_seat"
+                                data-option-id="child_seat"
+                                {% if has_child_seat %}checked{% endif %} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-left-desc">
+                            <span>Наклейка</span>
+                        </div>
+                        <div class="settings-item__right">
+                            <input type="checkbox" id="sticker"
+                                data-option-id="sticker"
+                                {% if has_sticker %}checked{% endif %} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-left-desc">
+                            <span>Лайтбокс - Шашка</span>
+                        </div>
+                        <div class="settings-item__right">
+                            <input type="checkbox" id="lightbox"
+                                data-option-id="lightbox"
+                                {% if has_lightbox %}checked{% endif %} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            // При загрузке DOM
+            document.addEventListener('DOMContentLoaded', initPage);
+            
+            function initPage() {
+                // Сохраняем исходное состояние чекбоксов для сравнения
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]:not([disabled])');
+                for (var i = 0; i < checkboxes.length; i++) {
+                    checkboxes[i].setAttribute('data-original-state', checkboxes[i].checked);
+                    checkboxes[i].addEventListener('change', handleCheckboxChange);
+                }
+                
+                // Отладочный вывод текущего состояния в консоль
+                console.log('Начальное состояние опций:');
+                checkboxes.forEach(function(checkbox) {
+                    console.log(checkbox.id + ': ' + checkbox.checked);
+                });
+                
+                // Обработчик для показа/скрытия отладочной информации
+                document.getElementById('debugToggle').addEventListener('click', function() {
+                    var debugInfo = document.getElementById('debugInfo');
+                    if (debugInfo.style.display === 'block') {
+                        debugInfo.style.display = 'none';
+                    } else {
+                        debugInfo.style.display = 'block';
+                    }
+                });
+            }
+            
+            // Обработчик изменения состояния чекбокса
+            function handleCheckboxChange(event) {
+                var optionId = event.target.getAttribute('data-option-id');
+                var enabled = event.target.checked;
+                updateOption(optionId, enabled);
+            }
+            
+            // Функция для отправки изменений опций на сервер
+            function updateOption(optionId, enabled) {
+                // Создаем объект с данными для отправки
+                var requestData = {
+                    driver_id: {{ driver.id }},
+                    option_id: optionId,
+                    enabled: enabled
+                };
+                
+                console.log('Отправка обновления для опции:', optionId, 'значение:', enabled);
+                
+                // Отправляем запрос на сервер
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/driver/update-option', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            console.log('Опция успешно обновлена:', response);
+                            
+                            // Обновляем отладочную информацию без перезагрузки страницы
+                            var debugInfo = document.getElementById('debugInfo');
+                            if (debugInfo) {
+                                // Здесь можно было бы обновить содержимое отладочной информации
+                                // на основе ответа сервера, но для этого нужен дополнительный эндпоинт
+                            }
+                        } else {
+                            console.error('Ошибка при обновлении опции:', response.message);
+                            // Возвращаем чекбокс в исходное состояние при ошибке
+                            resetCheckbox(optionId, !enabled);
+                        }
+                    } else {
+                        console.error('Ошибка запроса:', xhr.statusText);
+                        // Возвращаем чекбокс в исходное состояние при ошибке
+                        resetCheckbox(optionId, !enabled);
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    console.error('Ошибка сети при отправке запроса');
+                    // Возвращаем чекбокс в исходное состояние при ошибке
+                    resetCheckbox(optionId, !enabled);
+                };
+                
+                // Отправляем данные
+                xhr.send(JSON.stringify(requestData));
+            }
+            
+            // Функция для сброса состояния чекбокса
+            function resetCheckbox(optionId, state) {
+                var checkbox = document.querySelector('[data-option-id="' + optionId + '"]');
+                if (checkbox) {
+                    checkbox.checked = state;
+                }
+            }
+        </script>
+    </body>
+</html>

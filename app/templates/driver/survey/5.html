@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <style>
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #333;
+                font-size: 14px;
+            }
+            .select-wrapper {
+                position: relative;
+            }
+            .form-select {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                background-color: white;
+                appearance: none;
+                cursor: pointer;
+            }
+            .select-arrow {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="./4"><img
+                                    src="/static/driver/assets/img/ico/back.svg"
+                                    alt="back"></a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Заполните анкету
+                        </h1>
+                        <div class="survey__profile-wrapper">
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    <img
+                                        src="/static/driver/assets/img/ico/check.svg"
+                                        alt="check">
+                                </div>
+                                <p>Про вас</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    <img
+                                        src="/static/driver/assets/img/ico/check.svg"
+                                        alt="check">
+                                </div>
+                                <p>Про авто</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    3
+                                </div>
+                                <p>Условия</p>
+                            </div>
+                        </div>
+
+                        <div class="survey__profile-info">
+                            <div class="survery__profile-info-title">
+                                <p>В городе Ош можно выполнять
+                                    заказы только через парк</p>
+                            </div>
+                            <div class="survey__profile-info-wraper">
+                                <div class="survey__profile-info-title">
+                                    <h4>Условия парка</h4>
+                                </div>
+                                <div class="survey__profile-info-item">
+                                    <span>1</span>
+                                    <p>Парк берет процент с каждой поездки</p>
+                                </div>
+                                <div class="survey__profile-info-item">
+                                    <span>2</span>
+                                    <p>Парк выплачивает деньги за заказы</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="continueButton"
+                            class="main__btn main__btn-active"
+                            style="margin: 30px auto;"><a
+                                href="/driver/survey/6">Продолжить</a></button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Делаем кнопку активной по умолчанию
+                $('#continueButton').addClass('main__btn-active');
+            });
+        </script>
+    </body>
+</html>

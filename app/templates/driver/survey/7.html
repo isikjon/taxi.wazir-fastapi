@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="/driver/survey/6"><img
+                                    src="/static/driver/assets/img/ico/back.svg"
+                                    alt="back"></a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left" id="park-name">
+                            <!-- Название парка будет загружено динамически -->
+                        </h1>
+
+                        <div class="survey__park">
+                            <div class="survey__park-item">
+                                <a href="/driver/survey/7_1">Условия вывода
+                                    средств</a>
+                                <img
+                                    src="/static/driver/assets/img/ico/next.svg"
+                                    alt="next">
+                            </div>
+                        </div>
+
+                        <div class="survey__contacts">
+                            <h2>Контакты</h2>
+
+                            <div class="contact-item">
+                                <span class="contact-label">Телефон</span>
+                                <span class="contact-value"
+                                    id="park-phone"><!-- Телефон --></span>
+                            </div>
+
+                            <div class="contact-item">
+                                <span class="contact-label">График работы</span>
+                                <span class="contact-value" id="park-hours">
+                                    <!-- График работы -->
+                                </span>
+                            </div>
+
+                            <div class="contact-item">
+                                <span class="contact-label">Почта</span>
+                                <span class="contact-value"
+                                    id="park-email"><!-- Почта --></span>
+                            </div>
+
+                            <div class="contact-item">
+                                <span class="contact-label">Адрес</span>
+                                <span class="contact-value"
+                                    id="park-address"><!-- Адрес --></span>
+                            </div>
+                        </div>
+
+                        <button class="main__btn-active"><a
+                                href="/driver/survey/8">
+                                Выбрать этот
+                                парк
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Получаем выбранный парк из localStorage
+                const selectedPark = localStorage.getItem('driver_selected_park');
+                console.log('Получен парк из localStorage:', selectedPark);
+                
+                if (!selectedPark) {
+                    console.error('Парк не найден в localStorage!');
+                    // Если парк не выбран, вернемся на страницу выбора
+                    window.location.href = '/driver/survey/6';
+                    return;
+                }
+                
+                // Разбираем JSON с данными парка
+                try {
+                    const parkData = JSON.parse(selectedPark);
+                    console.log('Успешно распарсили данные парка:', parkData);
+                    
+                    // Заполняем информацию о парке
+                    $('#park-name').text(parkData.name || 'Название парка');
+                    $('#park-phone').text(parkData.phone || '+996000000000');
+                    $('#park-hours').html(parkData.hours || 'Пн-Сб 10:00-18:00<br>Вс-выходной');
+                    $('#park-email').text(parkData.email || 'park@example.com');
+                    $('#park-address').text(parkData.address || 'Кыргызстан, г. Бишкек');
+                    
+                } catch (e) {
+                    console.error('Критическая ошибка при разборе данных парка:', e);
+                    console.error('Исходная строка:', selectedPark);
+                    
+                    // Устанавливаем значения по умолчанию
+                    $('#park-name').text('Платинум Парк Ош');
+                    $('#park-phone').text('+996667788778');
+                    $('#park-hours').html('Пн-Сб 10:00-18:00<br>Вс-выходной');
+                    $('#park-email').text('example@gmail.com');
+                    $('#park-address').text('Кыргызстан г. Ош мкр Анар 1, (ориентир Автомойка Нурзаман, кафе Нирвана)');
+                }
+                
+                // Обработчик нажатия на кнопку "Выбрать этот парк"
+                $('button.main__btn-active').on('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Сохраняем, что пользователь выбрал этот парк
+                    localStorage.setItem('driver_selected_park_confirmed', 'true');
+                    
+                    // Переходим на следующую страницу
+                    window.location.href = '/driver/survey/8';
+                });
+            });
+        </script>
+    </body>
+</html>

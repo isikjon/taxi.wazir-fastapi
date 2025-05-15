@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Баланс - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .balance-page {
+                padding-bottom: 50px;
+            }
+            
+            .balance-header {
+                display: flex;
+                align-items: center;
+                margin: 12px 0;
+            }
+            
+            .balance-header h2 {
+                margin: 0;
+                margin-left: 15px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            
+            .balance-box {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            .balance-amount {
+                font-size: 28px;
+                font-weight: bold;
+                color: #000;
+                margin: 10px 0;
+            }
+            
+            .top-up-button {
+                display: none;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px;
+                background-color: #fff;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            .top-up-button p {
+                margin: 0;
+                font-weight: 500;
+            }
+            
+            .top-up-button img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .no-transactions {
+                text-align: center;
+                padding: 30px 20px;
+                color: #666;
+                background-color: #fff;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            .filter-options {
+                margin-top: 20px;
+            }
+            
+            .filter-option {
+                padding: 15px;
+                background-color: #fff;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                border: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .filter-option.active {
+                background-color: #f5f5f5;
+            }
+            
+            .filter-option span {
+                font-weight: 500;
+            }
+            
+            .filter-option img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            /* Темная тема (для демонстрации) */
+            .dark-theme {
+                background-color: #222;
+                color: #fff;
+            }
+            
+            .dark-theme .balance-box,
+            .dark-theme .top-up-button,
+            .dark-theme .no-transactions,
+            .dark-theme .filter-option {
+                background-color: #333;
+                border-color: #444;
+                color: #fff;
+            }
+            
+            .dark-theme .balance-amount {
+                color: #fff;
+            }
+            
+            /* Стили для транзакций на первой версии экрана */
+            .transaction-list {
+                margin-top: 15px;
+            }
+            
+            .transaction-item {
+                padding: 15px;
+                background-color: #fff;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                border: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .transaction-info {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .transaction-type {
+                font-weight: 500;
+                margin-bottom: 5px;
+            }
+            
+            .transaction-date {
+                color: #666;
+                font-size: 14px;
+            }
+            
+            .transaction-amount {
+                font-weight: bold;
+            }
+            
+            .transaction-amount.positive {
+                color: #2ecc71;
+            }
+            
+            .transaction-amount.negative {
+                color: #e74c3c;
+            }
+            
+            /* Убираем стандартные стили для select */
+            select {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="balance-page">
+            <section class="profile">
+                <div class="container">
+                    <div class="balance-header">
+                        <a href="{{ url_for('driver_profile') }}">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </a>
+                        <h2>Баланс</h2>
+                    </div>
+
+                    <div class="balance-box">
+                        <div class="balance-amount">{{ balance_formatted }}
+                            сом</div>
+                    </div>
+
+                    <div class="top-up-button">
+                        <a href="{{ url_for('driver_balance_top_up') }}"
+                            style="text-decoration: none; color: inherit; width: 100%;">
+                            <p>Пополнить баланс</p>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </a>
+                    </div>
+
+                    {% if transactions %}
+                    <div class="transaction-list" id="transaction-container">
+                        {% for tx in transactions %}
+                        <div class="transaction-item" data-type="{{ tx.type }}">
+                            <div class="transaction-info">
+                                <div class="transaction-type">{{ tx.type
+                                    }}</div>
+                                <div class="transaction-date">{{ tx.date
+                                    }}</div>
+                            </div>
+                            <div
+                                class="transaction-amount {{ tx.amount_class }}">{{
+                                tx.amount_formatted }} сом</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="no-transactions">
+                        У вас нет транзакций за последнее время
+                    </div>
+
+                    <!-- Фильтр с опциями как на скриншоте (скрыт по умолчанию) -->
+                    <div class="filter-options" style="display: none;">
+                        <div class="filter-option active">
+                            <span>За все время</span>
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/check.svg') }}"
+                                alt="selected">
+                        </div>
+                        <div class="filter-option">
+                            <span>Заказы за неделю</span>
+                        </div>
+                        <div class="filter-option">
+                            <span>Бонусы за неделю</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Скрытый select для хранения выбранного значения -->
+                    <select id="transaction-filter" style="display: none;">
+                        <option value="all">Все операции</option>
+                        <option value="deposit">Пополнения</option>
+                        <option value="withdrawal">Списания</option>
+                    </select>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Код для переключения фильтров
+                const filterOptions = document.querySelectorAll('.filter-option');
+                const hiddenSelect = document.getElementById('transaction-filter');
+                
+                filterOptions.forEach((option, index) => {
+                    option.addEventListener('click', function() {
+                        // Снимаем выделение со всех опций
+                        filterOptions.forEach(opt => opt.classList.remove('active'));
+                        
+                        // Выделяем текущую опцию
+                        this.classList.add('active');
+                        
+                        // Обновляем скрытый select
+                        if (index === 0) hiddenSelect.value = 'all';
+                        else if (index === 1) hiddenSelect.value = 'order';
+                        else if (index === 2) hiddenSelect.value = 'bonus';
+                        
+                        // Вызываем событие change для применения фильтрации
+                        const event = new Event('change');
+                        hiddenSelect.dispatchEvent(event);
+                    });
+                });
+                
+                // Код для фильтрации транзакций (сохранен из предыдущей версии)
+                const filter = document.getElementById('transaction-filter');
+                const container = document.getElementById('transaction-container');
+                const items = document.querySelectorAll('.transaction-item');
+                
+                if (filter && items.length > 0) {
+                    filter.addEventListener('change', function() {
+                        const selectedValue = this.value;
+                        let visibleCount = 0;
+                        
+                        items.forEach(item => {
+                            if (selectedValue === 'all' || item.dataset.type.includes(selectedValue)) {
+                                item.style.display = 'flex';
+                                visibleCount++;
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                        
+                        // Если нет видимых транзакций
+                        if (visibleCount === 0) {
+                            // Проверяем, существует ли уже элемент no-transactions
+                            let noTransactions = document.querySelector('.no-transactions');
+                            
+                            if (!noTransactions) {
+                                noTransactions = document.createElement('div');
+                                noTransactions.className = 'no-transactions';
+                                noTransactions.textContent = 'У вас нет транзакций за последнее время';
+                                container.parentNode.insertBefore(noTransactions, container.nextSibling);
+                            } else {
+                                noTransactions.style.display = 'block';
+                            }
+                            
+                            container.style.display = 'none';
+                        } else {
+                            // Скрываем сообщение о отсутствии транзакций, если оно есть
+                            const noTransactions = document.querySelector('.no-transactions');
+                            if (noTransactions) {
+                                noTransactions.style.display = 'none';
+                            }
+                            
+                            container.style.display = 'block';
+                        }
+                    });
+                }
+                
+                // Показать фильтр для демонстрации (в реальном приложении будет зависеть от логики)
+                // Раскомментировать для тестирования
+                // document.querySelector('.filter-options').style.display = 'block';
+            });
+        </script>
+    </body>
+</html>

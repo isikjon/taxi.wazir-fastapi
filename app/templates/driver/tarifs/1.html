@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Тарифы - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .tarif-status {
+                font-size: 12px;
+                color: #888;
+                margin-right: 10px;
+            }
+            
+            .tarif-status.active {
+                color: #3BAE49;
+            }
+            
+            .tarif-item {
+                margin-bottom: 20px;
+                border-radius: 10px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            
+            .tarif-header {
+                padding: 15px;
+                background-color: #f5f5f5;
+                border-bottom: 1px solid #ddd;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .tarif-header h3 {
+                margin: 0;
+                font-size: 18px;
+            }
+            
+            .tarif-content {
+                padding: 15px;
+                background-color: #fff;
+            }
+            
+            .tarif-description {
+                margin-bottom: 10px;
+                color: #666;
+            }
+            
+            .tarif-requirements {
+                font-size: 14px;
+                color: #888;
+                margin-bottom: 15px;
+            }
+            
+            .tarif-actions {
+                display: flex;
+                justify-content: flex-end;
+                padding-top: 10px;
+            }
+            
+            .tarif-button {
+                background-color: #3BAE49;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            
+            .tarif-button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+            
+            .tarif-button.selected {
+                background-color: #333;
+            }
+            
+            .status-label {
+                display: inline-block;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                color: white;
+                margin-left: 10px;
+            }
+            
+            .status-active {
+                background-color: #3BAE49;
+            }
+            
+            .status-unavailable {
+                background-color: #ccc;
+            }
+            
+            .success-message {
+                display: none;
+                padding: 10px;
+                background-color: #E8F5E9;
+                color: #3BAE49;
+                text-align: center;
+                margin: 10px 0;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            
+            .error-message {
+                display: none;
+                padding: 10px;
+                background-color: #FFEBEE;
+                color: #E53935;
+                text-align: center;
+                margin: 10px 0;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            .back__wrapper {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+        </style>
+    </head>
+    <body data-driver-id="{{ driver.id }}">
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__wrapper">
+                            <div class="back__content">
+                                <a href="{{ url_for('driver_profile') }}">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                        alt="back">
+                                </a>
+                            </div>
+                            <h3 class="title-left">Тарифы</h3>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="settings">
+                <div class="container">
+                    <div id="successMessage" class="success-message">
+                        Тариф успешно изменен!
+                    </div>
+
+                    <div id="errorMessage" class="error-message">
+                        Произошла ошибка при изменении тарифа.
+                    </div>
+
+                    <div class="settings-section">
+                        {% set current_tariff = driver.tariff|lower %}
+
+                        <div class="settings-item">
+                            <div class="settings-item-left-desc">
+                                <span>Эконом</span>
+                                <p>{% if "эконом"|lower == current_tariff %}Ваш
+                                    текущий тариф{% else %}Пройдите фотоконтроль
+                                    машины{% endif %}</p>
+                            </div>
+                            <div class="settings-item__right">
+                                <span class="tarif-status {% if "эконом"|lower
+                                    == current_tariff %}active{% endif %}">
+                                    {% if "эконом"|lower == current_tariff
+                                    %}активен{% else %}не доступно{% endif %}
+                                </span>
+                                <input type="checkbox" data-tariff="Эконом"
+                                    {% if "эконом"|lower == current_tariff
+                                    %}checked{% endif %}
+                                    {% if "эконом"|lower == current_tariff
+                                    %}disabled{% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-item-left-desc">
+                                <span>Комфорт</span>
+                                <p>{% if "комфорт"|lower == current_tariff %}Ваш
+                                    текущий тариф{% else %}Тариф недоступен в
+                                    этой геозоне{% endif %}</p>
+                            </div>
+                            <div class="settings-item__right">
+                                <span class="tarif-status {% if "комфорт"|lower
+                                    == current_tariff %}active{% endif %}">
+                                    {% if "комфорт"|lower == current_tariff
+                                    %}активен{% else %}не доступно{% endif %}
+                                </span>
+                                <input type="checkbox" data-tariff="Комфорт"
+                                    {% if "комфорт"|lower == current_tariff
+                                    %}checked{% endif %}
+                                    {% if "комфорт"|lower == current_tariff
+                                    %}disabled{% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-item-left-desc">
+                                <span>Комфорт +</span>
+                                <p>{% if "комфорт+"|lower == current_tariff
+                                    %}Ваш текущий тариф{% else %}Тариф
+                                    недоступен в этой геозоне{% endif %}</p>
+                            </div>
+                            <div class="settings-item__right">
+                                <span class="tarif-status {% if "комфорт+"|lower
+                                    == current_tariff %}active{% endif %}">
+                                    {% if "комфорт+"|lower == current_tariff
+                                    %}активен{% else %}не доступно{% endif %}
+                                </span>
+                                <input type="checkbox" data-tariff="Комфорт+"
+                                    {% if "комфорт+"|lower == current_tariff
+                                    %}checked{% endif %}
+                                    {% if "комфорт+"|lower == current_tariff
+                                    %}disabled{% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-item-left-desc">
+                                <span>Business</span>
+                                <p>{% if "business"|lower == current_tariff
+                                    %}Ваш текущий тариф{% else %}Тариф
+                                    недоступен в этой геозоне{% endif %}</p>
+                            </div>
+                            <div class="settings-item__right">
+                                <span class="tarif-status {% if "business"|lower
+                                    == current_tariff %}active{% endif %}">
+                                    {% if "business"|lower == current_tariff
+                                    %}активен{% else %}не доступно{% endif %}
+                                </span>
+                                <input type="checkbox" data-tariff="Business"
+                                    {% if "business"|lower == current_tariff
+                                    %}checked{% endif %}
+                                    {% if "business"|lower == current_tariff
+                                    %}disabled{% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-item-left-desc">
+                                <span>Доставка</span>
+                                <p>{% if "доставка"|lower == current_tariff
+                                    %}Ваш текущий тариф{% else %}Тариф
+                                    недоступен в этой геозоне{% endif %}</p>
+                            </div>
+                            <div class="settings-item__right">
+                                <span class="tarif-status {% if "доставка"|lower
+                                    == current_tariff %}active{% endif %}">
+                                    {% if "доставка"|lower == current_tariff
+                                    %}активен{% else %}не доступно{% endif %}
+                                </span>
+                                <input type="checkbox" data-tariff="Доставка"
+                                    {% if "доставка"|lower == current_tariff
+                                    %}checked{% endif %}
+                                    {% if "доставка"|lower == current_tariff
+                                    %}disabled{% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-item-left-desc">
+                                <span>Курьер</span>
+                                <p>{% if "курьер"|lower == current_tariff %}Ваш
+                                    текущий тариф{% else %}Тариф недоступен в
+                                    этой геозоне{% endif %}</p>
+                            </div>
+                            <div class="settings-item__right">
+                                <span class="tarif-status {% if "курьер"|lower
+                                    == current_tariff %}active{% endif %}">
+                                    {% if "курьер"|lower == current_tariff
+                                    %}активен{% else %}не доступно{% endif %}
+                                </span>
+                                <input type="checkbox" data-tariff="Курьер"
+                                    {% if "курьер"|lower == current_tariff
+                                    %}checked{% endif %}
+                                    {% if "курьер"|lower == current_tariff
+                                    %}disabled{% endif %} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const driverId = document.body.dataset.driverId;
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]:not([disabled])');
+                const successMessage = document.getElementById('successMessage');
+                const errorMessage = document.getElementById('errorMessage');
+                
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const tariff = this.dataset.tariff;
+                        if (this.checked) {
+                            updateDriverTariff(driverId, tariff);
+                        } else {
+                            // Если пользователь снял отметку, возвращаем её обратно
+                            this.checked = true;
+                        }
+                    });
+                });
+                
+                function updateDriverTariff(driverId, tariff) {
+                    // Отключаем все чекбоксы
+                    checkboxes.forEach(cb => cb.disabled = true);
+                    
+                    fetch('/api/driver/update-tariff', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            driver_id: driverId,
+                            tariff: tariff
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccessMessage();
+                            // Обновить UI без перезагрузки страницы
+                            updateTariffUI(tariff);
+                        } else {
+                            showErrorMessage(data.message || 'Произошла ошибка при изменении тарифа');
+                            // Включаем чекбоксы обратно
+                            resetCheckboxes();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        showErrorMessage('Произошла ошибка при изменении тарифа');
+                        // Включаем чекбоксы обратно
+                        resetCheckboxes();
+                    });
+                }
+                
+                function updateTariffUI(newTariff) {
+                    // Сбрасываем состояние всех элементов
+                    document.querySelectorAll('.settings-item-left-desc p').forEach(p => {
+                        const settingsItem = p.closest('.settings-item');
+                        const tariffName = settingsItem.querySelector('span').textContent.trim();
+                        p.textContent = 'Тариф недоступен в этой геозоне';
+                        
+                        if (tariffName.toLowerCase() === 'эконом') {
+                            p.textContent = 'Пройдите фотоконтроль машины';
+                        }
+                    });
+                    
+                    document.querySelectorAll('.tarif-status').forEach(span => {
+                        span.textContent = 'не доступно';
+                        span.classList.remove('active');
+                    });
+                    
+                    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        cb.checked = false;
+                        cb.disabled = false;
+                    });
+                    
+                    // Обновляем выбранный тариф
+                    const newTariffCheckbox = document.querySelector(`input[data-tariff="${newTariff}"]`);
+                    if (newTariffCheckbox) {
+                        const settingsItem = newTariffCheckbox.closest('.settings-item');
+                        
+                        // Обновляем текст и статус
+                        settingsItem.querySelector('.settings-item-left-desc p').textContent = 'Ваш текущий тариф';
+                        
+                        const statusSpan = settingsItem.querySelector('.tarif-status');
+                        statusSpan.textContent = 'активен';
+                        statusSpan.classList.add('active');
+                        
+                        // Устанавливаем чекбокс выбранным и отключаем его
+                        newTariffCheckbox.checked = true;
+                        newTariffCheckbox.disabled = true;
+                    }
+                    
+                    // Перезагружаем страницу через 2 секунды
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+                
+                function resetCheckboxes() {
+                    checkboxes.forEach(cb => {
+                        cb.disabled = false;
+                    });
+                }
+                
+                function showSuccessMessage() {
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 3000);
+                }
+                
+                function showErrorMessage(message) {
+                    errorMessage.textContent = message;
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none';
+                    
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                    }, 3000);
+                }
+            });
+        </script>
+    </body>
+</html>

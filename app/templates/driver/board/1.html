@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Полезные советы</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="/driver/profile">
+                        <div class="profile__back">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <h1 class="title-left">Полезные советы</h1>
+
+                <div class="settings-section">
+                    <a href="{{ url_for('driver_board_start') }}">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>С чего начать</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('driver_board_safety') }}">
+                        <div class="settings-item">
+                            <div class="settings-item__left">
+                                <span>Безопасность</span>
+                            </div>
+                            <div class="settings-item__right">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

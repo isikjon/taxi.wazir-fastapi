@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .survey-3 {
+                padding: 20px 0;
+            }
+            .title-left {
+                text-align: left;
+                font-size: 24px;
+                margin-bottom: 25px;
+                font-weight: 600;
+            }
+            .success-container {
+                text-align: center;
+                padding: 30px 20px;
+                background-color: #f9f9f9;
+                border-radius: 10px;
+                margin: 20px 0 40px;
+            }
+            .success-icon {
+                width: 80px;
+                height: 80px;
+                background-color: #4CAF50;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+            }
+            .success-icon svg {
+                width: 40px;
+                height: 40px;
+                fill: white;
+            }
+            .success-title {
+                font-size: 22px;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 15px;
+            }
+            .success-message {
+                font-size: 16px;
+                color: #666;
+                line-height: 1.5;
+                margin-bottom: 30px;
+            }
+            .next-steps {
+                background-color: #f0f0f0;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 30px;
+            }
+            .next-steps-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 15px;
+                color: #333;
+            }
+            .steps-list {
+                list-style-type: none;
+                padding: 0;
+            }
+            .steps-list li {
+                display: flex;
+                align-items: flex-start;
+                margin-bottom: 15px;
+                font-size: 16px;
+            }
+            .steps-list .number {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                background-color: #606060;
+                color: white;
+                border-radius: 50%;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }
+            .main__btn {
+                display: block;
+                width: 100%;
+                padding: 15px;
+                color: white;
+                border: none;
+                cursor: pointer;
+                font-size: 16px;
+                text-align: center;
+                margin: 30px 0;
+                background-color: #606060;
+                border-radius: 0;
+                text-decoration: none;
+            }
+            .loading-indicator {
+                display: none;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .spinner {
+                border: 4px solid rgba(0, 0, 0, 0.1);
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                border-left-color: #606060;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 15px;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Регистрация завершена
+                        </h1>
+
+                        <div id="loading-indicator" class="loading-indicator">
+                            <div class="spinner"></div>
+                            <p>Сохранение данных...</p>
+                        </div>
+
+                        <div class="success-container">
+                            <div class="success-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                                </svg>
+                            </div>
+                            <h2 class="success-title">Поздравляем!</h2>
+                            <p class="success-message">
+                                Ваши данные успешно переданы и сохранены в
+                                системе Wazir.
+                                Спасибо за заполнение анкеты! Теперь вы можете
+                                начать работу с нашим сервисом.
+                            </p>
+                        </div>
+
+                        <div class="next-steps">
+                            <h3 class="next-steps-title">Следующие шаги:</h3>
+                            <ul class="steps-list">
+                                <li>
+                                    <span class="number">1</span>
+                                    <span>В ближайшее время с вами свяжется
+                                        менеджер для подтверждения данных</span>
+                                </li>
+                                <li>
+                                    <span class="number">2</span>
+                                    <span>После подтверждения вам будет назначен
+                                        таксопарк для сотрудничества</span>
+                                </li>
+                                <li>
+                                    <span class="number">3</span>
+                                    <span>Войдите в мобильное приложение Wazir
+                                        Driver, чтобы начать получать
+                                        заказы</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <a href="/driver/profile"
+                            class="main__btn">Перейти в личный кабинет</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Отмечаем в localStorage, что анкета заполнена
+                localStorage.setItem('driver_survey_completed', 'true');
+                
+                // Показываем индикатор загрузки
+                $('#loading-indicator').show();
+                
+                // Собираем все данные из localStorage
+                const driverData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('driver_')) {
+                        // Пытаемся распарсить JSON, если возможно
+                        try {
+                            if (localStorage.getItem(key).startsWith('{') || localStorage.getItem(key).startsWith('[')) {
+                                driverData[key] = JSON.parse(localStorage.getItem(key));
+                            } else {
+                                driverData[key] = localStorage.getItem(key);
+                            }
+                        } catch (e) {
+                            driverData[key] = localStorage.getItem(key);
+                        }
+                    }
+                }
+                
+                console.log('Данные для отправки на сервер:', driverData);
+                
+                // Отправляем данные на сервер
+                $.ajax({
+                    url: '/api/driver/complete-registration',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(driverData),
+                    success: function(response) {
+                        console.log('Данные успешно сохранены в базе данных:', response);
+                        $('#loading-indicator').hide();
+                        
+                        // Сохраняем полученные данные в localStorage
+                        if (response.driver_id) {
+                            localStorage.setItem('driver_id', response.driver_id);
+                        }
+                        if (response.user_id) {
+                            localStorage.setItem('user_id', response.user_id);
+                        }
+                        
+                        // Если в анкете есть номер телефона, сохраняем его
+                        if (driverData.driver_phone) {
+                            localStorage.setItem('driver_phone', driverData.driver_phone);
+                        }
+                        
+                        // Перенаправляем на страницу профиля через 1 секунду
+                        setTimeout(function() {
+                            window.location.href = '/driver/profile?driver_id=' + response.driver_id;
+                        }, 1000);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при сохранении данных:', error);
+                        console.error('Статус:', status);
+                        console.error('Ответ сервера:', xhr.responseText);
+                        $('#loading-indicator').hide();
+                        alert('Произошла ошибка при сохранении данных. Пожалуйста, свяжитесь с поддержкой.');
+                    }
+                });
+                
+                console.log('Анкетирование успешно завершено');
+            });
+        </script>
+    </body>
+</html>

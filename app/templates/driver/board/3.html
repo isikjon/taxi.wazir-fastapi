@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Профилактика вирусных инфекций</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="{{ url_for('driver_board') }}">
+                        <div class="profile__back">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <h1 class="title-left">Профилактика вирусных инфекций</h1>
+
+                <div class="settings-section">
+                    <div class="help-content">
+                        <div class="help-item">
+                            <p>Вирусной инфекцией, в том числе и коронавирусом,
+                                передаётся:</p>
+                            <ul>
+                                <li
+                                    style="display: flex; align-items: center; gap: 10px;">
+                                    <div
+                                        style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                    <span>При рукопожатии</span>
+                                </li>
+                                <li
+                                    style="display: flex; align-items: center; gap: 10px;">
+                                    <div
+                                        style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                    <span>При использовании одной посуды с
+                                        носителем болезни</span>
+                                </li>
+                            </ul>
+
+                            <h3 style="margin-top: 20px;">Вот что советуют
+                                врачи</h3>
+
+                            <div
+                                style="background: #F2F2F7; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <h4>В машине</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Проветривайте салон после каждой
+                                            поездки</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Два раза в день протирайте руль,
+                                            ручки, сиденья влажными
+                                            салфетками</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Чаще мойте машину и сухие
+                                            уборки</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Уберите из салона коврики и другие
+                                            утеплители</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div style="margin: 15px 0;">
+                                <h4>В любое время</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Не трогайте руд где много
+                                            людей</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Если руками коснулись поручней, не
+                                            трогайте лицо и глаза</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Чаще протирайте руки и лицо</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Не щипайте и не трите глаза без
+                                            чистых рук</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Начните водить здоровый образ
+                                            жизни</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                                        <div
+                                            style="width: 8px; height: 8px; background: #666; border-radius: 50%;"></div>
+                                        <span>Если нет салфеток, протирайте
+                                            руки</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <h4>Обратитесь к врачу, если у вас:</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="margin: 5px 0;">• Повышенная
+                                        температура</li>
+                                    <li style="margin: 5px 0;">• Кашель</li>
+                                    <li style="margin: 5px 0;">• Насморк</li>
+                                    <li style="margin: 5px 0;">• Расстройство
+                                        желудка</li>
+                                    <li style="margin: 5px 0;">• Затрудненное
+                                        дыхание</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

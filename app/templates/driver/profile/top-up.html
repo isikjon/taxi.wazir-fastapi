@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Пополнение баланса - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .top-up-page {
+                padding-bottom: 50px;
+            }
+            
+            .top-up-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+            }
+            
+            .top-up-header h2 {
+                margin: 0;
+                margin-left: 15px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            
+            .balance-box {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            .balance-amount {
+                font-size: 28px;
+                font-weight: bold;
+                color: #000;
+                margin: 10px 0;
+            }
+            
+            .payment-methods {
+                margin-top: 20px;
+            }
+            
+            .payment-method {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px;
+                background-color: #fff;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            .payment-method-info {
+                display: flex;
+                align-items: center;
+            }
+            
+            .payment-method-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                margin-right: 15px;
+                background-color: #f5f5f5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .payment-method-icon img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .payment-method-name {
+                font-weight: 500;
+            }
+            
+            .payment-method-arrow img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            /* Форма пополнения */
+            .top-up-form {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                margin-top: 20px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            
+            .top-up-form h3 {
+                margin-top: 0;
+                margin-bottom: 15px;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            
+            .input-group {
+                margin-bottom: 15px;
+            }
+            
+            .input-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-size: 14px;
+                color: #666;
+            }
+            
+            .input-group input {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+            
+            .quick-amounts {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .quick-amount {
+                flex: 1 0 calc(33% - 10px);
+                padding: 10px;
+                text-align: center;
+                background-color: #f5f5f5;
+                border-radius: 8px;
+                border: 1px solid #eee;
+                font-weight: 500;
+                cursor: pointer;
+            }
+            
+            .quick-amount.active {
+                background-color: #e0e0e0;
+                border-color: #ccc;
+            }
+            
+            .submit-button {
+                display: block;
+                width: 100%;
+                padding: 15px;
+                background-color: #333;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 500;
+                cursor: pointer;
+                margin-top: 20px;
+            }
+            
+            .submit-button:disabled {
+                background-color: #999;
+                cursor: not-allowed;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="top-up-page">
+            <section class="profile">
+                <div class="container">
+                    <div class="top-up-header">
+                        <a href="{{ url_for('driver_balance_page') }}">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </a>
+                        <h2>Пополнение баланса</h2>
+                    </div>
+
+                    <div class="balance-box">
+                        <div class="balance-amount">{{ balance_formatted }}
+                            сом</div>
+                    </div>
+
+                    <div class="top-up-form">
+                        <h3>Введите сумму пополнения</h3>
+
+                        <div class="quick-amounts">
+                            <div class="quick-amount" data-amount="100">100
+                                сом</div>
+                            <div class="quick-amount" data-amount="500">500
+                                сом</div>
+                            <div class="quick-amount" data-amount="1000">1000
+                                сом</div>
+                            <div class="quick-amount" data-amount="2000">2000
+                                сом</div>
+                            <div class="quick-amount" data-amount="3000">3000
+                                сом</div>
+                            <div class="quick-amount" data-amount="5000">5000
+                                сом</div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="amount">Сумма</label>
+                            <input type="number" id="amount" name="amount"
+                                placeholder="Введите сумму" min="10" step="10">
+                        </div>
+
+                        <button type="button" class="submit-button"
+                            id="submitButton" disabled>Продолжить</button>
+                    </div>
+
+                    <div class="payment-methods">
+                        <h3
+                            style="margin-left: 10px; margin-bottom: 15px; color: #666;">Способы
+                            оплаты</h3>
+
+                        <div class="payment-method">
+                            <div class="payment-method-info">
+                                <div class="payment-method-icon">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/card.svg') }}"
+                                        alt="card">
+                                </div>
+                                <div class="payment-method-name">Банковская
+                                    карта</div>
+                            </div>
+                            <div class="payment-method-arrow">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </div>
+
+                        <div class="payment-method">
+                            <div class="payment-method-info">
+                                <div class="payment-method-icon">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/qr-code.svg') }}"
+                                        alt="qr">
+                                </div>
+                                <div class="payment-method-name">Qr-код для
+                                    оплаты</div>
+                            </div>
+                            <div class="payment-method-arrow">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const amountInput = document.getElementById('amount');
+                const submitButton = document.getElementById('submitButton');
+                const quickAmounts = document.querySelectorAll('.quick-amount');
+                
+                // Функция для проверки валидности суммы
+                function validateAmount() {
+                    const amount = parseFloat(amountInput.value);
+                    if (amount && amount >= 10) {
+                        submitButton.disabled = false;
+                    } else {
+                        submitButton.disabled = true;
+                    }
+                }
+                
+                // Слушатель для ввода суммы
+                amountInput.addEventListener('input', function() {
+                    // Снимаем выделение с быстрых сумм
+                    quickAmounts.forEach(item => item.classList.remove('active'));
+                    validateAmount();
+                });
+                
+                // Слушатели для быстрых сумм
+                quickAmounts.forEach(item => {
+                    item.addEventListener('click', function() {
+                        // Снимаем выделение со всех сумм
+                        quickAmounts.forEach(el => el.classList.remove('active'));
+                        
+                        // Выделяем текущую сумму
+                        this.classList.add('active');
+                        
+                        // Устанавливаем значение в поле ввода
+                        const amount = this.dataset.amount;
+                        amountInput.value = amount;
+                        
+                        // Активируем кнопку
+                        validateAmount();
+                    });
+                });
+                
+                // Обработчик кнопки "Продолжить"
+                submitButton.addEventListener('click', function() {
+                    const amount = parseFloat(amountInput.value);
+                    
+                    if (amount && amount >= 10) {
+                        // Получаем ID водителя из URL или из данных шаблона
+                        const driverId = "{{ driver.id }}";
+                        
+                        // Отправляем запрос на пополнение баланса
+                        fetch('/api/driver/balance/top-up', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                driver_id: driverId,
+                                amount: amount
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Баланс успешно пополнен!');
+                                // Перенаправляем на страницу баланса
+                                window.location.href = "{{ url_for('driver_balance_page') }}";
+                            } else {
+                                alert('Ошибка: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка при пополнении баланса:', error);
+                            alert('Произошла ошибка при пополнении баланса. Пожалуйста, попробуйте позже.');
+                        });
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

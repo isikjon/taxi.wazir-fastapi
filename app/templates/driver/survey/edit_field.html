@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Редактирование данных анкеты Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="/driver/survey/8"><img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/back.svg') }}"
+                                    alt="back"></a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left" id="edit-title">
+                            Редактирование данных
+                        </h1>
+
+                        <div class="survey__edit-form">
+                            <form id="edit-form">
+                                <div class="form-group">
+                                    <label for="field-value"
+                                        id="field-label">Значение</label>
+                                    <input type="text" id="field-value"
+                                        class="form-control"
+                                        placeholder="Введите значение">
+                                    <!-- Для выбора даты будет скрыт по умолчанию -->
+                                    <input type="date" id="date-value"
+                                        class="form-control"
+                                        style="display: none;">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit"
+                                        class="main__btn-active">Сохранить</button>
+                                    <button type="button"
+                                        class="main__btn-cancel"
+                                        id="cancel-btn">Отмена</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Функция для загрузки данных из localStorage
+                function loadFromLocalStorage() {
+                    try {
+                        const savedData = localStorage.getItem('driverSurveyData');
+                        if (savedData) {
+                            return JSON.parse(savedData);
+                        }
+                    } catch (e) {
+                        console.error('Ошибка при чтении из localStorage:', e);
+                    }
+                    return null;
+                }
+                
+                // Получаем информацию о редактируемом поле
+                const fieldId = localStorage.getItem('edit_field_id');
+                const fieldValue = localStorage.getItem('edit_field_value');
+                const fieldType = localStorage.getItem('edit_field_type');
+                
+                if (!fieldId || !fieldType) {
+                    // Если нет данных о поле, возвращаемся на страницу анкеты
+                    window.location.href = '/driver/survey/8';
+                    return;
+                }
+                
+                // Настраиваем страницу в зависимости от типа поля
+                function setupFieldEdit() {
+                    // Обновляем заголовок страницы
+                    let fieldTitle = 'Редактирование данных';
+                    let fieldLabel = 'Значение';
+                    
+                    switch (fieldType) {
+                        case 'city':
+                            fieldTitle = 'Изменить город';
+                            fieldLabel = 'Город';
+                            break;
+                        case 'full-name':
+                            fieldTitle = 'Изменить ФИО';
+                            fieldLabel = 'ФИО';
+                            break;
+                        case 'phone':
+                            fieldTitle = 'Изменить телефон';
+                            fieldLabel = 'Телефон';
+                            $('#field-value').attr('type', 'tel');
+                            break;
+                        case 'license-country':
+                            fieldTitle = 'Изменить страну выдачи прав';
+                            fieldLabel = 'Страна';
+                            break;
+                        case 'license-number':
+                            fieldTitle = 'Изменить номер прав';
+                            fieldLabel = 'Номер прав';
+                            break;
+                        case 'license-issue-date':
+                            fieldTitle = 'Изменить дату выдачи прав';
+                            fieldLabel = 'Дата выдачи';
+                            $('#field-value').hide();
+                            $('#date-value').show();
+                            break;
+                        case 'license-expiry-date':
+                            fieldTitle = 'Изменить срок действия прав';
+                            fieldLabel = 'Срок действия';
+                            $('#field-value').hide();
+                            $('#date-value').show();
+                            break;
+                        case 'invite-code':
+                            fieldTitle = 'Изменить инвайт-код';
+                            fieldLabel = 'Инвайт-код';
+                            break;
+                    }
+                    
+                    // Устанавливаем заголовок и метку поля
+                    $('#edit-title').text(fieldTitle);
+                    $('#field-label').text(fieldLabel);
+                    
+                    // Устанавливаем значение поля
+                    if (fieldValue !== 'Не указан' && fieldValue !== 'Не указана') {
+                        if (fieldType === 'license-issue-date' || fieldType === 'license-expiry-date') {
+                            // Преобразуем дату из формата ДД.ММ.ГГГГ в ГГГГ-ММ-ДД для поля input type="date"
+                            if (fieldValue) {
+                                const dateParts = fieldValue.split('.');
+                                if (dateParts.length === 3) {
+                                    const dateStr = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+                                    $('#date-value').val(dateStr);
+                                }
+                            }
+                        } else {
+                            $('#field-value').val(fieldValue);
+                        }
+                    }
+                }
+                
+                // Настраиваем форму для редактирования
+                setupFieldEdit();
+                
+                // Обработчик отправки формы
+                $('#edit-form').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Получаем новое значение поля
+                    let newValue;
+                    if (fieldType === 'license-issue-date' || fieldType === 'license-expiry-date') {
+                        const dateValue = $('#date-value').val();
+                        if (dateValue) {
+                            // Преобразуем дату из формата ГГГГ-ММ-ДД в объект Date
+                            const date = new Date(dateValue);
+                            newValue = date.toISOString().split('T')[0]; // Формат ГГГГ-ММ-ДД для API
+                        }
+                    } else {
+                        newValue = $('#field-value').val();
+                    }
+                    
+                    // Если значение не указано, то не сохраняем его
+                    if (!newValue) {
+                        localStorage.removeItem('edit_field_id');
+                        localStorage.removeItem('edit_field_value');
+                        localStorage.removeItem('edit_field_type');
+                        window.location.href = '/driver/survey/8';
+                        return;
+                    }
+                    
+                    // Сохраняем данные в localStorage
+                    let data = loadFromLocalStorage() || {};
+                    
+                    // Маппинг имен полей на клиенте с именами полей в БД
+                    const fieldMap = {
+                        'city-value': 'city',
+                        'full-name-value': 'full_name',
+                        'phone-value': 'phone',
+                        'license-country-value': 'country',
+                        'license-number-value': 'driver_license',
+                        'license-issue-date-value': 'license_issue_date',
+                        'license-expiry-date-value': 'license_expiry_date',
+                        'invite-code-value': 'invite_code'
+                    };
+                    
+                    // Получаем ключ для localStorage и БД
+                    const dbField = fieldMap[fieldId];
+                    
+                    if (dbField) {
+                        // Обновляем данные
+                        data[dbField] = newValue;
+                        
+                        // Сохраняем в localStorage
+                        localStorage.setItem('driverSurveyData', JSON.stringify(data));
+                        
+                        // Отправляем на сервер
+                        const serverData = {
+                            step: 8
+                        };
+                        serverData[dbField] = newValue;
+                        
+                        $.ajax({
+                            url: '/api/driver/survey',
+                            method: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(serverData),
+                            success: function(response) {
+                                console.log('Данные успешно сохранены:', response);
+                                
+                                // Очищаем данные о редактируемом поле
+                                localStorage.removeItem('edit_field_id');
+                                localStorage.removeItem('edit_field_value');
+                                localStorage.removeItem('edit_field_type');
+                                
+                                // Возвращаемся на страницу анкеты
+                                window.location.href = '/driver/survey/8';
+                            },
+                            error: function(error) {
+                                console.error('Ошибка сохранения данных:', error);
+                                alert('Произошла ошибка при сохранении данных. Пожалуйста, попробуйте еще раз.');
+                            }
+                        });
+                    } else {
+                        alert('Ошибка сохранения данных: неизвестное поле');
+                    }
+                });
+                
+                // Обработчик кнопки Отмена
+                $('#cancel-btn').on('click', function() {
+                    // Очищаем данные о редактируемом поле
+                    localStorage.removeItem('edit_field_id');
+                    localStorage.removeItem('edit_field_value');
+                    localStorage.removeItem('edit_field_type');
+                    
+                    // Возвращаемся на страницу анкеты
+                    window.location.href = '/driver/survey/8';
+                });
+            });
+        </script>
+
+        <style>
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-control {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 16px;
+            }
+            
+            .form-actions {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 30px;
+            }
+            
+            .main__btn-cancel {
+                background-color: #f44336;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+            
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: bold;
+            }
+        </style>
+    </body>
+</html>

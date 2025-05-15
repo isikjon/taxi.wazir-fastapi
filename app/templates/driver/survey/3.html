@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .survey-3 {
+                padding: 20px 0;
+            }
+            .back-button {
+                font-size: 24px;
+                cursor: pointer;
+                margin-bottom: 20px;
+            }
+            .title-left {
+                text-align: left;
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #9a9a9a;
+                font-size: 14px;
+            }
+            .form-input-with-arrow {
+                position: relative;
+                border: none;
+                border-bottom: 1px solid #ccc;
+                display: flex;
+                align-items: center;
+                padding: 0;
+            }
+            .form-input-with-arrow input {
+                width: 100%;
+                padding: 12px 0;
+                border: none;
+                outline: none;
+                background: transparent;
+                font-size: 16px;
+            }
+            .arrow {
+                position: absolute;
+                right: 5px;
+                transform: rotate(90deg);
+                font-weight: bold;
+                font-size: 20px;
+            }
+            .prefix {
+                padding-left: 0;
+                color: #777;
+            }
+            .form-input {
+                width: 100%;
+                padding: 12px 0;
+                border: none;
+                border-bottom: 1px solid #ccc;
+                outline: none;
+                font-size: 16px;
+            }
+            .main__btn {
+                display: block;
+                width: 100%;
+                padding: 15px;
+                color: white;
+                border: none;
+                cursor: pointer;
+                font-size: 16px;
+                text-align: center;
+                margin: 30px 0;
+                background-color: #606060;
+                border-radius: 0;
+            }
+            .main__btn-active {
+                background-color: #606060;
+            }
+            .section-title {
+                font-size: 20px;
+                margin-top: 30px;
+                margin-bottom: 20px;
+                color: #333;
+            }
+            .checkbox-group {
+                margin-top: 10px;
+            }
+            .checkbox-label {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+            }
+            .checkbox-label input {
+                margin-right: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="survey-3">
+            <div class="container">
+                <div class="back-button" id="backButton">←</div>
+
+                <h3 class="title-left">Заполните персональные данные</h3>
+                <form id="licenseForm">
+                    <!-- Персональные данные -->
+                    <div class="section-title">Личные данные</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Введите Ф.И.О.</label>
+                        <div class="form-input-with-arrow">
+                            <input type="text" id="fullName"
+                                placeholder="Ф.И.О.">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Дата рождения</label>
+                        <input type="text" id="birthDate"
+                            class="form-input date-mask"
+                            placeholder="дд.мм.гггг">
+                    </div>
+
+                    <!-- Паспортные данные -->
+                    <div class="section-title">Паспортные данные</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Серия и номер паспорта</label>
+                        <div class="form-input-with-arrow">
+                            <input type="text" id="passportNumber"
+                                placeholder="AN1234567">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Дата выдачи паспорта</label>
+                        <input type="text" id="passportIssueDate"
+                            class="form-input date-mask"
+                            placeholder="дд.мм.гггг">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Кем выдан</label>
+                        <div class="form-input-with-arrow">
+                            <input type="text" id="passportIssuedBy"
+                                placeholder="Наименование органа">
+                        </div>
+                    </div>
+
+                    <!-- Адресные данные -->
+                    <div class="section-title">Адресные данные</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Адрес регистрации</label>
+                        <div class="form-input-with-arrow">
+                            <input type="text" id="registrationAddress"
+                                placeholder="Город, улица, дом, квартира">
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sameAddressCheckbox">
+                            Адрес проживания совпадает с адресом регистрации
+                        </label>
+                    </div>
+
+                    <div class="form-group" id="residentialAddressGroup">
+                        <label class="form-label">Адрес проживания</label>
+                        <div class="form-input-with-arrow">
+                            <input type="text" id="residentialAddress"
+                                placeholder="Город, улица, дом, квартира">
+                        </div>
+                    </div>
+
+                    <!-- Данные водительского удостоверения -->
+                    <div class="section-title">Данные водительского
+                        удостоверения</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Введите страну</label>
+                        <div class="form-input-with-arrow" id="countrySelector">
+                            <input type="text" value="Республика Киргизия"
+                                readonly>
+                            <span class="arrow">›</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Введите номер в/у</label>
+                        <div class="form-input-with-arrow">
+                            <span class="prefix">в/у</span>
+                            <input type="text" id="licenseNumber"
+                                placeholder="00000000" maxlength="8">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Введите дату выдачи
+                            в/у</label>
+                        <input type="text" id="issueDate"
+                            class="form-input date-mask"
+                            placeholder="дд.мм.гггг">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Введите срок действия в/у
+                            (если есть)</label>
+                        <input type="text" id="expiryDate"
+                            class="form-input date-mask"
+                            placeholder="дд.мм.гггг">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Введите код приглашения (если
+                            есть)</label>
+                        <input type="text" id="inviteCode" class="form-input"
+                            placeholder="0000000000" maxlength="10">
+                    </div>
+
+                    <button type="submit" class="main__btn">Подтвердить</button>
+                </form>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://unpkg.com/imask"></script>
+        <script>
+            $(document).ready(function() {
+                // Загружаем имя и фамилию пользователя из localStorage
+                const firstName = localStorage.getItem('driver_first_name') || '';
+                const lastName = localStorage.getItem('driver_last_name') || '';
+                
+                // Если есть имя и фамилия, подставляем их в поле ФИО
+                if (firstName && lastName) {
+                    $('#fullName').val(`${lastName} ${firstName}`);
+                }
+                
+                // Загружаем ранее сохраненные данные, если они есть
+                const licenseNumber = localStorage.getItem('driver_license_number');
+                const issueDate = localStorage.getItem('driver_license_issue_date');
+                const expiryDate = localStorage.getItem('driver_license_expiry_date');
+                const inviteCode = localStorage.getItem('driver_invite_code');
+                const birthDate = localStorage.getItem('driver_birth_date');
+                const passportNumber = localStorage.getItem('driver_passport_number');
+                const passportIssueDate = localStorage.getItem('driver_passport_issue_date');
+                const passportIssuedBy = localStorage.getItem('driver_passport_issued_by');
+                const registrationAddress = localStorage.getItem('driver_registration_address');
+                const residentialAddress = localStorage.getItem('driver_residential_address');
+                const isSameAddress = localStorage.getItem('driver_same_address') === 'true';
+                
+                if (licenseNumber) $('#licenseNumber').val(licenseNumber);
+                if (issueDate) $('#issueDate').val(issueDate);
+                if (expiryDate) $('#expiryDate').val(expiryDate);
+                if (inviteCode) $('#inviteCode').val(inviteCode);
+                if (birthDate) $('#birthDate').val(birthDate);
+                if (passportNumber) $('#passportNumber').val(passportNumber);
+                if (passportIssueDate) $('#passportIssueDate').val(passportIssueDate);
+                if (passportIssuedBy) $('#passportIssuedBy').val(passportIssuedBy);
+                if (registrationAddress) $('#registrationAddress').val(registrationAddress);
+                if (residentialAddress) $('#residentialAddress').val(residentialAddress);
+                if (isSameAddress) {
+                    $('#sameAddressCheckbox').prop('checked', true);
+                    $('#residentialAddressGroup').hide();
+                }
+                
+                // Обработчик чекбокса "адрес совпадает"
+                $('#sameAddressCheckbox').on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $('#residentialAddressGroup').hide();
+                        $('#residentialAddress').val($('#registrationAddress').val());
+                    } else {
+                        $('#residentialAddressGroup').show();
+                    }
+                });
+                
+                // Синхронизация адресов при изменении адреса регистрации
+                $('#registrationAddress').on('input', function() {
+                    if ($('#sameAddressCheckbox').is(':checked')) {
+                        $('#residentialAddress').val($(this).val());
+                    }
+                });
+                
+                // Применяем маску для полей с датой
+                document.querySelectorAll('.date-mask').forEach(element => {
+                    IMask(element, {
+                        mask: 'dd.mm.yyyy',
+                        blocks: {
+                            dd: {
+                                mask: IMask.MaskedRange,
+                                from: 1,
+                                to: 31
+                            },
+                            mm: {
+                                mask: IMask.MaskedRange,
+                                from: 1,
+                                to: 12
+                            },
+                            yyyy: {
+                                mask: IMask.MaskedRange,
+                                from: 1900,
+                                to: 2099
+                            }
+                        }
+                    });
+                });
+                
+                // Маска для киргизского паспорта (XX YYYYYYY)
+                IMask(document.getElementById('passportNumber'), {
+                    mask: 'aa{0000000}',
+                    definitions: {
+                        'a': /[A-Z]/
+                    },
+                    prepare: function(str) {
+                        return str.toUpperCase();
+                    }
+                });
+                
+                // Проверка заполнения формы для активации кнопки
+                function checkFormCompletion() {
+                    const country = $('#countrySelector input').val();
+                    const name = $('#fullName').val();
+                    const licenseNumber = $('#licenseNumber').val();
+                    const issueDate = $('#issueDate').val();
+                    const birthDate = $('#birthDate').val();
+                    const passportNumber = $('#passportNumber').val();
+                    const passportIssueDate = $('#passportIssueDate').val();
+                    const passportIssuedBy = $('#passportIssuedBy').val();
+                    const registrationAddress = $('#registrationAddress').val();
+                    const submitButton = $('.main__btn');
+                    
+                    if (
+                        country !== 'Выберите страну' && 
+                        name.trim() !== '' && 
+                        licenseNumber.trim() !== '' && 
+                        issueDate.length === 10 &&
+                        birthDate.length === 10 &&
+                        passportNumber.trim() !== '' &&
+                        passportIssueDate.length === 10 &&
+                        passportIssuedBy.trim() !== '' &&
+                        registrationAddress.trim() !== ''
+                    ) {
+                        submitButton.addClass('main__btn-active');
+                    } else {
+                        submitButton.removeClass('main__btn-active');
+                    }
+                }
+                
+                // Проверяем состояние формы при загрузке
+                checkFormCompletion();
+                
+                // Обработчики событий для проверки заполнения формы
+                $('input').on('input', checkFormCompletion);
+                
+                // Обработка отправки формы
+                $('#licenseForm').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const country = $('#countrySelector input').val();
+                    const name = $('#fullName').val();
+                    const licenseNumber = $('#licenseNumber').val();
+                    const issueDate = $('#issueDate').val();
+                    const expiryDate = $('#expiryDate').val();
+                    const inviteCode = $('#inviteCode').val();
+                    const birthDate = $('#birthDate').val();
+                    const passportNumber = $('#passportNumber').val();
+                    const passportIssueDate = $('#passportIssueDate').val();
+                    const passportIssuedBy = $('#passportIssuedBy').val();
+                    const registrationAddress = $('#registrationAddress').val();
+                    const isSameAddress = $('#sameAddressCheckbox').is(':checked');
+                    const residentialAddress = isSameAddress ? registrationAddress : $('#residentialAddress').val();
+                    
+                    if (
+                        country !== 'Выберите страну' && 
+                        name.trim() !== '' && 
+                        licenseNumber.trim() !== '' && 
+                        issueDate.length === 10 &&
+                        birthDate.length === 10 &&
+                        passportNumber.trim() !== '' &&
+                        passportIssueDate.length === 10 &&
+                        passportIssuedBy.trim() !== '' &&
+                        registrationAddress.trim() !== ''
+                    ) {
+                        // Сохраняем данные в localStorage
+                        localStorage.setItem('driver_license_country', country);
+                        localStorage.setItem('driver_license_number', licenseNumber);
+                        localStorage.setItem('driver_license_issue_date', issueDate);
+                        
+                        if (expiryDate) {
+                            localStorage.setItem('driver_license_expiry_date', expiryDate);
+                        }
+                        
+                        if (inviteCode) {
+                            localStorage.setItem('driver_invitation_code', inviteCode);
+                        }
+                        
+                        // Сохраняем дополнительные данные
+                        localStorage.setItem('driver_birth_date', birthDate);
+                        localStorage.setItem('driver_passport_number', passportNumber);
+                        localStorage.setItem('driver_passport_issue_date', passportIssueDate);
+                        localStorage.setItem('driver_passport_issued_by', passportIssuedBy);
+                        localStorage.setItem('driver_registration_address', registrationAddress);
+                        localStorage.setItem('driver_residential_address', residentialAddress);
+                        localStorage.setItem('driver_same_address', isSameAddress.toString());
+                        
+                        console.log('Данные водителя и ВУ сохранены:', {
+                            country: country,
+                            licenseNumber: licenseNumber,
+                            issueDate: issueDate,
+                            expiryDate: expiryDate,
+                            inviteCode: inviteCode,
+                            birthDate: birthDate,
+                            passportNumber: passportNumber,
+                            passportIssueDate: passportIssueDate,
+                            passportIssuedBy: passportIssuedBy,
+                            registrationAddress: registrationAddress,
+                            residentialAddress: residentialAddress,
+                            isSameAddress: isSameAddress
+                        });
+                        
+                        // Переходим на следующую страницу
+                        window.location.href = "{{ url_for('driver_survey_step4') }}";
+                    }
+                });
+
+                // Обработчик для кнопки назад
+                document.getElementById('backButton').addEventListener('click', function() {
+                    window.location.href = "{{ url_for('driver_survey_step2') }}";
+                });
+            });
+        </script>
+    </body>
+</html>

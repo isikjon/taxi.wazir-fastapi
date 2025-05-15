@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Личные данные - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .driver-data-page {
+                padding-bottom: 50px;
+            }
+            
+            .driver-data-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+                padding: 12px 0;
+            }
+            
+            .driver-data-header h2 {
+                margin: 0;
+                margin-left: 15px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            
+            .data-section {
+                background-color: #fff;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+                overflow: hidden;
+            }
+            
+            .section-header {
+                padding: 15px;
+                background-color: #f9f9f9;
+                border-bottom: 1px solid #eee;
+                font-weight: 600;
+                font-size: 16px;
+            }
+            
+            .data-list {
+                padding: 0;
+                margin: 0;
+                list-style: none;
+            }
+            
+            .data-item {
+                padding: 15px;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .data-item:last-child {
+                border-bottom: none;
+            }
+            
+            .data-label {
+                color: #666;
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+            
+            .data-value {
+                font-weight: 500;
+                font-size: 16px;
+                word-break: break-word;
+            }
+            
+            .document-images {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .document-image {
+                flex: 1 0 calc(50% - 10px);
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+                min-height: 120px;
+                background-color: #f5f5f5;
+                border: 1px solid #eee;
+            }
+            
+            .document-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+            
+            .document-image-label {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                font-size: 12px;
+                padding: 5px 10px;
+                text-align: center;
+            }
+            
+            .no-image {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #666;
+                font-size: 14px;
+                font-style: italic;
+            }
+            
+            .car-images {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .car-image {
+                aspect-ratio: 4/3;
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+                background-color: #f5f5f5;
+                border: 1px solid #eee;
+            }
+            
+            .car-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+            
+            .car-image-label {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                font-size: 12px;
+                padding: 5px 10px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="driver-data-page">
+            <section class="profile">
+                <div class="container">
+                    <div class="driver-data-header">
+                        <a href="{{ url_for('driver_profile') }}">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </a>
+                        <h2>Личные данные</h2>
+                    </div>
+
+                    <!-- Персональные данные -->
+                    <div class="data-section">
+                        <div class="section-header">
+                            Личная информация
+                        </div>
+                        <ul class="data-list">
+                            <li class="data-item">
+                                <div class="data-label">ФИО</div>
+                                <div class="data-value">{{ driver.full_name
+                                    }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Телефон</div>
+                                <div class="data-value">{{ driver.phone }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Дата рождения</div>
+                                <div class="data-value">
+                                    {% if driver.birth_date and
+                                    driver.birth_date is not string and
+                                    driver.birth_date.strftime %}
+                                    {{ driver.birth_date.strftime('%d.%m.%Y') }}
+                                    {% elif driver.birth_date is string %}
+                                    {{ driver.birth_date }}
+                                    {% else %}
+                                    Не указано
+                                    {% endif %}
+                                </div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Город</div>
+                                <div class="data-value">{{ driver.city if
+                                    driver.city else 'Не указан' }}</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Автомобиль -->
+                    <div class="data-section">
+                        <div class="section-header">
+                            Информация об автомобиле
+                        </div>
+                        <ul class="data-list">
+                            {% if car %}
+                            <li class="data-item">
+                                <div class="data-label">Марка и модель</div>
+                                <div class="data-value">{{ car.brand }} {{
+                                    car.model }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Гос. номер</div>
+                                <div class="data-value">{{ car.license_plate
+                                    }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Год выпуска</div>
+                                <div class="data-value">{{ car.year }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Цвет</div>
+                                <div class="data-value">{{ car.color }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">VIN</div>
+                                <div class="data-value">{{ car.vin }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Коробка передач</div>
+                                <div class="data-value">
+                                    {% if car.transmission == 'automatic' %}
+                                    Автомат
+                                    {% elif car.transmission == 'manual' %}
+                                    Механика
+                                    {% else %}
+                                    {{ car.transmission }}
+                                    {% endif %}
+                                </div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Тариф</div>
+                                <div class="data-value">{{ car.tariff }}</div>
+                            </li>
+                            {% else %}
+                            <li class="data-item">
+                                <div class="data-value">Информация об автомобиле
+                                    не найдена</div>
+                            </li>
+                            {% endif %}
+                        </ul>
+
+                        <!-- Фотографии автомобиля -->
+                        {% if car %}
+                        <div class="car-images">
+                            <div class="car-image">
+                                {% if car_photos.front %}
+                                <img src="{{ car_photos.front }}"
+                                    alt="Фото спереди">
+                                <div class="car-image-label">Фото спереди</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                            <div class="car-image">
+                                {% if car_photos.rear %}
+                                <img src="{{ car_photos.rear }}"
+                                    alt="Фото сзади">
+                                <div class="car-image-label">Фото сзади</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                            <div class="car-image">
+                                {% if car_photos.right %}
+                                <img src="{{ car_photos.right }}"
+                                    alt="Фото справа">
+                                <div class="car-image-label">Фото справа</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                            <div class="car-image">
+                                {% if car_photos.left %}
+                                <img src="{{ car_photos.left }}"
+                                    alt="Фото слева">
+                                <div class="car-image-label">Фото слева</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Водительское удостоверение -->
+                    <div class="data-section">
+                        <div class="section-header">
+                            Водительское удостоверение
+                        </div>
+                        <ul class="data-list">
+                            <li class="data-item">
+                                <div class="data-label">Номер водительского
+                                    удостоверения</div>
+                                <div class="data-value">{{
+                                    driver.driver_license_number if
+                                    driver.driver_license_number else
+                                    'Не указан' }}</div>
+                            </li>
+                            <li class="data-item">
+                                <div class="data-label">Дата выдачи</div>
+                                <div class="data-value">
+                                    {% if license_issue_date %}
+                                    {{ license_issue_date }}
+                                    {% elif driver.driver_license_issue_date and
+                                    driver.driver_license_issue_date is not
+                                    string and
+                                    driver.driver_license_issue_date.strftime %}
+                                    {{
+                                    driver.driver_license_issue_date.strftime('%d.%m.%Y')
+                                    }}
+                                    {% elif driver.driver_license_issue_date is
+                                    string %}
+                                    {{ driver.driver_license_issue_date }}
+                                    {% else %}
+                                    Не указана
+                                    {% endif %}
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="document-images">
+                            <div class="document-image">
+                                {% if docs_photos.license_front %}
+                                <img src="{{ docs_photos.license_front }}"
+                                    alt="Лицевая сторона ВУ">
+                                <div class="document-image-label">Лицевая
+                                    сторона</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                            <div class="document-image">
+                                {% if docs_photos.license_back %}
+                                <img src="{{ docs_photos.license_back }}"
+                                    alt="Обратная сторона ВУ">
+                                <div class="document-image-label">Обратная
+                                    сторона</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Паспорт -->
+                    <div class="data-section">
+                        <div class="section-header">
+                            Паспорт
+                        </div>
+
+                        <div class="document-images">
+                            <div class="document-image">
+                                {% if docs_photos.passport_front %}
+                                <img src="{{ docs_photos.passport_front }}"
+                                    alt="Лицевая сторона паспорта">
+                                <div class="document-image-label">Лицевая
+                                    сторона</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                            <div class="document-image">
+                                {% if docs_photos.passport_back %}
+                                <img src="{{ docs_photos.passport_back }}"
+                                    alt="Обратная сторона паспорта">
+                                <div class="document-image-label">Обратная
+                                    сторона</div>
+                                {% else %}
+                                <div class="no-image">Фото не загружено</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </body>
+</html>

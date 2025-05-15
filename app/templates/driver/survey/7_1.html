@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Условия вывода средств - Wazir.kg</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="/driver/survey/7"><img
+                                    src="/static/driver/assets/img/ico/back.svg"
+                                    alt="back"></a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Условия вывода средств
+                        </h1>
+
+                        <div class="survey__terms" id="payment-terms">
+                            <p>Вывод средств через приложение MOZEN.</p>
+                            <p>Для этого необходимо:</p>
+                            <ol>
+                                <li>Заранее уточните в таксопарке график и форму
+                                    проведения выплат.</li>
+                                <li>Если вывод затянулся, не переживайте, а
+                                    подождите еще. Деньги должны прийти, просто
+                                    наберитесь терпения. Возможно, вы попали на
+                                    выходной или праздничный день.</li>
+                                <li>Если заявку долго не обрабатывают, не
+                                    создавайте еще одну. Обратитесь в
+                                    техподдержку для уточнения статуса вашей
+                                    аппликации.</li>
+                            </ol>
+                            <p>Средства автоматически переводятся на карту
+                                водителя со второго дня работы в
+                                парке.</p>
+                            <p>Каждая транзакция проходит проверку
+                                ответственными сотрудниками. Если она
+                                успешна, клиент получает соответствующее
+                                уведомление, а через некоторое время после этого
+                                деньги зачисляются на карту.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Получаем выбранный парк из localStorage
+                const selectedPark = localStorage.getItem('driver_selected_park');
+                
+                if (!selectedPark) {
+                    // Если парк не выбран, вернемся на страницу выбора
+                    window.location.href = '/driver/survey/6';
+                    return;
+                }
+                
+                // Разбираем JSON с данными парка
+                try {
+                    const parkData = JSON.parse(selectedPark);
+                    
+                    // Если у парка есть специфические условия вывода средств, загружаем их
+                    if (parkData.paymentTerms) {
+                        $('#payment-terms').html(parkData.paymentTerms);
+                    }
+                    
+                } catch (e) {
+                    console.error('Ошибка при разборе данных парка:', e);
+                    // Оставляем стандартные условия, которые уже указаны в HTML
+                }
+            });
+        </script>
+    </body>
+</html>

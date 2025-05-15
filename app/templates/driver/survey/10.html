@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Регистрация успешна - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .success-page {
+                padding: 20px 0;
+                text-align: center;
+            }
+            
+            .success-icon {
+                width: 120px;
+                height: 120px;
+                background-color: #eee;
+                border-radius: 60px;
+                margin: 30px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .success-icon img {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .success-title {
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 15px;
+                color: #000;
+            }
+            
+            .success-description {
+                font-size: 16px;
+                color: #555;
+                margin-bottom: 40px;
+                padding: 0 20px;
+                line-height: 1.5;
+            }
+            
+            .main__btn-active {
+                display: block;
+                width: 100%;
+                background-color: #606060;
+                color: white;
+                padding: 15px;
+                border: none;
+                border-radius: 0;
+                margin-top: 30px;
+                font-size: 16px;
+                text-align: center;
+                cursor: pointer;
+                text-decoration: none;
+            }
+            
+            .main__btn-active a {
+                color: white;
+                text-decoration: none;
+                display: block;
+                width: 100%;
+            }
+            
+            .loading-indicator {
+                display: none;
+                margin: 20px auto;
+                text-align: center;
+            }
+            
+            .loading-indicator p {
+                margin-top: 10px;
+                color: #777;
+            }
+            
+            .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #606060;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <section class="success-page">
+                <div class="container">
+                    <div class="success-icon">
+                        <img
+                            src="{{ url_for('static', path='/driver/assets/img/ico/check.svg') }}"
+                            alt="success">
+                    </div>
+
+                    <h1 class="success-title">Анкета заполнена!</h1>
+
+                    <p class="success-description">
+                        Ваша анкета успешно заполнена и отправлена. Теперь вы
+                        можете начать работу в Wazir.kg
+                    </p>
+
+                    <div class="loading-indicator" id="loadingIndicator">
+                        <div class="spinner"></div>
+                        <p>Обрабатываем данные...</p>
+                    </div>
+
+                    <button class="main__btn-active"
+                        id="loginButton">Войти</button>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Показываем индикатор загрузки и скрываем кнопку при загрузке страницы
+                $('#loadingIndicator').show();
+                $('#loginButton').hide();
+                
+                // Собираем все данные пользователя из localStorage
+                const userData = {
+                    first_name: localStorage.getItem('driver_first_name') || '',
+                    last_name: localStorage.getItem('driver_last_name') || '',
+                    phone: localStorage.getItem('driver_phone') || '',
+                    token: localStorage.getItem('driver_token') || '',
+                    user_id: localStorage.getItem('driver_id') || '',
+                    city: localStorage.getItem('driver_city') || '',
+                    license_country: localStorage.getItem('driver_license_country') || '',
+                    license_number: localStorage.getItem('driver_license_number') || '',
+                    license_issue_date: localStorage.getItem('driver_license_issue_date') || '',
+                    license_expiry_date: localStorage.getItem('driver_license_expiry_date') || '',
+                    invitation_code: localStorage.getItem('driver_invitation_code') || '',
+                    car_brand: localStorage.getItem('driver_car_brand') || '',
+                    car_model: localStorage.getItem('driver_car_model') || '',
+                    car_color: localStorage.getItem('driver_car_color') || '',
+                    car_year: localStorage.getItem('driver_car_year') || '',
+                    car_number: localStorage.getItem('driver_car_number') || '',
+                    birth_date: localStorage.getItem('driver_birth_date') || '',
+                    passport_number: localStorage.getItem('driver_passport_number') || '',
+                    passport_issue_date: localStorage.getItem('driver_passport_issue_date') || '',
+                    passport_issued_by: localStorage.getItem('driver_passport_issued_by') || '',
+                    registration_address: localStorage.getItem('driver_registration_address') || '',
+                    residential_address: localStorage.getItem('driver_residential_address') || '',
+                    employment_type: localStorage.getItem('driver_employment_type') || '',
+                    taxi_experience: localStorage.getItem('driver_taxi_experience') || '',
+                    work_time: localStorage.getItem('driver_work_time') || '',
+                    payment_method: localStorage.getItem('driver_payment_method') || '',
+                    bank_name: localStorage.getItem('driver_bank_name') || '',
+                    card_number: localStorage.getItem('driver_card_number') || '',
+                    card_holder: localStorage.getItem('driver_card_holder') || '',
+                    account_bank_name: localStorage.getItem('driver_account_bank_name') || '',
+                    account_number: localStorage.getItem('driver_account_number') || '',
+                    bank_bic: localStorage.getItem('driver_bank_bic') || '',
+                    account_holder: localStorage.getItem('driver_account_holder') || '',
+                    wallet_system: localStorage.getItem('driver_wallet_system') || '',
+                    wallet_number: localStorage.getItem('driver_wallet_number') || '',
+                    wallet_holder: localStorage.getItem('driver_wallet_holder') || ''
+                };
+                
+                // Получаем данные о выбранном парке
+                try {
+                    const parkData = localStorage.getItem('driver_selected_park');
+                    if (parkData) {
+                        userData.selected_park = JSON.parse(parkData);
+                    }
+                } catch (e) {
+                    console.error('Ошибка при получении данных о парке:', e);
+                }
+                
+                console.log('Данные пользователя для отправки на сервер:', userData);
+                
+                // Отправляем данные на сервер для создания/обновления пользователя
+                $.ajax({
+                    url: '/api/driver/complete-registration',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(userData),
+                    headers: {
+                        'Authorization': 'Bearer ' + userData.token
+                    },
+                    success: function(response) {
+                        console.log('Регистрация успешно завершена:', response);
+                        
+                        // Скрываем индикатор загрузки и показываем кнопку
+                        $('#loadingIndicator').hide();
+                        $('#loginButton').show();
+                        
+                        // Сохраняем данные об успешной регистрации
+                        localStorage.setItem('driver_registration_completed', 'true');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при завершении регистрации:', error);
+                        
+                        // Даже в случае ошибки даем возможность пользователю войти
+                        $('#loadingIndicator').hide();
+                        $('#loginButton').show();
+                    }
+                });
+                
+                // Обработчик нажатия на кнопку "Войти"
+                $('#loginButton').on('click', function() {
+                    // Перенаправляем на главную страницу водителя
+                    window.location.href = '/driver/dashboard';
+                });
+            });
+        </script>
+    </body>
+</html>

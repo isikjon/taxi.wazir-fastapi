@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Загрузка фотографий</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+        body {
+            font-weight: 400;
+            color: #606060;
+        }
+        
+        .photo-upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .photo-upload-title {
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: #606060;
+        }
+        
+        .photo-upload-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .photo-upload-item {
+            width: 100%;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border: 1px dashed #cccccc;
+            border-radius: 0;
+            position: relative;
+        }
+        
+        .photo-upload-item input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .photo-preview {
+            width: 100%;
+            height: 200px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        .photo-placeholder {
+            text-align: center;
+            padding: 30px 0;
+        }
+        
+        .photo-placeholder img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .photo-placeholder p {
+            margin: 0;
+            color: #606060;
+        }
+        
+        .upload-progress {
+            height: 4px;
+            background-color: #e0e0e0;
+            width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .upload-progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .upload-status {
+            display: none;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        
+        /* Кнопка отправки */
+        .submit-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin-top: 20px;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 400;
+            border-radius: 0;
+        }
+        
+        .submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        /* Блок инструкций */
+        .instructions-block {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .instructions-block h4 {
+            margin-top: 0;
+            font-weight: 400;
+            color: #606060;
+        }
+        
+        .instructions-block ul {
+            padding-left: 20px;
+        }
+        
+        .instructions-block li {
+            margin-bottom: 5px;
+            color: #606060;
+        }
+    </style>
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="/driver/photocontrol/1">
+                        <div class="profile__back">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <div class="title-left">Загрузка фотографий</div>
+
+                <div class="instructions-block">
+                    <h4>Требования к фотографиям:</h4>
+                    <ul>
+                        <li>Фотографии должны быть четкими и хорошо
+                            освещенными</li>
+                        <li>Все текстовые данные должны быть хорошо читаемы</li>
+                        <li>Документы должны быть сфотографированы
+                            полностью</li>
+                        <li>Рекомендуемый размер фото - не менее 800x600
+                            пикселей</li>
+                    </ul>
+                </div>
+
+                <form id="photoUploadForm">
+                    <!-- Блок для загрузки паспорта -->
+                    <div class="photo-upload-section">
+                        <h3 class="photo-upload-title">Паспорт</h3>
+
+                        <div class="photo-upload-container">
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="passport_front_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="passport_front_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Лицевая сторона паспорта</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="passport_front_progress">
+                                    <div class="upload-progress-bar"
+                                        id="passport_front_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="passport_front_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="passport_front" name="passport_front">
+                            </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="passport_back_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="passport_back_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Обратная сторона паспорта</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="passport_back_progress">
+                                    <div class="upload-progress-bar"
+                                        id="passport_back_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="passport_back_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="passport_back" name="passport_back">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Блок для загрузки водительского удостоверения -->
+                    <div class="photo-upload-section">
+                        <h3 class="photo-upload-title">Водительское
+                            удостоверение</h3>
+
+                        <div class="photo-upload-container">
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="license_front_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="license_front_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Лицевая сторона ВУ</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="license_front_progress">
+                                    <div class="upload-progress-bar"
+                                        id="license_front_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="license_front_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="license_front" name="license_front">
+                            </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="license_back_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="license_back_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Обратная сторона ВУ</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="license_back_progress">
+                                    <div class="upload-progress-bar"
+                                        id="license_back_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="license_back_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="license_back" name="license_back">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Блок для загрузки фото автомобиля -->
+                    <div class="photo-upload-section">
+                        <h3 class="photo-upload-title">Фотографии
+                            автомобиля</h3>
+
+                        <div class="photo-upload-container">
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="car_front_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="car_front_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Автомобиль спереди</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="car_front_progress">
+                                    <div class="upload-progress-bar"
+                                        id="car_front_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="car_front_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="car_front" name="car_front">
+                            </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="car_back_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="car_back_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Автомобиль сзади</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="car_back_progress">
+                                    <div class="upload-progress-bar"
+                                        id="car_back_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="car_back_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="car_back" name="car_back">
+                            </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="car_right_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="car_right_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Автомобиль справа</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="car_right_progress">
+                                    <div class="upload-progress-bar"
+                                        id="car_right_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="car_right_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="car_right" name="car_right">
+                            </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="car_left_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="car_left_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Автомобиль слева</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="car_left_progress">
+                                    <div class="upload-progress-bar"
+                                        id="car_left_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="car_left_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="car_left" name="car_left">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Блок для загрузки фото салона -->
+                    <div class="photo-upload-section">
+                        <h3 class="photo-upload-title">Фотографии салона</h3>
+
+                        <div class="photo-upload-container">
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="interior_front_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="interior_front_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Салон спереди</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="interior_front_progress">
+                                    <div class="upload-progress-bar"
+                                        id="interior_front_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="interior_front_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="interior_front" name="interior_front">
+                            </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="interior_back_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="interior_back_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Салон сзади</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="interior_back_progress">
+                                    <div class="upload-progress-bar"
+                                        id="interior_back_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="interior_back_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="interior_back" name="interior_back">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-button"
+                        id="submitButton" disabled>Отправить фотографии</button>
+                </form>
+            </div>
+        </main>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('photoUploadForm');
+            const submitButton = document.getElementById('submitButton');
+            const photoInputs = form.querySelectorAll('input[type="file"]');
+            const requiredPhotos = ['passport_front', 'passport_back', 'license_front', 'license_back'];
+            const uploadedFiles = {};
+            
+            // Функция для отображения предпросмотра фото
+            function handleFileSelect(event) {
+                const fileInput = event.target;
+                const fileId = fileInput.id;
+                const previewElement = document.getElementById(`${fileId}_preview`);
+                const placeholderElement = document.getElementById(`${fileId}_placeholder`);
+                const progressElement = document.getElementById(`${fileId}_progress`);
+                const statusElement = document.getElementById(`${fileId}_status`);
+                
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    
+                    // Показываем прогресс загрузки
+                    progressElement.style.display = 'block';
+                    statusElement.style.display = 'block';
+                    statusElement.textContent = 'Подготовка...';
+                    
+                    reader.onload = function(e) {
+                        previewElement.style.backgroundImage = `url('${e.target.result}')`;
+                        previewElement.style.display = 'block';
+                        placeholderElement.style.display = 'none';
+                        
+                        // Имитация загрузки для демонстрации
+                        simulateUpload(fileId, file);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+                
+                // Проверяем, можно ли активировать кнопку отправки
+                checkSubmitButtonState();
+            }
+            
+            // Имитация процесса загрузки
+            function simulateUpload(fileId, file) {
+                const progressBar = document.getElementById(`${fileId}_progress_bar`);
+                const statusElement = document.getElementById(`${fileId}_status`);
+                let progress = 0;
+                
+                const interval = setInterval(() => {
+                    progress += 5;
+                    progressBar.style.width = `${progress}%`;
+                    statusElement.textContent = `Загрузка: ${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        statusElement.textContent = 'Загружено успешно';
+                        uploadedFiles[fileId] = true;
+                        checkSubmitButtonState();
+                    }
+                }, 100);
+            }
+            
+            // Проверка состояния кнопки отправки
+            function checkSubmitButtonState() {
+                const allRequiredUploaded = requiredPhotos.every(id => uploadedFiles[id]);
+                submitButton.disabled = !allRequiredUploaded;
+            }
+            
+            // Добавляем обработчики событий для всех полей загрузки фото
+            photoInputs.forEach(input => {
+                input.addEventListener('change', handleFileSelect);
+            });
+            
+            // Обработчик отправки формы
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Создаем объект FormData для отправки файлов
+                const formData = new FormData();
+                
+                // Добавляем все файлы в FormData
+                photoInputs.forEach(input => {
+                    if (input.files && input.files[0]) {
+                        formData.append(input.name, input.files[0]);
+                    }
+                });
+                
+                // Отправка данных на сервер через fetch API
+                fetch('/api/driver/upload-photos', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Фотографии успешно загружены! Они будут проверены администратором.');
+                        window.location.href = '/driver/photocontrol/1';
+                    } else {
+                        alert('Ошибка при загрузке фотографий: ' + data.detail);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Произошла ошибка при загрузке фотографий. Пожалуйста, попробуйте еще раз.');
+                });
+            });
+        });
+    </script>
+    </body>
+</html>

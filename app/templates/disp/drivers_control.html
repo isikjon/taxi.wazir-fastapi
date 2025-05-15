@@ -570,6 +570,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
     
+    // Комментируем обработчики для отсутствующих элементов
+    /* 
     document.getElementById('accept-all-drivers').addEventListener('click', function() {
         document.getElementById('acceptAllModal').style.display = 'block';
     });
@@ -585,6 +587,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('accept-all-close').addEventListener('click', function() {
         document.getElementById('acceptAllModal').style.display = 'none';
     });
+    */
     
     document.getElementById('accept-modal-btn').addEventListener('click', function() {
         if (currentDriverId && !isDispCreated) {
@@ -599,6 +602,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
     
     function acceptAllDrivers() {
+        // Проверяем, существует ли модальное окно
+        const acceptAllModal = document.getElementById('acceptAllModal');
+        
         fetch('/api/drivers/accept-all', {
             method: 'POST',
             headers: {
@@ -623,7 +629,9 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (data.success) {
                 alert(data.detail);
-                document.getElementById('acceptAllModal').style.display = 'none';
+                if (acceptAllModal) {
+                    acceptAllModal.style.display = 'none';
+                }
                 window.location.reload();
             } else {
                 alert('Ошибка при принятии всех водителей: ' + (data.detail || 'Неизвестная ошибка'));

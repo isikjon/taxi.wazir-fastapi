@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Полезные советы</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="{{ url_for('driver_board') }}">
+                        <div class="profile__back">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <h1 class="title-left">Полезные советы</h1>
+
+                <div class="settings-section">
+                    <div class="help-content">
+                        <div class="help-item">
+                            <h2>Куда обратиться за помощью.</h2>
+                            <p>Если у вас возникли технические проблемы или
+                                появились вопросы по работе с сервисом вы всегда
+                                можете написать в службу поддержки через
+                                соответствующий раздел меню в Wazir.</p>
+                            <p>Сотрудники службы поддержки помогут вам в любой
+                                ситуации - например, если:</p>
+                            <ul>
+                                <li>— клиенты забыли вещи в вашем
+                                    автомобиле,</li>
+                                <li>— возникли проблемы с безналичной
+                                    оплатой.</li>
+                            </ul>
+
+                            <p><strong>Помните</strong>, что некоторые важные
+                                вопросы вам помогут решить в таксопарке:</p>
+                            <ul>
+                                <li>— проконсультировать о выводе денежных
+                                    средств со счета и пополнении счета
+                                    водителя,</li>
+                                <li>— рассказать о смене водительского
+                                    удостоверения.</li>
+                            </ul>
+
+                            <p>Ещё можно приехать в Центр для водителей и лично
+                                пообщаться со специалистом.</p>
+
+                            <p>Центр для водителей в Бишкеке работает по адресу:
+                                Бульвар Эркиндик 58а.</p>
+
+                            <p>Ждём вас с 10:00 до 19:00 по будням.</p>
+
+                            <a href="#"
+                                style="color: #2d29c7; text-decoration: none;">Поехать
+                                в Центр для водителей</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

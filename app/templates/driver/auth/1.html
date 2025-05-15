@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Регистрация водитель Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+        <style>
+                .iti {
+                    width: 100% !important;
+                } 
+                body {
+                    padding: 100px 0;
+                }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="brand">
+                <div class="container">
+                    <div class="brand__content">
+                        <div class="logo">
+                            <a href="{{ url_for('driver_auth_step1') }}">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/logo.png') }}"
+                                    alt="logo">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main>
+            <section class="register">
+                <div class="container">
+                    <div class="register__content">
+                        <div class="register__intro">
+                            <h1 class="title">
+                                Регистрация по номеру телефона
+                            </h1>
+                        </div>
+                        <div class="register__tabs">
+                            <div class="tabs">
+                                <button style="width: 50%;"><a
+                                        href="/client/auth/1.html"></a>
+                                    Пользователь</button>
+                                <button class="active"
+                                    style="width: 50%;">Водитель</button>
+                            </div>
+                        </div>
+                        <div class="register__form">
+                            <form id="phoneForm" style="width: 100%;">
+                                <input type="tel" id="phone" class="phone"
+                                    name="phone" required
+                                    style="padding-right: 60px; width: 100%;">
+                                <button type="submit"
+                                    class="main__btn">Продолжить</button>
+                            </form>
+                            <div class="register__block">
+                                <a href="#">
+                                    Нажимая кнопку вы соглашаетесь с условиями
+                                    <span> Пользовательского соглашения</span>
+                                    и
+                                    <span> Политики
+                                        конфенденциальносит</span>
+                                </a>
+                            </div>
+                            <div class="register__block">
+                                <p>Уже есть аккаунт?
+                                    <a
+                                        href="{{ url_for('driver_auth_step1') }}">Войти</a></p>
+                            </div>
+                            <div class="register__block register__block-footer">
+                                <p>Центр обработки, тех. поддержка, авторске
+                                    права</p>
+                            </div>
+                        </div>
+                        <!-- Добавляем ссылку для прямого входа (только для тестирования) -->
+                        <div style="margin-top: 20px; text-align: center;">
+                            <a href="#" id="direct-login-link"
+                                style="color: #999; font-size: 12px;">Прямой
+                                вход для тестирования</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <!-- Добавляем блок для тестирования API -->
+        <div class="testing-tools"
+            style="margin-top: 40px; padding: 15px; border-top: 1px solid #eee;">
+            <h3
+                style="color: #999; font-size: 14px; margin-bottom: 10px;">Инструменты
+                для тестирования</h3>
+
+            <div class="tool-item" style="margin-bottom: 10px;">
+                <button id="test-db-connection"
+                    style="background: #f5f5f5; border: 1px solid #ddd; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                    Проверить соединение с БД
+                </button>
+            </div>
+
+            <div class="tool-item" style="margin-bottom: 10px;">
+                <button id="sync-driver-users"
+                    style="background: #f5f5f5; border: 1px solid #ddd; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                    Синхронизировать пользователей
+                </button>
+            </div>
+
+            <div class="tool-item" style="margin-bottom: 10px;">
+                <label
+                    style="display: block; margin-bottom: 5px; font-size: 12px; color: #666;">ID
+                    водителя:</label>
+                <input type="text" id="driver-id-input"
+                    style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 200px;"
+                    placeholder="Введите ID водителя">
+                <button id="sync-driver-balance"
+                    style="background: #f5f5f5; border: 1px solid #ddd; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                    Синхронизировать баланс
+                </button>
+            </div>
+
+            <div id="test-result"
+                style="margin-top: 15px; padding: 10px; background: #f9f9f9; border-radius: 4px; font-size: 12px; max-height: 200px; overflow-y: auto; display: none;">
+                <pre style="margin: 0; white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                const phoneInput = document.querySelector("#phone");
+                const iti = window.intlTelInput(phoneInput, {
+                    initialCountry: "kg",
+                    onlyCountries: ["kg"],
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                });
+
+                $('#phone').mask('000-000-00-00', {
+                    placeholder: "XXX-XXX-XX-XX"
+                });
+
+                $('#phone').on('input', function() {
+                    const phoneValue = $(this).val().replace(/[^0-9]/g, '');
+                    if (phoneValue.length === 10) {
+                        $('.main__btn').addClass('main__btn-active');
+                    } else {
+                        $('.main__btn').removeClass('main__btn-active');
+                    }
+                });
+
+                $('#phoneForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const phoneNumber = iti.getNumber();
+                    
+                    localStorage.setItem('driver_phone', phoneNumber);
+                    console.log('Телефон сохранен в localStorage:', phoneNumber);
+                    
+                    $.ajax({
+                        url: '/api/driver/login',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ phone: phoneNumber }),
+                        success: function(response) {
+                            window.location.href = "{{ url_for('driver_auth_step2') }}?phone=" + encodeURIComponent(phoneNumber);
+                        },
+                        error: function(xhr) {
+                            // Обработка ошибок
+                            alert('Произошла ошибка при отправке кода. Пожалуйста, попробуйте снова.');
+                        }
+                    });
+                });
+
+                // Добавляем обработчик для прямого входа
+                document.getElementById('direct-login-link').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Получаем номер телефона из поля ввода
+                    const phone = document.getElementById('phone').value;
+                    
+                    if (!phone) {
+                        alert('Пожалуйста, введите номер телефона');
+                        return;
+                    }
+                    
+                    // Перенаправляем на прямой вход
+                    window.location.href = `/driver/direct-login/${encodeURIComponent(phone)}`;
+                });
+            });
+
+            // Добавляем обработчики для тестирования
+            document.addEventListener('DOMContentLoaded', function() {
+                // Функция для отображения результатов
+                function showResult(data) {
+                    const resultDiv = document.getElementById('test-result');
+                    const pre = resultDiv.querySelector('pre');
+                    pre.textContent = JSON.stringify(data, null, 2);
+                    resultDiv.style.display = 'block';
+                }
+                
+                // Тест соединения с БД
+                document.getElementById('test-db-connection').addEventListener('click', function() {
+                    fetch('/api/test-db-connection')
+                        .then(response => response.json())
+                        .then(data => {
+                            showResult(data);
+                        })
+                        .catch(error => {
+                            showResult({error: error.message});
+                        });
+                });
+                
+                // Синхронизация пользователей
+                document.getElementById('sync-driver-users').addEventListener('click', function() {
+                    fetch('/api/sync-driver-users')
+                        .then(response => response.json())
+                        .then(data => {
+                            showResult(data);
+                        })
+                        .catch(error => {
+                            showResult({error: error.message});
+                        });
+                });
+                
+                // Синхронизация баланса водителя
+                document.getElementById('sync-driver-balance').addEventListener('click', function() {
+                    const driverId = document.getElementById('driver-id-input').value.trim();
+                    if (!driverId) {
+                        showResult({error: 'Необходимо указать ID водителя'});
+                        return;
+                    }
+                    
+                    fetch(`/api/driver/${driverId}/sync-balance`)
+                        .then(response => response.json())
+                        .then(data => {
+                            showResult(data);
+                        })
+                        .catch(error => {
+                            showResult({error: error.message});
+                        });
+                });
+            });
+        </script>
+    </body>
+</html>

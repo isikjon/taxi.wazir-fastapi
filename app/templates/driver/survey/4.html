@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .back__content {
+                display: flex;
+                align-items: center;
+            }
+            .back__content a {
+                display: flex;
+                align-items: center;
+            }
+            .title-left {
+                text-align: left;
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #9a9a9a;
+                font-size: 14px;
+            }
+            .form-input {
+                width: 100%;
+                padding: 12px 0;
+                border: none;
+                border-bottom: 1px solid #ccc;
+                outline: none;
+                font-size: 16px;
+                background-color: transparent;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                background-image: url("{{ url_for('static', path='/driver/assets/img/ico/down-arrow.svg') }}");
+                background-repeat: no-repeat;
+                background-position: right center;
+                cursor: pointer;
+            }
+            .main__btn {
+                display: block;
+                width: 100%;
+                padding: 15px;
+                color: white;
+                background-color: #606060;
+                border: none;
+                cursor: pointer;
+                font-size: 16px;
+                text-align: center;
+                margin: 30px 0;
+            }
+            .main__btn-active {
+                background-color: #606060;
+            }
+            .survey__profile-item-active img {
+                width: 12px;
+                height: 12px;
+            }
+            .checkbox-group {
+                margin-top: 10px;
+            }
+            .checkbox-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+                position: relative;
+            }
+            .checkbox-item input[type="checkbox"] {
+                margin-right: 10px;
+                width: 20px;
+                height: 20px;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                outline: none;
+                cursor: pointer;
+                position: relative;
+            }
+            .checkbox-item input[type="checkbox"]:checked {
+                background-color: #606060;
+                border-color: #606060;
+            }
+            .checkbox-item input[type="checkbox"]:checked::after {
+                content: '';
+                position: absolute;
+                left: 7px;
+                top: 3px;
+                width: 5px;
+                height: 10px;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+            }
+            .checkbox-item label {
+                font-weight: 400;
+                font-size: 16px;
+                color: #333;
+                cursor: pointer;
+                display: inline-block;
+                margin-bottom: 0;
+                line-height: 20px;
+            }
+            /* Стиль для input текстовых полей без стрелки */
+            .form-input-text {
+                width: 100%;
+                padding: 12px 0;
+                border: none;
+                border-bottom: 1px solid #ccc;
+                outline: none;
+                font-size: 16px;
+                background-color: transparent;
+                background-image: none;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="{{ url_for('driver_survey_step3') }}">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/back.svg') }}"
+                                    alt="back">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Заполните анкету
+                        </h1>
+                        <div class="survey__profile-wrapper">
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/check.svg') }}"
+                                        alt="check">
+                                </div>
+                                <p>Про вас</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    2
+                                </div>
+                                <p>Про авто</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item">
+                                    3
+                                </div>
+                                <p>Условия</p>
+                            </div>
+                        </div>
+                        <div class="register__form register__auth">
+                            <form id="carForm">
+                                <div class="form-group">
+                                    <label for="brand">Введите марку</label>
+                                    <select id="brand" class="form-input"
+                                        required>
+                                        <option value disabled selected>Выберите
+                                            марку</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="model">Введите модель</label>
+                                    <select id="model" class="form-input"
+                                        required disabled>
+                                        <option value disabled selected>Сначала
+                                            выберите марку</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="color">Введите Цвет</label>
+                                    <select id="color" class="form-input"
+                                        required>
+                                        <option value disabled selected>Выберите
+                                            цвет</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="year">Введите год
+                                        выпуска</label>
+                                    <select id="year" class="form-input"
+                                        required>
+                                        <option value disabled selected>Выберите
+                                            год</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="number">Введите
+                                        гос.номер</label>
+                                    <input type="text" id="number"
+                                        placeholder="01 220 DCA"
+                                        class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="vin">Введите VIN номер
+                                        автомобиля</label>
+                                    <input type="text" id="vin"
+                                        placeholder="WDD1690071J236589"
+                                        class="form-input form-input-text" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="body_number">Введите номер
+                                        кузова (если есть)</label>
+                                    <input type="text" id="body_number"
+                                        placeholder="ZFA22300005556677"
+                                        class="form-input form-input-text">
+                                </div>
+                                <div class="form-group">
+                                    <label for="registration">Данные о
+                                        регистрации ТС</label>
+                                    <input type="text" id="registration"
+                                        placeholder="Серия и номер СТС"
+                                        class="form-input form-input-text">
+                                </div>
+                                <div class="form-group">
+                                    <label for="transmission">Тип коробки
+                                        передач</label>
+                                    <select id="transmission" class="form-input"
+                                        required>
+                                        <option value disabled selected>Выберите
+                                            тип</option>
+                                        <option
+                                            value="manual">Механическая</option>
+                                        <option
+                                            value="automatic">Автоматическая</option>
+                                        <option
+                                            value="robot">Роботизированная</option>
+                                        <option
+                                            value="variator">Вариатор</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="category">Категория
+                                        обслуживания</label>
+                                    <select id="category" class="form-input"
+                                        required>
+                                        <option value disabled selected>Выберите
+                                            категорию</option>
+                                        <option value="economy">Эконом</option>
+                                        <option value="comfort">Комфорт</option>
+                                        <option value="business">Бизнес</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="child_seats">Количество детских
+                                        кресел</label>
+                                    <select id="child_seats" class="form-input">
+                                        <option value="0" selected>0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="boosters">Количество
+                                        бустеров</label>
+                                    <select id="boosters" class="form-input">
+                                        <option value="0" selected>0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Дополнительно</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox"
+                                                id="is_park_car">
+                                            <label for="is_park_car">Автомобиль
+                                                принадлежит таксопарку</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox"
+                                                id="has_sticker">
+                                            <label for="has_sticker">Есть
+                                                наклейка такси</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox"
+                                                id="has_lightbox">
+                                            <label for="has_lightbox">Есть
+                                                "шашка" такси</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit"
+                                    class="main__btn">Продолжить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Загружаем ранее сохраненные данные, если они есть
+                const savedBrand = localStorage.getItem('driver_car_brand');
+                const savedModel = localStorage.getItem('driver_car_model');
+                const savedColor = localStorage.getItem('driver_car_color');
+                const savedYear = localStorage.getItem('driver_car_year');
+                const savedNumber = localStorage.getItem('driver_car_number');
+                const savedVin = localStorage.getItem('driver_car_vin');
+                const savedBodyNumber = localStorage.getItem('driver_car_body_number');
+                const savedRegistration = localStorage.getItem('driver_car_registration');
+                const savedTransmission = localStorage.getItem('driver_car_transmission');
+                const savedCategory = localStorage.getItem('driver_car_category');
+                const savedChildSeats = localStorage.getItem('driver_car_child_seats');
+                const savedBoosters = localStorage.getItem('driver_car_boosters');
+                const savedIsParkCar = localStorage.getItem('driver_car_is_park_car') === 'true';
+                const savedHasSticker = localStorage.getItem('driver_car_has_sticker') === 'true';
+                const savedHasLightbox = localStorage.getItem('driver_car_has_lightbox') === 'true';
+                
+                // Применяем маски для VIN, номера кузова и СТС
+                $('#vin').mask('SSSSSSSSSSSSSSSSS', {
+                    'translation': {
+                        'S': { pattern: /[A-Za-z0-9]/ }
+                    },
+                    placeholder: "WDD1690071J236589"
+                });
+                
+                $('#body_number').mask('SSSSSSSSSSSSSSSSS', {
+                    'translation': {
+                        'S': { pattern: /[A-Za-z0-9]/ }
+                    },
+                    placeholder: "ZFA22300005556677"
+                });
+                
+                $('#registration').mask('SS 0000000', {
+                    'translation': {
+                        'S': { pattern: /[A-Za-z]/ }
+                    },
+                    placeholder: "AA 1234567"
+                });
+                
+                // Загружаем данные из JSON файла
+                $.getJSON("{{ url_for('static', path='/driver/assets/data/cities.json') }}", function(data) {
+                    // Заполняем список марок
+                    data.cars.brands.forEach(brand => {
+                        $('#brand').append(`<option value="${brand.name}">${brand.name}</option>`);
+                    });
+                    
+                    // Заполняем список цветов
+                    data.cars.colors.forEach(color => {
+                        $('#color').append(`<option value="${color}">${color}</option>`);
+                    });
+                    
+                    // Заполняем список годов
+                    data.cars.years.forEach(year => {
+                        $('#year').append(`<option value="${year}">${year}</option>`);
+                    });
+                    
+                    // Функция для загрузки моделей по выбранной марке
+                    function loadModels(brandName) {
+                        $('#model').empty().append('<option value="" disabled selected>Выберите модель</option>');
+                        
+                        const selectedBrand = data.cars.brands.find(brand => brand.name === brandName);
+                        if (selectedBrand) {
+                            selectedBrand.models.forEach(model => {
+                                $('#model').append(`<option value="${model}">${model}</option>`);
+                            });
+                            $('#model').prop('disabled', false);
+                        }
+                    }
+                    
+                    // Обработчик изменения марки
+                    $('#brand').on('change', function() {
+                        loadModels($(this).val());
+                    });
+                    
+                    // Восстанавливаем сохраненные данные, если они есть
+                    if (savedBrand) {
+                        $('#brand').val(savedBrand);
+                        loadModels(savedBrand);
+                        
+                        if (savedModel) {
+                            $('#model').val(savedModel);
+                        }
+                    }
+                    
+                    if (savedColor) {
+                        $('#color').val(savedColor);
+                    }
+                    
+                    if (savedYear) {
+                        $('#year').val(savedYear);
+                    }
+                    
+                    if (savedNumber) {
+                        $('#number').val(savedNumber);
+                    }
+                    
+                    if (savedVin) {
+                        $('#vin').val(savedVin);
+                    }
+                    
+                    if (savedBodyNumber) {
+                        $('#body_number').val(savedBodyNumber);
+                    }
+                    
+                    if (savedRegistration) {
+                        $('#registration').val(savedRegistration);
+                    }
+                    
+                    if (savedTransmission) {
+                        $('#transmission').val(savedTransmission);
+                    }
+                    
+                    if (savedCategory) {
+                        $('#category').val(savedCategory);
+                    }
+                    
+                    if (savedChildSeats) {
+                        $('#child_seats').val(savedChildSeats);
+                    }
+                    
+                    if (savedBoosters) {
+                        $('#boosters').val(savedBoosters);
+                    }
+                    
+                    if (savedIsParkCar) {
+                        $('#is_park_car').prop('checked', true);
+                    }
+                    
+                    if (savedHasSticker) {
+                        $('#has_sticker').prop('checked', true);
+                    }
+                    
+                    if (savedHasLightbox) {
+                        $('#has_lightbox').prop('checked', true);
+                    }
+                    
+                    // Проверяем заполнение формы
+                    checkFormCompletion();
+                });
+                
+                // Функция проверки заполнения формы для активации кнопки
+                function checkFormCompletion() {
+                    const brand = $('#brand').val();
+                    const model = $('#model').val();
+                    const color = $('#color').val();
+                    const year = $('#year').val();
+                    const number = $('#number').val();
+                    const vin = $('#vin').val();
+                    const transmission = $('#transmission').val();
+                    const category = $('#category').val();
+                    
+                    if (brand && model && color && year && number && vin && transmission && category) {
+                        $('.main__btn').addClass('main__btn-active');
+                        return true;
+                    } else {
+                        $('.main__btn').removeClass('main__btn-active');
+                        return false;
+                    }
+                }
+                
+                // Обработчики изменения полей формы
+                $('select, input').on('change input', checkFormCompletion);
+                
+                // Обработка отправки формы
+                $('#carForm').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    if (checkFormCompletion()) {
+                        // Сохраняем данные в localStorage
+                        localStorage.setItem('driver_car_brand', $('#brand').val());
+                        localStorage.setItem('driver_car_model', $('#model').val());
+                        localStorage.setItem('driver_car_color', $('#color').val());
+                        localStorage.setItem('driver_car_year', $('#year').val());
+                        localStorage.setItem('driver_car_number', $('#number').val());
+                        localStorage.setItem('driver_car_vin', $('#vin').val());
+                        localStorage.setItem('driver_car_body_number', $('#body_number').val());
+                        localStorage.setItem('driver_car_registration', $('#registration').val());
+                        localStorage.setItem('driver_car_transmission', $('#transmission').val());
+                        localStorage.setItem('driver_car_category', $('#category').val());
+                        localStorage.setItem('driver_car_child_seats', $('#child_seats').val());
+                        localStorage.setItem('driver_car_boosters', $('#boosters').val());
+                        localStorage.setItem('driver_car_is_park_car', $('#is_park_car').is(':checked'));
+                        localStorage.setItem('driver_car_has_sticker', $('#has_sticker').is(':checked'));
+                        localStorage.setItem('driver_car_has_lightbox', $('#has_lightbox').is(':checked'));
+                        
+                        console.log('Данные автомобиля сохранены:', {
+                            brand: $('#brand').val(),
+                            model: $('#model').val(),
+                            color: $('#color').val(),
+                            year: $('#year').val(),
+                            number: $('#number').val(),
+                            vin: $('#vin').val(),
+                            bodyNumber: $('#body_number').val(),
+                            registration: $('#registration').val(),
+                            transmission: $('#transmission').val(),
+                            category: $('#category').val(),
+                            childSeats: $('#child_seats').val(),
+                            boosters: $('#boosters').val(),
+                            isParkCar: $('#is_park_car').is(':checked'),
+                            hasSticker: $('#has_sticker').is(':checked'),
+                            hasLightbox: $('#has_lightbox').is(':checked')
+                        });
+                        
+                        // Переходим на следующую страницу
+                        window.location.href = "{{ url_for('driver_survey_step5') }}";
+                    }
+                });
+
+                // Обработка ввода номера
+                $('#number').on('input', function() {
+                    let value = $(this).val().replace(/[^0-9A-Za-z\s]/g, ''); // Оставляем только цифры, английские буквы и пробелы
+                    
+                    // Форматируем номер
+                    if (value.length > 0) {
+                        // Первые две цифры
+                        const firstPart = value.substring(0, 2).replace(/[^0-9]/g, '');
+                        
+                        // Следующие три цифры (после первых двух)
+                        let secondPart = '';
+                        if (value.length > 2) {
+                            secondPart = value.substring(2).replace(/[^0-9]/g, '').substring(0, 3);
+                        }
+                        
+                        // Последние три буквы
+                        let thirdPart = '';
+                        if (value.length > 5) {
+                            thirdPart = value.substring(5).replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
+                        }
+                        
+                        // Собираем форматированный номер
+                        let formattedValue = firstPart;
+                        if (secondPart) {
+                            formattedValue += (firstPart.length === 2 ? ' ' : '') + secondPart;
+                        }
+                        if (thirdPart) {
+                            formattedValue += (secondPart.length === 3 ? ' ' : '') + thirdPart;
+                        }
+                        
+                        $(this).val(formattedValue);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
+</html>

@@ -1,0 +1,2315 @@
+{
+  "database_name": "wazir",
+  "tables": {
+    "alembic_version": {
+      "columns": [
+        {
+          "column_name": "version_num",
+          "data_type": "character varying",
+          "character_maximum_length": 32,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": true
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "alembic_version_pkc",
+          "column_names": "version_num",
+          "is_unique": true,
+          "is_primary": true
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "alembic_version_pkc",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "version_num",
+          "referenced_table": "alembic_version",
+          "referenced_column": "version_num"
+        }
+      ],
+      "sample_data": [
+        {
+          "version_num": "aa9ac8cf0ba1"
+        }
+      ],
+      "size_info": [
+        "24 kB",
+        "8192 bytes",
+        "16 kB",
+        -1.0
+      ]
+    },
+    "autoparks": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('autoparks_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "name",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "address",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "phone",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "email",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "autoparks_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_autoparks_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "autoparks_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "autoparks",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "24 kB",
+        "0 bytes",
+        "24 kB",
+        -1.0
+      ]
+    },
+    "balance_transactions": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('balance_transactions_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "amount",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "type",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "status",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "description",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "balance_transactions_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_balance_transactions_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "balance_transactions_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "balance_transactions_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "balance_transactions",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 2,
+          "driver_id": null,
+          "amount": 10000.0,
+          "type": "deposit",
+          "status": "completed",
+          "description": "Пополнение баланса водителя Леха Леха Леха",
+          "created_at": "2025-04-19 12:57:05.254453"
+        },
+        {
+          "id": 1,
+          "driver_id": null,
+          "amount": 1000.0,
+          "type": "deposit",
+          "status": "completed",
+          "description": "Пополнение баланса водителя Леха Васильев Васильевич",
+          "created_at": "2025-04-15 16:05:19.375245"
+        },
+        {
+          "id": 3,
+          "driver_id": null,
+          "amount": 9000.0,
+          "type": "deposit",
+          "status": "completed",
+          "description": "Пополнение баланса водителя Леха Васильев Васильевич",
+          "created_at": "2025-04-19 12:57:11.468411"
+        },
+        {
+          "id": 4,
+          "driver_id": 6,
+          "amount": 10000.0,
+          "type": "deposit",
+          "status": "completed",
+          "description": "Пополнение баланса водителя На пути у богов Смоки",
+          "created_at": "2025-05-12 18:59:22.246336"
+        },
+        {
+          "id": 5,
+          "driver_id": 7,
+          "amount": 10000.0,
+          "type": "deposit",
+          "status": "completed",
+          "description": "Пополнение баланса водителя Evgeniy Prigojhin",
+          "created_at": "2025-05-12 21:42:42.430216"
+        }
+      ],
+      "size_info": [
+        "48 kB",
+        "8192 bytes",
+        "40 kB",
+        -1.0
+      ]
+    },
+    "cars": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('cars_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "brand",
+          "data_type": "character varying",
+          "character_maximum_length": 100,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "model",
+          "data_type": "character varying",
+          "character_maximum_length": 100,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "year",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "transmission",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "has_booster",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "has_child_seat",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "tariff",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "license_plate",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "vin",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "service_type",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photo_front",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photo_rear",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photo_right",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photo_left",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photo_interior_front",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photo_interior_rear",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "color",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "sts",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "has_sticker",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "has_lightbox",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "cars_license_plate_key",
+          "column_names": "license_plate",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "cars_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "cars_vin_key",
+          "column_names": "vin",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "ix_cars_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "cars_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "cars_license_plate_key",
+          "constraint_type": "UNIQUE",
+          "column_name": "license_plate",
+          "referenced_table": "cars",
+          "referenced_column": "license_plate"
+        },
+        {
+          "constraint_name": "cars_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "cars",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "cars_vin_key",
+          "constraint_type": "UNIQUE",
+          "column_name": "vin",
+          "referenced_table": "cars",
+          "referenced_column": "vin"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 4,
+          "driver_id": 6,
+          "brand": "Toyota",
+          "model": "Land Cruiser",
+          "year": 2020,
+          "transmission": "automatic",
+          "has_booster": false,
+          "has_child_seat": false,
+          "tariff": "comfort",
+          "license_plate": "22 222 ZZZ",
+          "vin": "WDDD3932932993929",
+          "service_type": "Такси",
+          "photo_front": null,
+          "photo_rear": null,
+          "photo_right": null,
+          "photo_left": null,
+          "photo_interior_front": null,
+          "photo_interior_rear": null,
+          "color": "Черный",
+          "sts": "12 КG 123456",
+          "has_sticker": null,
+          "has_lightbox": null
+        },
+        {
+          "id": 5,
+          "driver_id": 7,
+          "brand": "Toyota",
+          "model": "Land Cruiser",
+          "year": 2021,
+          "transmission": "automatic",
+          "has_booster": true,
+          "has_child_seat": false,
+          "tariff": "business",
+          "license_plate": "02 222 ZZZ",
+          "vin": "ZDF20222222002220",
+          "service_type": "Такси",
+          "photo_front": null,
+          "photo_rear": null,
+          "photo_right": null,
+          "photo_left": null,
+          "photo_interior_front": null,
+          "photo_interior_rear": null,
+          "color": "Белый",
+          "sts": "",
+          "has_sticker": false,
+          "has_lightbox": false
+        }
+      ],
+      "size_info": [
+        "80 kB",
+        "8192 bytes",
+        "72 kB",
+        -1.0
+      ]
+    },
+    "driver_cars": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('driver_cars_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "make",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "model",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "color",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "year",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "license_plate",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "vin",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "sts",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "body_number",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "transmission",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "child_seats",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "boosters",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "has_sticker",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "has_lightbox",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "registration",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_park_car",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "category",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "front_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "back_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "right_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "left_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "interior_front_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "interior_back_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "driver_cars_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_driver_cars_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "driver_cars_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_cars_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "driver_cars",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 1,
+          "driver_id": 7,
+          "make": null,
+          "model": null,
+          "color": null,
+          "year": null,
+          "license_plate": null,
+          "vin": null,
+          "sts": null,
+          "body_number": null,
+          "transmission": "manual",
+          "child_seats": 0,
+          "boosters": 0,
+          "has_sticker": false,
+          "has_lightbox": false,
+          "registration": null,
+          "is_park_car": false,
+          "category": null,
+          "front_photo": "uploads/drivers/7/car_front_1747158416.png",
+          "back_photo": "uploads/drivers/7/car_back_1747158416.webp",
+          "right_photo": "uploads/drivers/7/car_right_1747158416.jpg",
+          "left_photo": "uploads/drivers/7/car_left_1747158416.jpg",
+          "interior_front_photo": "uploads/drivers/7/car_interior_front_1747158416.jpeg",
+          "interior_back_photo": "uploads/drivers/7/car_interior_back_1747158416.png"
+        }
+      ],
+      "size_info": [
+        "48 kB",
+        "8192 bytes",
+        "40 kB",
+        -1.0
+      ]
+    },
+    "driver_documents": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('driver_documents_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "passport_front",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "passport_back",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "license_front",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "license_back",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "driver_with_license",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "profile_photo",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_verified",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "verification_date",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "driver_documents_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_driver_documents_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "driver_documents_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_documents_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "driver_documents",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 1,
+          "driver_id": 7,
+          "passport_front": "uploads/drivers/7/passport_front_1747158416.jpg",
+          "passport_back": "uploads/drivers/7/passport_back_1747158416.jpg",
+          "license_front": "uploads/drivers/7/license_front_1747158416.jpg",
+          "license_back": "uploads/drivers/7/license_back_1747158416.webp",
+          "driver_with_license": null,
+          "profile_photo": null,
+          "is_verified": true,
+          "verification_date": "2025-05-13 17:51:42.237637"
+        }
+      ],
+      "size_info": [
+        "48 kB",
+        "8192 bytes",
+        "40 kB",
+        -1.0
+      ]
+    },
+    "driver_options": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('driver_options_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "option_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "options",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "activation_date",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "deactivation_date",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "driver_options_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_driver_options_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "driver_options_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_options_option_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "option_id",
+          "referenced_table": "options",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_options_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "driver_options",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "16 kB",
+        "0 bytes",
+        "16 kB",
+        -1.0
+      ]
+    },
+    "driver_transactions": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('driver_transactions_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "amount",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "transaction_type",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "description",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "driver_transactions_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_driver_transactions_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "driver_transactions_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_transactions_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "driver_transactions",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "24 kB",
+        "0 bytes",
+        "24 kB",
+        -1.0
+      ]
+    },
+    "driver_users": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('driver_users_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "phone",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "first_name",
+          "data_type": "character varying",
+          "character_maximum_length": 100,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "last_name",
+          "data_type": "character varying",
+          "character_maximum_length": 100,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_verified",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "date_registered",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "last_login",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "confirmation_code",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "code_expiry",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "driver_users_phone_key",
+          "column_names": "phone",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "driver_users_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_driver_users_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "driver_users_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_users_phone_key",
+          "constraint_type": "UNIQUE",
+          "column_name": "phone",
+          "referenced_table": "driver_users",
+          "referenced_column": "phone"
+        },
+        {
+          "constraint_name": "driver_users_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "driver_users",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 1,
+          "phone": "9967777777777",
+          "first_name": null,
+          "last_name": null,
+          "is_verified": true,
+          "date_registered": "2025-05-08 14:28:23.735861",
+          "last_login": "2025-05-08 14:33:19.172079",
+          "driver_id": null,
+          "confirmation_code": null,
+          "code_expiry": null,
+          "created_at": null
+        },
+        {
+          "id": 2,
+          "phone": "9961181811818",
+          "first_name": null,
+          "last_name": null,
+          "is_verified": true,
+          "date_registered": "2025-05-10 11:41:24.655123",
+          "last_login": "2025-05-10 11:41:30.974119",
+          "driver_id": null,
+          "confirmation_code": null,
+          "code_expiry": null,
+          "created_at": null
+        },
+        {
+          "id": 3,
+          "phone": "9961818181818",
+          "first_name": "Василис",
+          "last_name": "Василис",
+          "is_verified": true,
+          "date_registered": "2025-05-10 11:44:37.962310",
+          "last_login": "2025-05-10 11:44:42.975427",
+          "driver_id": null,
+          "confirmation_code": null,
+          "code_expiry": null,
+          "created_at": null
+        },
+        {
+          "id": 5,
+          "phone": "9969777777777",
+          "first_name": "Василис",
+          "last_name": "Qartvelli",
+          "is_verified": true,
+          "date_registered": "2025-05-12 19:44:21.191038",
+          "last_login": "2025-05-15 10:45:57.808570",
+          "driver_id": 7,
+          "confirmation_code": null,
+          "code_expiry": null,
+          "created_at": null
+        },
+        {
+          "id": 6,
+          "phone": "+9969777777777",
+          "first_name": "Василис",
+          "last_name": "Петров",
+          "is_verified": true,
+          "date_registered": "2025-05-12 19:52:28.267363",
+          "last_login": null,
+          "driver_id": 7,
+          "confirmation_code": null,
+          "code_expiry": null,
+          "created_at": null
+        }
+      ],
+      "size_info": [
+        "96 kB",
+        "8192 bytes",
+        "88 kB",
+        7.0
+      ]
+    },
+    "driver_verifications": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('driver_verifications_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "verification_type",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "status",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "verified_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "verified_by",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "users",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "comment",
+          "data_type": "text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "photos",
+          "data_type": "jsonb",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "'{}'::jsonb",
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "driver_verifications_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "ix_driver_verifications_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "driver_verifications_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_verifications_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "driver_verifications",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "driver_verifications_verified_by_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "verified_by",
+          "referenced_table": "users",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 1,
+          "driver_id": 7,
+          "verification_type": "documents",
+          "status": "accepted",
+          "created_at": "2025-05-13 22:46:56.194808",
+          "verified_at": "2025-05-13 17:51:42.235493",
+          "verified_by": null,
+          "comment": "Обновлены документы водителя",
+          "photos": {
+            "car_back": "uploads/drivers/7/car_back_1747158416.webp",
+            "car_left": "uploads/drivers/7/car_left_1747158416.jpg",
+            "car_front": "uploads/drivers/7/car_front_1747158416.png",
+            "car_right": "uploads/drivers/7/car_right_1747158416.jpg",
+            "license_back": "uploads/drivers/7/license_back_1747158416.webp",
+            "license_front": "uploads/drivers/7/license_front_1747158416.jpg",
+            "passport_back": "uploads/drivers/7/passport_back_1747158416.jpg",
+            "passport_front": "uploads/drivers/7/passport_front_1747158416.jpg",
+            "car_interior_back": "uploads/drivers/7/car_interior_back_1747158416.png",
+            "car_interior_front": "uploads/drivers/7/car_interior_front_1747158416.jpeg"
+          }
+        }
+      ],
+      "size_info": [
+        "48 kB",
+        "8192 bytes",
+        "40 kB",
+        -1.0
+      ]
+    },
+    "drivers": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('drivers_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "full_name",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "callsign",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "city",
+          "data_type": "character varying",
+          "character_maximum_length": 100,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "balance",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "phone",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "status",
+          "data_type": "character varying",
+          "character_maximum_length": 20,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "rating",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_online",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "last_online",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "tariff_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "tariffs",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "autopark_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "autoparks",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "personal_number",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "birth_date",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "address",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "driver_license",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "license_issue_date",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "license_expiry_date",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "unique_id",
+          "data_type": "character varying",
+          "character_maximum_length": 255,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "drivers_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        },
+        {
+          "index_name": "drivers_unique_id_key",
+          "column_names": "unique_id",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "ix_drivers_callsign",
+          "column_names": "callsign",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "ix_drivers_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "drivers_autopark_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "autopark_id",
+          "referenced_table": "autoparks",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "drivers_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "drivers_tariff_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "tariff_id",
+          "referenced_table": "tariffs",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "drivers_unique_id_key",
+          "constraint_type": "UNIQUE",
+          "column_name": "unique_id",
+          "referenced_table": "drivers",
+          "referenced_column": "unique_id"
+        }
+      ],
+      "sample_data": [
+        {
+          "id": 6,
+          "full_name": "На пути у богов Смоки",
+          "callsign": "9968888888888",
+          "city": "Бишкек",
+          "balance": 10000.0,
+          "phone": "+9968888888888",
+          "status": "pending",
+          "rating": null,
+          "created_at": null,
+          "is_online": null,
+          "last_online": null,
+          "tariff_id": null,
+          "autopark_id": null,
+          "personal_number": null,
+          "birth_date": null,
+          "address": null,
+          "driver_license": null,
+          "license_issue_date": null,
+          "license_expiry_date": null,
+          "unique_id": null
+        },
+        {
+          "id": 7,
+          "full_name": "Evgeniy Prigojhin",
+          "callsign": "9969777777777",
+          "city": "Бишкек",
+          "balance": 12000.0,
+          "phone": "+9969777777777",
+          "status": "active",
+          "rating": null,
+          "created_at": null,
+          "is_online": null,
+          "last_online": null,
+          "tariff_id": null,
+          "autopark_id": null,
+          "personal_number": null,
+          "birth_date": null,
+          "address": null,
+          "driver_license": null,
+          "license_issue_date": null,
+          "license_expiry_date": null,
+          "unique_id": null
+        }
+      ],
+      "size_info": [
+        "80 kB",
+        "8192 bytes",
+        "72 kB",
+        2.0
+      ]
+    },
+    "messages": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('messages_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "sender_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "recipient_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "content",
+          "data_type": "text",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_broadcast",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "ix_messages_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        },
+        {
+          "index_name": "messages_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "messages_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "messages",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "messages_recipient_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "recipient_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "messages_sender_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "sender_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "24 kB",
+        "0 bytes",
+        "24 kB",
+        -1.0
+      ]
+    },
+    "options": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('options_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "name",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "description",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "price",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_recurring",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "recurring_period",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "ix_options_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        },
+        {
+          "index_name": "options_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "options_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "options",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "24 kB",
+        "0 bytes",
+        "24 kB",
+        -1.0
+      ]
+    },
+    "orders": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('orders_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "time",
+          "data_type": "character varying",
+          "character_maximum_length": 5,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "origin",
+          "data_type": "text",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "destination",
+          "data_type": "text",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "driver_id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false,
+          "foreign_key": {
+            "referenced_table": "drivers",
+            "referenced_column": "id"
+          }
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "is_primary": false
+        },
+        {
+          "column_name": "status",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "price",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "notes",
+          "data_type": "text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "payment_method",
+          "data_type": "character varying",
+          "character_maximum_length": 50,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "ix_orders_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        },
+        {
+          "index_name": "orders_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "orders_driver_id_fkey",
+          "constraint_type": "FOREIGN KEY",
+          "column_name": "driver_id",
+          "referenced_table": "drivers",
+          "referenced_column": "id"
+        },
+        {
+          "constraint_name": "orders_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "orders",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "24 kB",
+        "0 bytes",
+        "24 kB",
+        -1.0
+      ]
+    },
+    "tariffs": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('tariffs_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "name",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "description",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "price",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "commission_percent",
+          "data_type": "double precision",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "ix_tariffs_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        },
+        {
+          "index_name": "tariffs_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "tariffs_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "tariffs",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "24 kB",
+        "0 bytes",
+        "24 kB",
+        -1.0
+      ]
+    },
+    "users": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "character_maximum_length": null,
+          "is_nullable": "NO",
+          "column_default": "nextval('users_id_seq'::regclass)",
+          "is_primary": true
+        },
+        {
+          "column_name": "username",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "email",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "hashed_password",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        },
+        {
+          "column_name": "role",
+          "data_type": "character varying",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "is_primary": false
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "ix_users_email",
+          "column_names": "email",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "ix_users_id",
+          "column_names": "id",
+          "is_unique": false,
+          "is_primary": false
+        },
+        {
+          "index_name": "ix_users_username",
+          "column_names": "username",
+          "is_unique": true,
+          "is_primary": false
+        },
+        {
+          "index_name": "users_pkey",
+          "column_names": "id",
+          "is_unique": true,
+          "is_primary": true
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_name": "users_pkey",
+          "constraint_type": "PRIMARY KEY",
+          "column_name": "id",
+          "referenced_table": "users",
+          "referenced_column": "id"
+        }
+      ],
+      "sample_data": [],
+      "size_info": [
+        "40 kB",
+        "0 bytes",
+        "40 kB",
+        -1.0
+      ]
+    }
+  }
+}

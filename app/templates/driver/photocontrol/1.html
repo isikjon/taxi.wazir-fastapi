@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Фотоконтроль</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .verification-status {
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 4px;
+                text-align: center;
+            }
+            .verification-status.pending {
+                background-color: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeeba;
+            }
+            .verification-status.accepted {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .verification-status.rejected {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            .verified-text {
+                color: #16a737 !important;
+            }
+            .not-verified-text {
+                color: #721c24;
+            }
+            .photo-item-wrapper {
+                cursor: default;
+            }
+            
+            /* Стили для неактивных элементов */
+            .inactive-item {
+                opacity: 0.5;
+                cursor: default;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="/driver/profile">
+                        <div class="profile__back">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <div class="title-left">Фотоконтроль</div>
+
+                {% if verification and verification.status %}
+                <div class="verification-status {{ verification.status }}">
+                    {% if verification.status == 'pending' %}
+                    <p>Ваши фотографии находятся на проверке. Пожалуйста,
+                        дождитесь решения администратора.</p>
+                    {% elif verification.status == 'accepted' %}
+                    <p>Ваши фотографии успешно проверены и подтверждены
+                        администратором.</p>
+                    {% elif verification.status == 'rejected' %}
+                    <p>Ваши фотографии были отклонены. Причина: {{
+                        verification.comment or 'Не указана' }}.</p>
+                    <p>Пожалуйста, загрузите новые фотографии.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="settings-section">
+                    <h3>Блокирует работу</h3>
+
+                    {% if verification and verification.status == 'accepted' %}
+                    <div class="photo-item-wrapper">
+                        {% else %}
+                        <a href="/driver/photocontrol/2">
+                            {% endif %}
+                            <div class="settings-item">
+                                <div class="settings-item__left">
+                                    <div class="settings-item-left-desc">
+                                        <span>Фотоконтроль в/у</span>
+                                        {% if verification and
+                                        verification.status == 'accepted' %}
+                                        <p
+                                            class="verified-text">Верифицировано</p>
+                                        {% else %}
+                                        <p class="not-verified-text">Не
+                                            пройдено</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="settings-item__right">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                        alt="next">
+                                </div>
+                            </div>
+                            {% if verification and verification.status ==
+                            'accepted' %}
+                        </div>
+                        {% else %}
+                    </a>
+                    {% endif %}
+
+                    {% if verification and verification.status == 'accepted' %}
+                    <div class="photo-item-wrapper">
+                        {% else %}
+                        <a href="/driver/photocontrol/3">
+                            {% endif %}
+                            <div class="settings-item">
+                                <div class="settings-item__left">
+                                    <div class="settings-item-left-desc">
+                                        <span>Фотоконтроль СТС</span>
+                                        {% if verification and
+                                        verification.status == 'accepted' %}
+                                        <p
+                                            class="verified-text">Верифицировано</p>
+                                        {% else %}
+                                        <p class="not-verified-text">Не
+                                            пройдено</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="settings-item__right">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                        alt="next">
+                                </div>
+                            </div>
+                            {% if verification and verification.status ==
+                            'accepted' %}
+                        </div>
+                        {% else %}
+                    </a>
+                    {% endif %}
+
+                    <h3>Мешает работе</h3>
+
+                    {% if verification and verification.status == 'accepted' %}
+                    <div class="photo-item-wrapper">
+                        {% else %}
+                        <a href="/driver/photocontrol/4">
+                            {% endif %}
+                            <div class="settings-item">
+                                <div class="settings-item__left">
+                                    <div class="settings-item-left-desc">
+                                        <span>Фотоконтроль машины</span>
+                                        {% if verification and
+                                        verification.status == 'accepted' %}
+                                        <p
+                                            class="verified-text">Верифицировано</p>
+                                        {% else %}
+                                        <p class="not-verified-text">Не
+                                            пройдено</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="settings-item__right">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                        alt="next">
+                                </div>
+                            </div>
+                            {% if verification and verification.status ==
+                            'accepted' %}
+                        </div>
+                        {% else %}
+                    </a>
+                    {% endif %}
+
+                    <div class="settings-item inactive-item">
+                        <div class="settings-item__left">
+                            <div class="settings-item-left-desc">
+                                <span>Фотография профиля</span>
+                                <p>Сделайте фотографию</p>
+                            </div>
+                        </div>
+                        <div class="settings-item__right">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                alt="next">
+                        </div>
+                    </div>
+
+                    {% if not verification or verification.status == 'rejected'
+                    %}
+                    <div style="margin-top: 40px; text-align: center;">
+                        <a href="/driver/photocontrol/upload"
+                            class="main__btn-active"
+                            style="display: inline-block; text-decoration: none;">
+                            Пройти фотоконтроль
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

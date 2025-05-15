@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>История активности - Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <style>
+            .activity-page {
+                padding-bottom: 50px;
+            }
+            
+            .activity-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+                padding: 12px 0;
+            }
+            
+            .activity-header h2 {
+                margin: 0;
+                margin-left: 15px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            
+            .period-selector {
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+                overflow: hidden;
+                margin-bottom: 20px;
+            }
+            
+            .period-tabs {
+                display: flex;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .period-tab {
+                flex: 1;
+                text-align: center;
+                padding: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .period-tab.active {
+                background-color: #f9f9f9;
+                border-bottom: 2px solid #333;
+            }
+            
+            .orders-empty {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 30px 20px;
+                text-align: center;
+                color: #666;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+                margin-bottom: 20px;
+            }
+            
+            .orders-empty img {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 15px;
+                opacity: 0.5;
+            }
+            
+            .date-divider {
+                margin: 20px 0 10px 0;
+                font-weight: 500;
+                font-size: 14px;
+                color: #666;
+                display: flex;
+                align-items: center;
+            }
+            
+            .date-divider::before,
+            .date-divider::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background-color: #eee;
+            }
+            
+            .date-divider::before {
+                margin-right: 15px;
+            }
+            
+            .date-divider::after {
+                margin-left: 15px;
+            }
+            
+            .order-card {
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+                margin-bottom: 15px;
+                overflow: hidden;
+            }
+            
+            .order-header {
+                padding: 15px;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #f9f9f9;
+            }
+            
+            .order-number {
+                font-weight: 600;
+                font-size: 16px;
+            }
+            
+            .order-time {
+                color: #666;
+                font-size: 14px;
+            }
+            
+            .order-content {
+                padding: 15px;
+            }
+            
+            .order-route {
+                margin-bottom: 15px;
+            }
+            
+            .route-point {
+                display: flex;
+                margin-bottom: 10px;
+                align-items: flex-start;
+            }
+            
+            .route-point:last-child {
+                margin-bottom: 0;
+            }
+            
+            .route-icon {
+                flex-shrink: 0;
+                width: 24px;
+                height: 24px;
+                margin-right: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .route-icon img {
+                width: 16px;
+                height: 16px;
+            }
+            
+            .route-address {
+                font-size: 14px;
+                line-height: 1.4;
+            }
+            
+            .order-details {
+                border-top: 1px solid #eee;
+                padding-top: 15px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .order-detail {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .detail-label {
+                font-size: 12px;
+                color: #666;
+                margin-bottom: 5px;
+            }
+            
+            .detail-value {
+                font-weight: 500;
+                font-size: 14px;
+            }
+            
+            .order-footer {
+                border-top: 1px solid #eee;
+                padding: 15px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .order-status {
+                display: inline-block;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            
+            .status-completed {
+                background-color: #e8f5e9;
+                color: #2e7d32;
+            }
+            
+            .status-cancelled {
+                background-color: #ffebee;
+                color: #c62828;
+            }
+            
+            .order-price {
+                font-weight: 600;
+                font-size: 18px;
+            }
+            
+            /* Прелоадер для загрузки заказов */
+            .loader {
+                display: none;
+                text-align: center;
+                padding: 20px;
+            }
+            
+            .loader-spinner {
+                width: 30px;
+                height: 30px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #333;
+                border-radius: 50%;
+                margin: 0 auto 10px;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="activity-page">
+            <section class="profile">
+                <div class="container">
+                    <div class="activity-header">
+                        <a href="{{ url_for('driver_profile') }}">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/prev_profile.svg') }}"
+                                alt="back">
+                        </a>
+                        <h2>История активности</h2>
+                    </div>
+
+                    <!-- Переключатель периодов -->
+                    <div class="period-selector">
+                        <div class="period-tabs">
+                            <div class="period-tab active" data-period="week">За
+                                неделю</div>
+                            <div class="period-tab" data-period="month">За
+                                месяц</div>
+                            <div class="period-tab" data-period="all">Все
+                                время</div>
+                        </div>
+                    </div>
+
+                    <!-- Контейнер для отображения заказов -->
+                    <div id="orders-container">
+                        {% if not orders or orders|length == 0 %}
+                        <div class="orders-empty">
+                            <img
+                                src="{{ url_for('static', path='/driver/assets/img/ico/car.svg') }}"
+                                alt="Нет заказов">
+                            <p>Вы не выполняли заказы в течение недели</p>
+                        </div>
+                        {% else %}
+                        {% set current_date = None %}
+                        {% for order in orders %}
+                        {% if current_date != order.date_str %}
+                        {% set current_date = order.date_str %}
+                        <div class="date-divider">{{ order.date_str }}</div>
+                        {% endif %}
+
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div class="order-number">Заказ #{{ order.id
+                                    }}</div>
+                                <div class="order-time">{{ order.time_str
+                                    }}</div>
+                            </div>
+                            <div class="order-content">
+                                <div class="order-route">
+                                    <div class="route-point">
+                                        <div class="route-icon">
+                                            <img
+                                                src="{{ url_for('static', path='/driver/assets/img/ico/pin-start.svg') }}"
+                                                alt="От">
+                                        </div>
+                                        <div class="route-address">{{
+                                            order.origin }}</div>
+                                    </div>
+                                    <div class="route-point">
+                                        <div class="route-icon">
+                                            <img
+                                                src="{{ url_for('static', path='/driver/assets/img/ico/pin-end.svg') }}"
+                                                alt="До">
+                                        </div>
+                                        <div class="route-address">{{
+                                            order.destination }}</div>
+                                    </div>
+                                </div>
+                                <div class="order-details">
+                                    <div class="order-detail">
+                                        <div
+                                            class="detail-label">Расстояние</div>
+                                        <div class="detail-value">{{
+                                            order.distance }} км</div>
+                                    </div>
+                                    <div class="order-detail">
+                                        <div class="detail-label">Время в
+                                            пути</div>
+                                        <div class="detail-value">{{
+                                            order.duration }}</div>
+                                    </div>
+                                    <div class="order-detail">
+                                        <div class="detail-label">Тип
+                                            оплаты</div>
+                                        <div class="detail-value">
+                                            {% if order.payment_type == 'cash'
+                                            %}
+                                            Наличные
+                                            {% elif order.payment_type == 'card'
+                                            %}
+                                            Банковская карта
+                                            {% else %}
+                                            {{ order.payment_type }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="order-detail">
+                                        <div class="detail-label">Тариф</div>
+                                        <div class="detail-value">{{
+                                            order.tariff }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-footer">
+                                <div
+                                    class="order-status status-{{ order.status }}">
+                                    {% if order.status == 'completed' %}
+                                    Выполнен
+                                    {% elif order.status == 'cancelled' %}
+                                    Отменен
+                                    {% else %}
+                                    {{ order.status }}
+                                    {% endif %}
+                                </div>
+                                <div class="order-price">{{
+                                    order.price_formatted }} сом</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Прелоадер для загрузки заказов -->
+                    <div class="loader" id="orders-loader">
+                        <div class="loader-spinner"></div>
+                        <div>Загрузка заказов...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const periodTabs = document.querySelectorAll('.period-tab');
+                const ordersContainer = document.getElementById('orders-container');
+                const ordersLoader = document.getElementById('orders-loader');
+                const driverId = "{{ driver.id }}";
+                let currentPeriod = 'week';
+                
+                // Обработчик кликов по вкладкам периодов
+                periodTabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Если уже выбран текущий период - пропускаем
+                        if (this.classList.contains('active')) return;
+                        
+                        // Обновляем активную вкладку
+                        periodTabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Получаем выбранный период
+                        const period = this.dataset.period;
+                        currentPeriod = period;
+                        
+                        // Загружаем заказы за выбранный период
+                        loadOrders(period);
+                    });
+                });
+                
+                // Функция загрузки заказов за период
+                function loadOrders(period) {
+                    // Показываем прелоадер
+                    ordersContainer.style.display = 'none';
+                    ordersLoader.style.display = 'block';
+                    
+                    // Запрос данных с сервера
+                    fetch(`/api/driver/${driverId}/activity?period=${period}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Скрываем прелоадер
+                            ordersLoader.style.display = 'none';
+                            ordersContainer.style.display = 'block';
+                            
+                            // Проверяем, есть ли заказы
+                            if (!data.success) {
+                                console.error('Ошибка загрузки заказов:', data.message);
+                                ordersContainer.innerHTML = `
+                                    <div class="orders-empty">
+                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/error.svg') }}" alt="Ошибка">
+                                        <p>Не удалось загрузить заказы. Попробуйте позже.</p>
+                                    </div>
+                                `;
+                                return;
+                            }
+                            
+                            const orders = data.orders;
+                            
+                            // Если нет заказов, показываем сообщение
+                            if (!orders || orders.length === 0) {
+                                let emptyMessage = 'У вас пока нет заказов';
+                                
+                                if (period === 'week') {
+                                    emptyMessage = 'Вы не выполняли заказы в течение недели';
+                                } else if (period === 'month') {
+                                    emptyMessage = 'Вы не выполняли заказы в течение месяца';
+                                }
+                                
+                                ordersContainer.innerHTML = `
+                                    <div class="orders-empty">
+                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/car.svg') }}" alt="Нет заказов">
+                                        <p>${emptyMessage}</p>
+                                    </div>
+                                `;
+                                return;
+                            }
+                            
+                            // Формируем HTML с заказами
+                            let html = '';
+                            let currentDate = null;
+                            
+                            orders.forEach(order => {
+                                // Добавляем разделитель даты, если она изменилась
+                                if (currentDate !== order.date_str) {
+                                    currentDate = order.date_str;
+                                    html += `<div class="date-divider">${currentDate}</div>`;
+                                }
+                                
+                                // Определяем статус
+                                let statusText = 'Неизвестно';
+                                let statusClass = '';
+                                
+                                if (order.status === 'completed') {
+                                    statusText = 'Выполнен';
+                                    statusClass = 'status-completed';
+                                } else if (order.status === 'cancelled') {
+                                    statusText = 'Отменен';
+                                    statusClass = 'status-cancelled';
+                                } else {
+                                    statusText = order.status;
+                                }
+                                
+                                // Определяем тип оплаты
+                                let paymentType = order.payment_type;
+                                if (paymentType === 'cash') paymentType = 'Наличные';
+                                else if (paymentType === 'card') paymentType = 'Банковская карта';
+                                
+                                // Добавляем карточку заказа
+                                html += `
+                                    <div class="order-card">
+                                        <div class="order-header">
+                                            <div class="order-number">Заказ #${order.id}</div>
+                                            <div class="order-time">${order.time_str}</div>
+                                        </div>
+                                        <div class="order-content">
+                                            <div class="order-route">
+                                                <div class="route-point">
+                                                    <div class="route-icon">
+                                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/pin-start.svg') }}" alt="От">
+                                                    </div>
+                                                    <div class="route-address">${order.origin}</div>
+                                                </div>
+                                                <div class="route-point">
+                                                    <div class="route-icon">
+                                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/pin-end.svg') }}" alt="До">
+                                                    </div>
+                                                    <div class="route-address">${order.destination}</div>
+                                                </div>
+                                            </div>
+                                            <div class="order-details">
+                                                <div class="order-detail">
+                                                    <div class="detail-label">Расстояние</div>
+                                                    <div class="detail-value">${order.distance} км</div>
+                                                </div>
+                                                <div class="order-detail">
+                                                    <div class="detail-label">Время в пути</div>
+                                                    <div class="detail-value">${order.duration}</div>
+                                                </div>
+                                                <div class="order-detail">
+                                                    <div class="detail-label">Тип оплаты</div>
+                                                    <div class="detail-value">${paymentType}</div>
+                                                </div>
+                                                <div class="order-detail">
+                                                    <div class="detail-label">Тариф</div>
+                                                    <div class="detail-value">${order.tariff}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="order-footer">
+                                            <div class="order-status ${statusClass}">${statusText}</div>
+                                            <div class="order-price">${order.price_formatted} сом</div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            
+                            // Обновляем содержимое контейнера
+                            ordersContainer.innerHTML = html;
+                        })
+                        .catch(error => {
+                            console.error('Ошибка при загрузке заказов:', error);
+                            ordersLoader.style.display = 'none';
+                            ordersContainer.style.display = 'block';
+                            ordersContainer.innerHTML = `
+                                <div class="orders-empty">
+                                    <img src="{{ url_for('static', path='/driver/assets/img/ico/error.svg') }}" alt="Ошибка">
+                                    <p>Не удалось загрузить заказы. Попробуйте позже.</p>
+                                </div>
+                            `;
+                        });
+                }
+                
+                // Загружаем начальные данные (за неделю)
+                if (!ordersContainer.querySelector('.order-card')) {
+                    // Только если у нас нет заказов на странице (при первой загрузке)
+                    // loadOrders('week');
+                }
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Регистрация водитель Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    </head>
+    <body>
+        <header>
+            <div class="brand">
+                <div class="container">
+                    <div class="brand__content">
+                        <div class="logo">
+                            <a href="{{ url_for('driver_auth_step1') }}">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/logo.png') }}"
+                                    alt="logo">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main>
+            <section class="register">
+                <div class="container">
+                    <div class="register__content">
+                        <div class="register__intro">
+                            <h1 class="title">
+                                Укажите имя и фамилию
+                            </h1>
+                        </div>
+                        <div class="register__form register__auth">
+                            <form id="nameForm">
+                                <input type="text" id="firstName"
+                                    name="first_name" placeholder="Имя"
+                                    required>
+                                <input type="text" id="lastName"
+                                    name="last_name" placeholder="Фамилия"
+                                    required>
+                                <button type="submit"
+                                    class="main__btn">Продолжить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Проверка заполнения полей для активации кнопки
+                $('.register__auth form input').on('input', function () {
+                    const $form = $('.register__auth form');
+                    const $inputs = $form.find('input');
+                    const $submitBtn = $form.find('.main__btn');
+
+                    const allFilled = Array.from($inputs).every(input => input.value.trim() !== '');
+
+                    if (allFilled) {
+                        $submitBtn.addClass('main__btn-active');
+                    } else {
+                        $submitBtn.removeClass('main__btn-active');
+                    }
+                });
+
+                // Отправка формы
+                document.getElementById('nameForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const firstName = document.getElementById('firstName').value;
+                    const lastName = document.getElementById('lastName').value;
+                    
+                    if (!firstName || !lastName) {
+                        showError('Пожалуйста, введите имя и фамилию');
+                        return;
+                    }
+                    
+                    // Сохраняем данные в localStorage
+                    localStorage.setItem('driver_first_name', firstName);
+                    localStorage.setItem('driver_last_name', lastName);
+                    
+                    // Получаем ID пользователя из localStorage
+                    const userId = localStorage.getItem('user_id');
+                    
+                    // Отправляем запрос на сервер для обновления профиля
+                    fetch('/api/driver/update-profile', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            first_name: firstName,
+                            last_name: lastName,
+                            user_id: userId
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Не удалось обновить профиль');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Профиль успешно обновлен:', data);
+                        console.log('Сохранено в localStorage:', {
+                            driver_first_name: firstName,
+                            driver_last_name: lastName
+                        });
+                        
+                        // После успешного обновления переходим на первый шаг анкеты
+                        window.location.href = '/driver/survey/1';
+                    })
+                    .catch(error => {
+                        showError(error.message);
+                    });
+                });
+
+                // Функция для отображения ошибок
+                function showError(message) {
+                    // Создаем элемент с ошибкой, если его нет
+                    if (!$('#error-message').length) {
+                        $('<div>').attr('id', 'error-message')
+                            .css({
+                                'color': 'red',
+                                'margin-bottom': '15px',
+                                'text-align': 'center'
+                            })
+                            .insertBefore($('#nameForm'));
+                    }
+                    
+                    // Показываем сообщение об ошибке
+                    $('#error-message').text(message).show();
+                    
+                    // Скрываем сообщение через 3 секунды
+                    setTimeout(() => {
+                        $('#error-message').hide();
+                    }, 3000);
+                }
+            });
+        </script>
+    </body>
+</html>

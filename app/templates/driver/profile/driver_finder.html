@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Перенаправление - Wazir.kg</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .loader {
+                display: inline-block;
+                width: 50px;
+                height: 50px;
+                border: 3px solid rgba(0,0,0,0.1);
+                border-radius: 50%;
+                border-top-color: #000;
+                animation: spin 1s ease-in-out infinite;
+                margin-bottom: 20px;
+            }
+            h1 {
+                font-size: 24px;
+                margin: 0 0 20px;
+            }
+            p {
+                color: #666;
+                line-height: 1.5;
+            }
+            .button {
+                display: inline-block;
+                background-color: #606060;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 4px;
+                margin-top: 20px;
+                cursor: pointer;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="loader"></div>
+            <h1>Загрузка профиля...</h1>
+            <p>Пожалуйста, подождите, осуществляется поиск данных вашего
+                профиля.</p>
+            <div id="error-container" style="display: none;">
+                <p id="error-message" style="color: red;"></p>
+                <a href="/driver/survey/1" class="button">Заполнить анкету</a>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                try {
+                    // Проверяем наличие ID водителя в localStorage
+                    const driverId = localStorage.getItem('driver_id');
+                    
+                    if (driverId) {
+                        // Если ID найден, перенаправляем на страницу профиля
+                        window.location.href = `/driver/profile?driver_id=${driverId}`;
+                    } else {
+                        // Пробуем получить другие данные из localStorage, которые могут помочь
+                        const phone = localStorage.getItem('driver_phone');
+                        
+                        if (phone) {
+                            // Если есть номер телефона, отправляем его на сервер для поиска
+                            fetch('/api/driver/find-by-phone', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ phone: phone })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success' && data.driver_id) {
+                                    // Сохраняем ID и перенаправляем
+                                    localStorage.setItem('driver_id', data.driver_id);
+                                    window.location.href = `/driver/profile?driver_id=${data.driver_id}`;
+                                } else {
+                                    showError('Не удалось найти ваш профиль.');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Ошибка при поиске по телефону:', error);
+                                showError('Произошла ошибка при поиске профиля.');
+                            });
+                        } else {
+                            // Если нет ни ID, ни телефона, показываем сообщение
+                            showError('Данные профиля не найдены.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка при обработке данных:', error);
+                    showError('Произошла ошибка при загрузке профиля.');
+                }
+                
+                // Функция для отображения ошибки
+                function showError(message) {
+                    document.querySelector('.loader').style.display = 'none';
+                    document.querySelector('h1').textContent = 'Профиль не найден';
+                    document.querySelector('#error-container').style.display = 'block';
+                    document.querySelector('#error-message').textContent = message;
+                }
+                
+                // Таймаут на случай, если все методы поиска не сработали
+                setTimeout(function() {
+                    if (window.location.pathname === '/driver/profile') {
+                        showError('Не удалось автоматически загрузить ваш профиль.');
+                    }
+                }, 5000);
+            });
+        </script>
+    </body>
+</html>

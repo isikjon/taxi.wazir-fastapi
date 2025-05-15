@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="/driver/survey/5"><img
+                                    src="/static/driver/assets/img/ico/back.svg"
+                                    alt="back"></a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Выберите парк
+                        </h1>
+                        <div class="survey__park" id="park-list">
+                            <!-- Здесь будет список парков -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Загрузка данных о парках из JSON
+                $.getJSON('/static/driver/assets/data/cities.json', function(data) {
+                    if (data.parks && data.parks.length > 0) {
+                        const parkList = $('#park-list');
+                        parkList.empty();
+                        
+                        // Используем парки из JSON
+                        data.parks.forEach(function(park) {
+                            parkList.append(`
+                                <div class="survey__park-item" data-park-id="${park.name}">
+                                    <a href="javascript:void(0)">${park.name}</a>
+                                    <img src="/static/driver/assets/img/ico/next.svg" alt="next">
+                                </div>
+                            `);
+                        });
+                        
+                        // Добавляем обработчики событий для выбора парка
+                        $('.survey__park-item').on('click', function() {
+                            const parkName = $(this).data('park-id');
+                            
+                            // Находим выбранный парк в данных
+                            const selectedPark = data.parks.find(park => park.name === parkName);
+                            
+                            if (selectedPark) {
+                                // Логируем, что сохраняем
+                                console.log('Сохраняю выбранный парк в localStorage:', selectedPark);
+                                
+                                // Сохраняем выбранный парк в localStorage как JSON
+                                localStorage.setItem('driver_selected_park', JSON.stringify(selectedPark));
+                                
+                                // Проверяем, что действительно сохранилось
+                                const savedPark = localStorage.getItem('driver_selected_park');
+                                console.log('Проверка сохраненного парка:', savedPark);
+                                
+                                try {
+                                    const parsedPark = JSON.parse(savedPark);
+                                    console.log('Парсинг успешен:', parsedPark);
+                                } catch (e) {
+                                    console.error('Ошибка при парсинге сохраненного парка:', e);
+                                }
+                                
+                                // Переходим на страницу с подробной информацией о парке
+                                window.location.href = '/driver/survey/7';
+                            }
+                        });
+                    } else {
+                        $('#park-list').html('<p>Данные о парках не найдены</p>');
+                    }
+                }).fail(function() {
+                    $('#park-list').html('<p>Ошибка загрузки данных</p>');
+                });
+            });
+        </script>
+    </body>
+</html>

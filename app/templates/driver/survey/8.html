@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Заполнение анкеты Wazir.kg</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+        <style>
+            .survey-3 {
+                padding: 20px 0;
+            }
+            
+            .title-left {
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 20px;
+            }
+        
+            .survey__verification-text {
+                margin: 30px 0;
+                font-size: 16px;
+                color: #000;
+            }
+            
+            .survey__personal-info, .survey__car-info, .survey__park-info {
+                margin-bottom: 30px;
+            }
+            
+            .survey__personal-info h2, .survey__car-info h2, .survey__park-info h2 {
+                font-size: 20px;
+                font-weight: 600;
+                margin: 30px 0 20px;
+            }
+            
+            .info-item {
+                border-bottom: 1px solid #eee;
+                padding: 15px 0;
+                position: relative;
+            }
+            
+            .info-label {
+                color: #888;
+                font-size: 14px;
+                display: block;
+                margin-bottom: 5px;
+            }
+            
+            .info-value {
+                font-size: 16px;
+                color: #000;
+                font-weight: 400;
+                display: block;
+            }
+            
+            .info-item:after {
+                content: '›';
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 24px;
+                color: #ccc;
+            }
+            
+            .survey__profile-wrapper {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+            
+            .survey__profile {
+                text-align: center;
+            }
+            
+            .survey__profile-item-active {
+                background-color: #eee;
+                width: 40px;
+                height: 40px;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 5px;
+            }
+            
+            .survey__profile-item-active img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .survey__profile p {
+                font-size: 14px;
+                color: #000;
+            }
+            
+            .main__btn-active {
+                display: block;
+                width: 100%;
+                color: white;
+                padding: 15px;
+                border: none;
+                border-radius: 0;
+                margin-top: 30px;
+                font-size: 16px;
+                text-align: center;
+                cursor: pointer;
+            }
+            .survey-3 .survey__personal-info .info-item .info-value {
+                border-bottom: none;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <header>
+                <div class="back">
+                    <div class="container">
+                        <div class="back__content">
+                            <a href="/driver/survey/7"><img
+                                    src="/static/driver/assets/img/ico/back.svg"
+                                    alt="back"></a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="survey-3">
+                <div class="container">
+                    <div class="survey__content">
+                        <h1 class="title-left">
+                            Подтверждение данных
+                        </h1>
+
+                        <!-- Блок с чекбоксами -->
+                        <div class="survey__profile-wrapper">
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    <img
+                                        src="/static/driver/assets/img/ico/check.svg"
+                                        alt="check">
+                                </div>
+                                <p>Про вас</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    <img
+                                        src="/static/driver/assets/img/ico/check.svg"
+                                        alt="check">
+                                </div>
+                                <p>Про авто</p>
+                            </div>
+                            <div class="survey__profile">
+                                <div class="survey__profile-item-active">
+                                    <img
+                                        src="/static/driver/assets/img/ico/check.svg"
+                                        alt="check">
+                                </div>
+                                <p>Условия</p>
+                            </div>
+                        </div>
+
+                        <p class="survey__verification-text">Давайте сверимся.
+                            Если все в порядке, нажмите Все верно.</p>
+
+                        <!-- Информация о пользователе -->
+                        <div class="survey__personal-info">
+                            <h2 style="font-size: 20px; font-weight: 600;">Про
+                                вас</h2>
+
+                            <div class="info-item">
+                                <span class="info-label">Город</span>
+                                <span class="info-value"
+                                    id="user-city">Ош</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">ФИО</span>
+                                <span class="info-value"
+                                    id="user-name">Маасалиев Талантбек</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Страна выдачи ВУ</span>
+                                <span class="info-value"
+                                    id="driver-license-country">Киргизия</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Серия и номер ВУ</span>
+                                <span class="info-value"
+                                    id="driver-license-number">000124893</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Дата выдачи ВУ</span>
+                                <span class="info-value"
+                                    id="driver-license-issue-date">15.12.2022</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Дата окончания срока
+                                    действия ВУ</span>
+                                <span class="info-value"
+                                    id="driver-license-expiry-date">15.12.2028</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Код приглашения</span>
+                                <span class="info-value"
+                                    id="invitation-code">120004893</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Телефон</span>
+                                <span class="info-value"
+                                    id="user-phone">+996181818181</span>
+                            </div>
+                        </div>
+
+                        <!-- Информация об автомобиле -->
+                        <div class="survey__car-info">
+                            <h2>Про автомобиль</h2>
+
+                            <div class="info-item">
+                                <span class="info-label">Марка</span>
+                                <span class="info-value"
+                                    id="car-brand">Toyota</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Модель</span>
+                                <span class="info-value" id="car-model">Land
+                                    Cruiser</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Цвет</span>
+                                <span class="info-value"
+                                    id="car-color">Черный</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Год выпуска</span>
+                                <span class="info-value"
+                                    id="car-year">2020</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Гос. номер</span>
+                                <span class="info-value" id="car-number">02 222
+                                    ZZZ</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">VIN номер</span>
+                                <span class="info-value" id="car-vin"></span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Номер кузова</span>
+                                <span class="info-value"
+                                    id="car-body-number"></span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Данные о
+                                    регистрации</span>
+                                <span class="info-value"
+                                    id="car-registration"></span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Тип коробки
+                                    передач</span>
+                                <span class="info-value"
+                                    id="car-transmission"></span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Категория
+                                    обслуживания</span>
+                                <span class="info-value"
+                                    id="car-category"></span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Детские кресла</span>
+                                <span class="info-value"
+                                    id="car-child-seats"></span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Бустеры</span>
+                                <span class="info-value"
+                                    id="car-boosters"></span>
+                            </div>
+
+                            <div class="info-item" id="car-is-park-item"
+                                style="display: none;">
+                                <span class="info-label">Автомобиль
+                                    таксопарка</span>
+                                <span class="info-value">Да</span>
+                            </div>
+
+                            <div class="info-item" id="car-has-sticker-item"
+                                style="display: none;">
+                                <span class="info-label">Наклейка такси</span>
+                                <span class="info-value">Есть</span>
+                            </div>
+
+                            <div class="info-item" id="car-has-lightbox-item"
+                                style="display: none;">
+                                <span class="info-label">Шашка такси</span>
+                                <span class="info-value">Есть</span>
+                            </div>
+                        </div>
+
+                        <!-- Информация о таксопарке -->
+                        <div class="survey__park-info">
+                            <h2>Выбранный таксопарк</h2>
+
+                            <div class="info-item">
+                                <span class="info-label">Название</span>
+                                <span class="info-value" id="park-name">Premium
+                                    park</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Телефон</span>
+                                <span class="info-value"
+                                    id="park-phone">+996700234567</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Комиссия</span>
+                                <span class="info-value"
+                                    id="park-commission">12%</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Адрес</span>
+                                <span class="info-value"
+                                    id="park-address">Кыргызстан, г. Бишкек, ул.
+                                    Турусбекова 31</span>
+                            </div>
+                        </div>
+
+                        <button class="main__btn-active" id="confirm-button">Все
+                            верно</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                console.log('Начинаем загрузку данных для страницы подтверждения...');
+                
+                // Выводим все данные из localStorage для проверки
+                const localStorageData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('driver_')) {
+                        localStorageData[key] = localStorage.getItem(key);
+                    }
+                }
+                console.log('Все данные водителя в localStorage:', localStorageData);
+                
+                // Загрузка данных пользователя из localStorage
+                const firstName = localStorage.getItem('driver_first_name') || '';
+                const lastName = localStorage.getItem('driver_last_name') || '';
+                const phone = localStorage.getItem('driver_phone') || '';
+                
+                // Получаем город
+                let city = '';
+                try {
+                    const cityData = localStorage.getItem('driver_city');
+                    console.log('Данные города из localStorage:', cityData);
+                    
+                    if (cityData) {
+                        // Проверяем, является ли строка JSON-объектом
+                        if (cityData.startsWith('{')) {
+                            const cityObj = JSON.parse(cityData);
+                            city = cityObj.name || '';
+                            console.log('Распарсили город из JSON:', city);
+                        } else {
+                            city = cityData;
+                            console.log('Получили город как строку:', city);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Ошибка при разборе данных города:', e);
+                }
+                
+                // Если город всё ещё пустой, устанавливаем значение по умолчанию
+                if (!city) {
+                    city = 'Бишкек';
+                    console.log('Установлен город по умолчанию:', city);
+                }
+                
+                // Дополнительные данные водителя
+                const licenseCountry = localStorage.getItem('driver_license_country') || 'Республика Киргизия';
+                const licenseNumber = localStorage.getItem('driver_license_number') || '88888888';
+                const licenseIssueDate = localStorage.getItem('driver_license_issue_date') || '08.08.2018';
+                const licenseExpiryDate = localStorage.getItem('driver_license_expiry_date') || '08.08.2028';
+                const invitationCode = localStorage.getItem('driver_invitation_code') || '120004893';
+                
+                console.log('Загружены данные водителя:', {
+                    firstName, lastName, phone, city,
+                    licenseCountry, licenseNumber, licenseIssueDate, licenseExpiryDate, invitationCode
+                });
+                
+                // Загрузка данных автомобиля из localStorage
+                const carBrand = localStorage.getItem('driver_car_brand') || '';
+                const carModel = localStorage.getItem('driver_car_model') || '';
+                const carColor = localStorage.getItem('driver_car_color') || '';
+                const carYear = localStorage.getItem('driver_car_year') || '';
+                const carNumber = localStorage.getItem('driver_car_number') || '';
+                const carVin = localStorage.getItem('driver_car_vin') || '';
+                const carBodyNumber = localStorage.getItem('driver_car_body_number') || '';
+                const carRegistration = localStorage.getItem('driver_car_registration') || '';
+                const carTransmission = localStorage.getItem('driver_car_transmission') || '';
+                const carCategory = localStorage.getItem('driver_car_category') || '';
+                const carChildSeats = localStorage.getItem('driver_car_child_seats') || '0';
+                const carBoosters = localStorage.getItem('driver_car_boosters') || '0';
+                const carIsParkCar = localStorage.getItem('driver_car_is_park_car') === 'true';
+                const carHasSticker = localStorage.getItem('driver_car_has_sticker') === 'true';
+                const carHasLightbox = localStorage.getItem('driver_car_has_lightbox') === 'true';
+                
+                console.log('Загружены данные автомобиля:', {
+                    carBrand, carModel, carColor, carYear, carNumber, carVin, carBodyNumber, 
+                    carRegistration, carTransmission, carCategory, carChildSeats, carBoosters,
+                    carIsParkCar, carHasSticker, carHasLightbox
+                });
+                
+                // Загрузка данных о таксопарке из localStorage
+                let parkName = '';
+                let parkPhone = '';
+                let parkCommission = '';
+                let parkAddress = '';
+                
+                // Пытаемся получить данные из localStorage
+                const selectedPark = localStorage.getItem('driver_selected_park');
+                console.log('Данные о парке из localStorage:', selectedPark);
+                
+                if (selectedPark) {
+                    try {
+                        const parkData = JSON.parse(selectedPark);
+                        console.log('Успешно распарсили данные парка:', parkData);
+                        
+                        parkName = parkData.name || '';
+                        parkPhone = parkData.phone || '';
+                        parkCommission = parkData.commission || '';
+                        parkAddress = parkData.address || '';
+                    } catch (e) {
+                        console.error('Ошибка при разборе данных парка:', e);
+                        console.error('Исходная строка:', selectedPark);
+                    }
+                }
+                
+                // Если данных нет, устанавливаем значения по умолчанию
+                if (!parkName) {
+                    parkName = 'ООО Тумар Такси';
+                    parkPhone = '+996777123456';
+                    parkCommission = '10%';
+                    parkAddress = 'Кыргызстан, г. Ош, ул. Масалиева 42';
+                    console.log('Установлены данные о парке по умолчанию');
+                }
+                
+                // Заполнение информации о пользователе
+                $('#user-name').text(firstName && lastName ? `${firstName} ${lastName}` : 'undefined undefined');
+                $('#user-phone').text(phone || 'undefined');
+                $('#user-city').text(city || 'undefined');
+                $('#driver-license-country').text(licenseCountry || 'undefined');
+                $('#driver-license-number').text(licenseNumber || 'undefined');
+                $('#driver-license-issue-date').text(licenseIssueDate || 'undefined');
+                $('#driver-license-expiry-date').text(licenseExpiryDate || 'undefined');
+                $('#invitation-code').text(invitationCode || 'undefined');
+                
+                // Заполнение информации об автомобиле
+                $('#car-brand').text(carBrand || 'undefined');
+                $('#car-model').text(carModel || 'undefined');
+                $('#car-color').text(carColor || 'undefined');
+                $('#car-year').text(carYear || 'undefined');
+                $('#car-number').text(carNumber || 'undefined');
+                $('#car-vin').text(carVin || '-');
+                $('#car-body-number').text(carBodyNumber || '-');
+                $('#car-registration').text(carRegistration || '-');
+                
+                // Для полей с выбором из списка преобразуем значения в человекочитаемый вид
+                let transmissionText = '-';
+                if (carTransmission === 'manual') transmissionText = 'Механическая';
+                if (carTransmission === 'automatic') transmissionText = 'Автоматическая';
+                if (carTransmission === 'robot') transmissionText = 'Роботизированная';
+                if (carTransmission === 'variator') transmissionText = 'Вариатор';
+                $('#car-transmission').text(transmissionText);
+                
+                let categoryText = '-';
+                if (carCategory === 'economy') categoryText = 'Эконом';
+                if (carCategory === 'comfort') categoryText = 'Комфорт';
+                if (carCategory === 'business') categoryText = 'Бизнес';
+                $('#car-category').text(categoryText);
+                
+                $('#car-child-seats').text(carChildSeats);
+                $('#car-boosters').text(carBoosters);
+                
+                // Отображаем чекбоксы только если они отмечены
+                if (carIsParkCar) {
+                    $('#car-is-park-item').show();
+                }
+                
+                if (carHasSticker) {
+                    $('#car-has-sticker-item').show();
+                }
+                
+                if (carHasLightbox) {
+                    $('#car-has-lightbox-item').show();
+                }
+                
+                // Заполнение информации о таксопарке
+                $('#park-name').text(parkName || 'undefined');
+                $('#park-phone').text(parkPhone || 'undefined');
+                $('#park-commission').text(parkCommission || 'undefined');
+                $('#park-address').text(parkAddress || 'undefined');
+                
+                // Обработчик нажатия на кнопку "Все верно"
+                $('#confirm-button').on('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Сохраняем подтверждение данных
+                    localStorage.setItem('driver_data_confirmed', 'true');
+                    console.log('Данные подтверждены');
+                    
+                    // Переходим на следующую страницу
+                    window.location.href = '/driver/survey/9';
+                });
+            });
+        </script>
+    </body>
+</html>

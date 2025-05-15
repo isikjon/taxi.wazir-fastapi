@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Низкий баланс</title>
+        <link rel="stylesheet" href="/static/driver/assets/scss/main.css">
+    </head>
+    <body>
+        <main>
+            <div class="settings">
+                <div class="settings__header">
+                    <a href="/driver/diagnostics/1">
+                        <div class="profile__back">
+                            <img
+                                src="/static/driver/assets/img/ico/prev_profile.svg"
+                                alt="back">
+                        </div>
+                    </a>
+                </div>
+
+                <div class="title-left">Низкий баланс</div>
+
+                <div class="settings-section">
+                    <p>На вашем балансе недостаточно средств для получения
+                        заказов.</p>
+
+                    <div class="balance-info">
+                        <div class="balance-current">
+                            <h3>Текущий баланс</h3>
+                            <div class="balance-amount">{{ balance }} сом</div>
+                        </div>
+
+                        <div class="balance-required">
+                            <h3>Минимальный баланс</h3>
+                            <div class="balance-amount">{{ min_balance }}
+                                сом</div>
+                        </div>
+                    </div>
+
+                    <p>Пополните баланс, чтобы продолжить получать заказы.</p>
+
+                    <div class="action-buttons">
+                        <a href="/driver/profile/balance"
+                            class="main__btn-active">Пополнить баланс</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
