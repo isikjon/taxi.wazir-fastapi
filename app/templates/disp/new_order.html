@@ -540,26 +540,112 @@
         $('#destination-house, #destination-district').on('change keyup', function() {
             updateFullAddress('destination');
         });
+
+        // База данных улиц и адресов Киргизии (основные города)
+        const kyrgyzstanAddresses = [
+            // Город Ош
+            'ул. Ленина', 'ул. Курманжан Датка', 'ул. Навои', 'ул. Кувандык', 'ул. Исанова',
+            'ул. Мырзалы Аматова', 'ул. Токтогула', 'ул. Абдрахманова', 'ул. Мадания',
+            'ул. Карасу', 'ул. Салиева', 'ул. Омурзакова', 'ул. Айтматова',
+            'пр. Жайлау', 'пр. Масалиева', 'мкр. Аэропорт', 'мкр. Центр',
+            
+            // Бишкек
+            'ул. Киевская', 'ул. Токтогула', 'ул. Манас', 'ул. Чуй', 'ул. Исанова',
+            'ул. Боконбаева', 'ул. Московская', 'ул. Турусбекова', 'ул. Жибек Жолу',
+            'пр. Мира', 'пр. Чуй', 'пр. Ден Сяопина', 'мкр. Джал', 'мкр. Асанбай',
+            
+            // Джалал-Абад
+            'ул. Эркиндик', 'ул. Токтогула', 'ул. Ленина', 'ул. Советская',
+            
+            // Каракол
+            'ул. Токтогула', 'ул. Абдрахманова', 'ул. Гагарина', 'ул. Московская',
+            
+            // Нарын
+            'ул. Ленина', 'ул. Бердике Баатыра', 'ул. Салиева',
+            
+            // Талас
+            'ул. Бердике Баатыра', 'ул. Фрунзе', 'ул. Ленина'
+        ];
+
+        // Инициализация автодополнения для полей улиц
+        function initAutocomplete() {
+            $('#origin-street, #destination-street').each(function() {
+                const $input = $(this);
+                const $container = $input.parent();
+                
+                // Создаем контейнер для выпадающего списка
+                if (!$container.find('.autocomplete-dropdown').length) {
+                    $container.css('position', 'relative');
+                    $container.append('<div class="autocomplete-dropdown"></div>');
+                }
+                
+                const $dropdown = $container.find('.autocomplete-dropdown');
+                
+                $input.on('input', function() {
+                    const value = $(this).val().toLowerCase().trim();
+                    $dropdown.empty().hide();
+                    
+                    if (value.length >= 2) {
+                        const matches = kyrgyzstanAddresses.filter(address => 
+                            address.toLowerCase().includes(value)
+                        ).slice(0, 10); // Показываем максимум 10 вариантов
+                        
+                        if (matches.length > 0) {
+                            matches.forEach(address => {
+                                const $item = $('<div class="autocomplete-item">' + address + '</div>');
+                                $item.on('click', function() {
+                                    $input.val(address);
+                                    $dropdown.hide();
+                                    updateFullAddress($input.attr('id').includes('origin') ? 'origin' : 'destination');
+                                });
+                                $dropdown.append($item);
+                            });
+                            $dropdown.show();
+                        }
+                    }
+                });
+                
+                // Скрываем выпадающий список при клике вне его
+                $(document).on('click', function(e) {
+                    if (!$container.is(e.target) && !$container.has(e.target).length) {
+                        $dropdown.hide();
+                    }
+                });
+            });
+        }
+
+        // Инициализируем автодополнение после загрузки
+        setTimeout(initAutocomplete, 500);
         
-        // Валидация адресов для Киргизии при ручном вводе
+        // Валидация адресов для Киргизии при ручном вводе (делаем менее строгой)
         $('#origin-street, #destination-street').on('blur', function() {
-            const address = $(this).val().toLowerCase();
-            if (address && !isKyrgyzstanAddress(address)) {
-                alert('Пожалуйста, введите адрес на территории Киргизии');
-                $(this).focus();
+            const address = $(this).val().toLowerCase().trim();
+            // Убираем строгую валидацию - проверяем только если введено что-то
+            if (address && address.length > 2) {
+                if (!isKyrgyzstanAddress(address)) {
+                    // Не показываем alert, просто логируем предупреждение
+                    console.warn('Введенный адрес может не относиться к Киргизии:', address);
+                }
             }
         });
         
-        // Проверка, относится ли адрес к Киргизии
+        // Проверка, относится ли адрес к Киргизии (улучшенная версия)
         function isKyrgyzstanAddress(address) {
             const kyrgyzstanKeywords = [
-                'кыргызстан', 'киргизия', 'бишкек', 'ош', 'джалал-абад', 
-                'каракол', 'нарын', 'талас', 'баткен', 'чуй', 'иссык-куль',
+                'кыргызстан', 'киргизия', 'бишкек', 'ош', 'джалал-абад', 'джалалабад',
+                'каракол', 'нарын', 'талас', 'баткен', 'чуй', 'иссык-куль', 'исыккуль',
                 'кг', 'kg', 'bishkek', 'osh', 'jalal-abad', 'karakol', 
-                'naryn', 'talas', 'batken', 'чолпон-ата', 'кербен'
+                'naryn', 'talas', 'batken', 'чолпон-ата', 'кербен', 'токмак',
+                'кант', 'сокулук', 'беловодское', 'кемин', 'чолпон', 'ата',
+                'кочкор', 'ат-башы', 'кызыл-кия', 'сулюкта', 'узген',
+                'арсланбоб', 'майлуу-суу', 'жалал-абад', 'кайынды', 'базар-коргон',
+                'ноокат', 'кара-суу', 'кара-кулжа', 'ленин', 'пик', 'ленина'
             ];
             
-            return kyrgyzstanKeywords.some(keyword => address.includes(keyword));
+            // Если адрес содержит хотя бы одно ключевое слово - считаем валидным
+            // Или если адрес просто числа/координаты - тоже валидным
+            return kyrgyzstanKeywords.some(keyword => address.includes(keyword)) || 
+                   /^[\d\.,\s\-]+$/.test(address); // Координаты или числа
         }
         
         function updateFullAddress(type) {
@@ -571,12 +657,7 @@
             if (house) fullAddress += `, ${house}`;
             if (district) fullAddress += `, ${district}`;
             
-            // Проверяем, что адрес относится к Киргизии
-            if (fullAddress && !isKyrgyzstanAddress(fullAddress.toLowerCase())) {
-                alert('Адрес должен находиться на территории Киргизии');
-                return;
-            }
-            
+            // Убираем строгую валидацию - просто обновляем адрес
             $(`#${type}-full`).val(fullAddress);
             
             if ($('#origin-full').val() && $('#destination-full').val()) {
@@ -615,14 +696,14 @@
                 return false;
             }
             
-            // Проверяем, что адреса находятся в пределах Киргизии
+            // Проверяем, что адреса находятся в пределах Киргизии (делаем менее строгим)
             if (!isKyrgyzstanAddress(origin.toLowerCase())) {
-                alert('Адрес отправления должен находиться на территории Киргизии');
-                return false;
+                console.warn('Внимание: адрес отправления может не относиться к Киргизии');
+                // Не блокируем отправку, только предупреждаем
             }
             if (!isKyrgyzstanAddress(destination.toLowerCase())) {
-                alert('Адрес назначения должен находиться на территории Киргизии');
-                return false;
+                console.warn('Внимание: адрес назначения может не относиться к Киргизии');
+                // Не блокируем отправку, только предупреждаем
             }
             
             // Отправка формы
@@ -818,6 +899,44 @@
         .route-info-item {
             width: 100%;
         }
+    }
+    
+    /* Стили для автодополнения адресов */
+    .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #2d2e33;
+        border: 1px solid #47484c;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .autocomplete-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        color: #fff;
+        border-bottom: 1px solid #47484c;
+        transition: background-color 0.2s;
+    }
+    
+    .autocomplete-item:hover {
+        background-color: #47484c;
+    }
+    
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Улучшение стилей для полей ввода адресов */
+    .main__order-details-item {
+        position: relative;
     }
 </style>
 {% endblock %}

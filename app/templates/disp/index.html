@@ -192,18 +192,18 @@
                     return;
                 }
                 
-                // Центр Киргизии (Бишкек)
-                const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
+                // Центр города Ош, Киргизия (как на странице создания заказов)
+                const oshCenter = [72.8019, 40.5138]; // [lng, lat] для MapGL - город Ош
                 
                 const mainMap = new mapgl.Map('main-map-container', {
-                    center: kyrgyzstanCenter,
-                    zoom: 7,
+                    center: oshCenter,
+                    zoom: 12, // Увеличиваем зум для города
                     key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
                     minZoom: 5,
                     maxZoom: 18
                 });
                 
-                console.log('Главная карта 2ГИС MapGL создана для территории Киргизии');
+                console.log('Главная карта 2ГИС MapGL создана для города Ош');
 
                 // Добавляем маркеры заказов на карту в будущем
                 // Здесь можно добавить геокодирование адресов заказов только в пределах Киргизии
