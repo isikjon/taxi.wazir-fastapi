@@ -142,7 +142,20 @@
 <!-- Подключение 2ГИС MapGL JS API -->
 <script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
-    $(document).ready(function() {
+    // Ждём загрузки DOM и jQuery
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ждём также загрузки jQuery
+        function waitForJQuery() {
+            if (typeof $ !== 'undefined') {
+                initApp();
+            } else {
+                setTimeout(waitForJQuery, 100);
+            }
+        }
+        waitForJQuery();
+    });
+
+    function initApp() {
         console.log('jQuery готов');
         
         // Константы для тарифов
@@ -190,7 +203,8 @@
         function updateKyrgyzTime() {
             try {
                 const now = new Date();
-                const kyrgyzTime = new Date(now.getTime() + (6 * 60 * 60 * 1000 + now.getTimezoneOffset() * 60 * 1000));
+                // Получаем UTC время и добавляем 6 часов для Киргизии (GMT+6)
+                const kyrgyzTime = new Date(now.getTime() + (6 * 60 * 60 * 1000));
                 
                 const orderTimeElement = document.getElementById('order-time');
                 if (orderTimeElement) {
@@ -198,7 +212,8 @@
                         hour: '2-digit', 
                         minute: '2-digit',
                         second: '2-digit',
-                        hour12: false
+                        hour12: false,
+                        timeZone: 'Asia/Bishkek'
                     });
                 }
             } catch (error) {
@@ -230,18 +245,18 @@
                     return;
                 }
                 
-                // Центр Киргизии (Бишкек)
-                const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
+                // Центр города Ош, Киргизия
+                const oshCenter = [72.8019, 40.5138]; // [lng, lat] для MapGL - город Ош
                 
                 map = new mapgl.Map('map-container', {
-                    center: kyrgyzstanCenter,
-                    zoom: 7,
+                    center: oshCenter,
+                    zoom: 12, // Увеличиваем зум для города
                     key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
                     minZoom: 5,
                     maxZoom: 18
                 });
                 
-                console.log('Карта 2ГИС MapGL создана для Киргизии');
+                console.log('Карта 2ГИС MapGL создана для города Ош');
 
                 // Добавляем обработчик правой кнопки мыши для выбора точек
                 map.on('contextmenu', function(e) {
@@ -256,7 +271,7 @@
                     }
                 });
                 
-                console.log('Карта 2ГИС MapGL успешно инициализирована для Киргизии');
+                console.log('Карта 2ГИС MapGL успешно инициализирована для города Ош');
             } catch (error) {
                 console.error('Ошибка при инициализации карты 2ГИС MapGL:', error);
             }
@@ -639,7 +654,7 @@
                 window.location.reload();
             }
         });
-    });
+    } // Закрытие функции initApp
 </script>
 <style>
     /* Адаптивные стили */
