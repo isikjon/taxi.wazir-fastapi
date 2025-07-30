@@ -54,13 +54,13 @@
                 </div>
                 <div class="main__order-details">
                     <div class="main__order-details-item main__order-details-where">
-                        <input type="text" id="origin-street" name="origin_street" placeholder="Улица" class="main__btn" />
+                        <input type="text" id="origin-street" name="origin_street" placeholder="Улица откуда" class="main__btn" />
                         <input type="text" id="origin-house" name="origin_house" placeholder="Дом" class="main__btn" />
                         <input type="text" id="origin-district" name="origin_district" placeholder="Район" class="main__btn" />
                         <input type="hidden" id="origin-full" name="origin" />
                     </div>
                     <div class="main__order-details-item main__order-details-whither">
-                        <input type="text" id="destination-street" name="destination_street" placeholder="Улица" class="main__btn" />
+                        <input type="text" id="destination-street" name="destination_street" placeholder="Улица куда" class="main__btn" />
                         <input type="text" id="destination-house" name="destination_house" placeholder="Дом" class="main__btn" />
                         <input type="text" id="destination-district" name="destination_district" placeholder="Район" class="main__btn" />
                         <input type="hidden" id="destination-full" name="destination" />
@@ -108,7 +108,7 @@
             </div>
             <div class="main__order-map">
                 <div class="main__order-map-item" id="map-container">
-                    <!-- Google Maps будет загружен сюда -->
+                    <!-- 2ГИС карта будет загружена сюда -->
                 </div>
                 <div class="main__order-map-settings">
                     <div class="main__order-map-settings">
@@ -138,6 +138,9 @@
         </div>
     </form>
 </div>
+
+<!-- Подключение 2ГИС RasterJS API -->
+<script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="{{ url_for('static', path='/assets/js/script.js') }}"></script>
 <script>
@@ -189,10 +192,8 @@
         function updateKyrgyzTime() {
             try {
                 const now = new Date();
-                // Устанавливаем киргизское время (UTC+6)
                 const kyrgyzTime = new Date(now.getTime() + (6 * 60 * 60 * 1000 + now.getTimezoneOffset() * 60 * 1000));
                 
-                // Обновляем только поле времени заказа, добавляем секунды
                 const orderTimeElement = document.getElementById('order-time');
                 if (orderTimeElement) {
                     orderTimeElement.value = kyrgyzTime.toLocaleTimeString('ru-RU', { 
@@ -207,477 +208,251 @@
             }
         }
         
-        // Запускаем обновление времени каждую секунду
         updateKyrgyzTime();
         setInterval(updateKyrgyzTime, 1000);
 
-        // Инициализация Google Maps
+        // Переменные для карты 2ГИС
         let map;
-        let directionsService;
-        let directionsRenderer;
         let originMarker;
         let destinationMarker;
-        let autocompleteOrigin;
-        let autocompleteDestination;
+        let routeLayer;
         let distance = 0;
         let duration = 0;
 
+        // Инициализация карты 2ГИС
         function initMap() {
             try {
-                console.log('Инициализация карты...');
-                // Центр Бишкека (столица Киргизии)
-                const bishkekCenter = { lat: 42.8746, lng: 74.5698 };
+                console.log('Инициализация карты 2ГИС...');
                 
-                const mapContainer = document.getElementById("map-container");
-                if (!mapContainer) {
-                    console.error('Контейнер карты не найден');
-                    return;
-                }
-                
-                map = new google.maps.Map(mapContainer, {
-                    center: bishkekCenter,
-                    zoom: 12,
-                    styles: [
-                        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                        {
-                            featureType: "administrative.locality",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#d59563" }],
-                        },
-                        {
-                            featureType: "poi",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#d59563" }],
-                        },
-                        {
-                            featureType: "poi.park",
-                            elementType: "geometry",
-                            stylers: [{ color: "#263c3f" }],
-                        },
-                        {
-                            featureType: "poi.park",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#6b9a76" }],
-                        },
-                        {
-                            featureType: "road",
-                            elementType: "geometry",
-                            stylers: [{ color: "#38414e" }],
-                        },
-                        {
-                            featureType: "road",
-                            elementType: "geometry.stroke",
-                            stylers: [{ color: "#212a37" }],
-                        },
-                        {
-                            featureType: "road",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#9ca5b3" }],
-                        },
-                        {
-                            featureType: "road.highway",
-                            elementType: "geometry",
-                            stylers: [{ color: "#746855" }],
-                        },
-                        {
-                            featureType: "road.highway",
-                            elementType: "geometry.stroke",
-                            stylers: [{ color: "#1f2835" }],
-                        },
-                        {
-                            featureType: "road.highway",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#f3d19c" }],
-                        },
-                        {
-                            featureType: "transit",
-                            elementType: "geometry",
-                            stylers: [{ color: "#2f3948" }],
-                        },
-                        {
-                            featureType: "transit.station",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#d59563" }],
-                        },
-                        {
-                            featureType: "water",
-                            elementType: "geometry",
-                            stylers: [{ color: "#17263c" }],
-                        },
-                        {
-                            featureType: "water",
-                            elementType: "labels.text.fill",
-                            stylers: [{ color: "#515c6d" }],
-                        },
-                        {
-                            featureType: "water",
-                            elementType: "labels.text.stroke",
-                            stylers: [{ color: "#17263c" }],
-                        },
-                    ],
-                });
-                
-                console.log('Карта создана');
-
-                directionsService = new google.maps.DirectionsService();
-                directionsRenderer = new google.maps.DirectionsRenderer({
-                    map: map,
-                    suppressMarkers: true,
-                    polylineOptions: {
-                        strokeColor: "#00FFFC",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 5
-                    }
-                });
-
-                // Отслеживаем последние координаты мыши на карте
-                window.lastMouseEvent = null;
-                
-                mapContainer.addEventListener('mousemove', function(e) {
-                    window.lastMouseEvent = e;
-                });
-
-                // Добавляем обработчик правой кнопки мыши для выбора точек
-                google.maps.event.addListener(map, 'rightclick', function(e) {
-                    const latLng = e.latLng;
-                    console.log('Клик правой кнопкой по координатам:', latLng.lat(), latLng.lng());
+                DG.then(function () {
+                    // Центр Киргизии (Бишкек)
+                    const kyrgyzstanCenter = [41.2044, 74.7661];
                     
-                    // Показываем контекстное меню
-                    showContextMenu(latLng);
+                    // Границы Киргизии (приблизительные координаты)
+                    const kyrgyzstanBounds = [
+                        [39.2, 69.2], // юго-запад
+                        [43.3, 80.3]  // северо-восток
+                    ];
+                    
+                    map = DG.map('map-container', {
+                        center: kyrgyzstanCenter,
+                        zoom: 7,
+                        key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
+                        maxBounds: kyrgyzstanBounds,
+                        minZoom: 6,
+                        maxZoom: 18
+                    });
+                    
+                    console.log('Карта 2ГИС создана для Киргизии');
+
+                    // Добавляем обработчик правой кнопки мыши для выбора точек
+                    map.on('contextmenu', function(e) {
+                        const latLng = e.latlng;
+                        
+                        // Проверяем, что координаты находятся в пределах Киргизии
+                        if (isWithinKyrgyzstan(latLng.lat, latLng.lng)) {
+                            console.log('Клик правой кнопкой по координатам в Киргизии:', latLng.lat, latLng.lng);
+                            showContextMenu(latLng, e.originalEvent);
+                        } else {
+                            alert('Выберите точку на территории Киргизии');
+                        }
+                    });
+                    
+                    console.log('Карта 2ГИС успешно инициализирована для Киргизии');
                 });
-                
-                // Автозаполнение для полей адреса
-                const options = {
-                    componentRestrictions: { country: 'kg' },
-                    types: ['geocode']
-                };
-
-                const originStreetInput = document.getElementById('origin-street');
-                if (originStreetInput) {
-                    autocompleteOrigin = new google.maps.places.Autocomplete(originStreetInput, options);
-                    autocompleteOrigin.addListener('place_changed', function() {
-                        const place = autocompleteOrigin.getPlace();
-                        if (place && place.geometry) {
-                            // Удаляем предыдущий маркер, если он существует
-                            if (originMarker) {
-                                originMarker.setMap(null);
-                            }
-                            
-                            originMarker = new google.maps.Marker({
-                                position: place.geometry.location,
-                                map: map,
-                                title: 'Откуда',
-                                icon: {
-                                    url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                                }
-                            });
-                            
-                            // Заполняем скрытое поле с полным адресом
-                            const originFullField = document.getElementById('origin-full');
-                            if (originFullField) {
-                                originFullField.value = place.formatted_address;
-                            }
-                            
-                            // Заполняем поля с районом/домом, если они есть в адресе
-                            fillAddressDetails(place, 'origin');
-                            
-                            // Центрируем карту на точке
-                            map.setCenter(place.geometry.location);
-                            map.setZoom(14);
-                            
-                            // Обновляем маршрут, если оба адреса установлены
-                            const destinationFullField = document.getElementById('destination-full');
-                            if (destinationFullField && destinationFullField.value) {
-                                calculateRoute();
-                            }
-                        }
-                    });
-                }
-
-                const destinationStreetInput = document.getElementById('destination-street');
-                if (destinationStreetInput) {
-                    autocompleteDestination = new google.maps.places.Autocomplete(destinationStreetInput, options);
-                    autocompleteDestination.addListener('place_changed', function() {
-                        const place = autocompleteDestination.getPlace();
-                        if (place && place.geometry) {
-                            // Удаляем предыдущий маркер, если он существует
-                            if (destinationMarker) {
-                                destinationMarker.setMap(null);
-                            }
-                            
-                            destinationMarker = new google.maps.Marker({
-                                position: place.geometry.location,
-                                map: map,
-                                title: 'Куда',
-                                icon: {
-                                    url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
-                                }
-                            });
-                            
-                            // Заполняем скрытое поле с полным адресом
-                            const destinationFullField = document.getElementById('destination-full');
-                            if (destinationFullField) {
-                                destinationFullField.value = place.formatted_address;
-                            }
-                            
-                            // Заполняем поля с районом/домом, если они есть в адресе
-                            fillAddressDetails(place, 'destination');
-                            
-                            // Обновляем маршрут, если оба адреса установлены
-                            const originFullField = document.getElementById('origin-full');
-                            if (originFullField && originFullField.value) {
-                                calculateRoute();
-                            }
-                        }
-                    });
-                }
-                
-                console.log('Карта успешно инициализирована');
             } catch (error) {
-                console.error('Ошибка при инициализации карты:', error);
+                console.error('Ошибка при инициализации карты 2ГИС:', error);
             }
         }
-        
-        // Функция для заполнения полей адреса
-        function fillAddressDetails(place, type) {
-            if (place.address_components) {
-                for (const component of place.address_components) {
-                    if (component.types.includes('street_number')) {
-                        document.getElementById(`${type}-house`).value = component.long_name;
-                    }
-                    if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
-                        document.getElementById(`${type}-district`).value = component.long_name;
-                    }
-                }
-            }
+
+        // Проверка, находится ли точка в пределах Киргизии
+        function isWithinKyrgyzstan(lat, lng) {
+            return (lat >= 39.2 && lat <= 43.3 && lng >= 69.2 && lng <= 80.3);
         }
 
         // Функция для отображения контекстного меню
-        function showContextMenu(latLng) {
+        function showContextMenu(latLng, event) {
             try {
-                // Создаем контейнер для контекстного меню
-                const menuDiv = document.createElement('div');
-                menuDiv.className = 'map-context-menu';
-                menuDiv.innerHTML = `
-                    <div class="map-context-menu-item" id="set-origin">Установить точку отправления</div>
-                    <div class="map-context-menu-item" id="set-destination">Установить точку назначения</div>
-                `;
+                // Удаляем предыдущее меню, если оно есть
+                $('.map-context-menu').remove();
                 
-                // Устанавливаем стили для контекстного меню
-                menuDiv.style.position = 'absolute';
-                menuDiv.style.backgroundColor = '#2d2e33';
-                menuDiv.style.border = '1px solid #47484c';
-                menuDiv.style.borderRadius = '5px';
-                menuDiv.style.padding = '5px 0';
-                menuDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-                menuDiv.style.zIndex = '1000';
+                const menuDiv = $(`
+                    <div class="map-context-menu">
+                        <div class="map-context-menu-item" data-action="origin">Установить точку отправления</div>
+                        <div class="map-context-menu-item" data-action="destination">Установить точку назначения</div>
+                    </div>
+                `);
                 
-                // Стили для пунктов меню
-                const menuItems = menuDiv.querySelectorAll('.map-context-menu-item');
-                menuItems.forEach(item => {
-                    item.style.padding = '8px 12px';
-                    item.style.cursor = 'pointer';
-                    item.style.color = '#fff';
-                    
-                    // Эффект при наведении
-                    item.addEventListener('mouseover', function() {
-                        this.style.backgroundColor = '#47484c';
-                    });
-                    item.addEventListener('mouseout', function() {
-                        this.style.backgroundColor = 'transparent';
-                    });
+                // Позиционируем меню
+                menuDiv.css({
+                    position: 'fixed',
+                    left: event.clientX + 'px',
+                    top: event.clientY + 'px',
+                    backgroundColor: '#2d2e33',
+                    border: '1px solid #47484c',
+                    borderRadius: '5px',
+                    padding: '5px 0',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                    zIndex: 1000,
+                    color: '#fff'
                 });
                 
-                // Добавляем меню на карту
-                const mapContainer = document.getElementById('map-container');
-                mapContainer.appendChild(menuDiv);
-                
-                // Используем событие rightclick для получения пиксельных координат
-                // Хранение последних координат курсора мыши
-                if (window.lastMouseEvent) {
-                    menuDiv.style.left = window.lastMouseEvent.clientX + 'px';
-                    menuDiv.style.top = window.lastMouseEvent.clientY + 'px';
-                } else {
-                    try {
-                        // Пробуем использовать OverlayView для получения координат
-                        const overlay = new google.maps.OverlayView();
-                        overlay.draw = function() {}; // Пустая функция draw
-                        overlay.setMap(map);
-                        
-                        overlay.onAdd = function() {
-                            try {
-                                const projection = this.getProjection();
-                                const pixel = projection.fromLatLngToContainerPixel(latLng);
-                                
-                                // Позиционируем меню по координатам клика
-                                menuDiv.style.left = pixel.x + 'px';
-                                menuDiv.style.top = pixel.y + 'px';
-                            } catch (error) {
-                                console.error('Ошибка позиционирования меню:', error);
-                                // Если не сработало, устанавливаем позицию в центр карты
-                                const mapContainerRect = mapContainer.getBoundingClientRect();
-                                menuDiv.style.left = (mapContainerRect.width / 2) + 'px';
-                                menuDiv.style.top = (mapContainerRect.height / 2) + 'px';
-                            }
-                        };
-                    } catch (error) {
-                        console.error('Ошибка при создании оверлея:', error);
-                        // Если не сработало, устанавливаем позицию в центр карты
-                        const mapContainerRect = mapContainer.getBoundingClientRect();
-                        menuDiv.style.left = (mapContainerRect.width / 2) + 'px';
-                        menuDiv.style.top = (mapContainerRect.height / 2) + 'px';
-                    }
-                }
+                $('body').append(menuDiv);
                 
                 // Обработчики для пунктов меню
-                document.getElementById('set-origin').addEventListener('click', function() {
-                    setMarkerByClick(latLng, 'origin');
-                    removeContextMenu();
-                });
-                
-                document.getElementById('set-destination').addEventListener('click', function() {
-                    setMarkerByClick(latLng, 'destination');
-                    removeContextMenu();
+                menuDiv.find('.map-context-menu-item').hover(
+                    function() { $(this).css('backgroundColor', '#47484c'); },
+                    function() { $(this).css('backgroundColor', 'transparent'); }
+                ).css({
+                    padding: '8px 12px',
+                    cursor: 'pointer'
+                }).click(function() {
+                    const action = $(this).data('action');
+                    setMarkerByClick(latLng, action);
+                    $('.map-context-menu').remove();
                 });
                 
                 // Закрываем меню при клике вне его
-                document.addEventListener('click', removeContextMenu);
+                $(document).one('click', function() {
+                    $('.map-context-menu').remove();
+                });
                 
-                // Функция для удаления контекстного меню
-                function removeContextMenu() {
-                    if (menuDiv && menuDiv.parentNode) {
-                        menuDiv.parentNode.removeChild(menuDiv);
-                    }
-                    document.removeEventListener('click', removeContextMenu);
-                }
             } catch (error) {
                 console.error('Ошибка при отображении контекстного меню:', error);
             }
         }
         
-        // Функция для установки маркера при клике правой кнопкой мыши
+        // Функция для установки маркера при клике
         function setMarkerByClick(latLng, type) {
-            console.log('Установка маркера', type, 'по координатам:', latLng.lat(), latLng.lng());
-            // Получаем адрес по координатам (обратное геокодирование)
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ location: latLng }, function(results, status) {
-                console.log('Результат геокодирования:', status);
-                if (status === 'OK' && results[0]) {
-                    const address = results[0].formatted_address;
-                    console.log('Полученный адрес:', address);
+            console.log('Установка маркера', type, 'по координатам в Киргизии:', latLng.lat, latLng.lng);
+            
+            // Обратное геокодирование для получения адреса в Киргизии
+            DG.Geocoder.geocode([latLng.lat, latLng.lng]).then(function(result) {
+                if (result && result.length > 0) {
+                    const address = result[0].formatted_address || result[0].name;
                     
-                    // Устанавливаем маркер
-                    if (type === 'origin') {
-                        // Удаляем предыдущий маркер, если он существует
-                        if (originMarker) {
-                            originMarker.setMap(null);
+                    // Проверяем, что адрес относится к Киргизии
+                    if (address.toLowerCase().includes('кыргызстан') || 
+                        address.toLowerCase().includes('киргизия') ||
+                        address.toLowerCase().includes('бишкек') ||
+                        address.toLowerCase().includes('ош') ||
+                        address.toLowerCase().includes('джалал-абад') ||
+                        address.toLowerCase().includes('каракол') ||
+                        address.toLowerCase().includes('нарын') ||
+                        address.toLowerCase().includes('талас') ||
+                        address.toLowerCase().includes('баткен')) {
+                        
+                        console.log('Полученный адрес в Киргизии:', address);
+                        
+                        // Устанавливаем маркер
+                        if (type === 'origin') {
+                            if (originMarker) {
+                                map.removeLayer(originMarker);
+                            }
+                            
+                            originMarker = DG.marker([latLng.lat, latLng.lng], {
+                                icon: DG.icon({
+                                    iconUrl: 'https://maps.api.2gis.ru/2.0/icons/pin_green.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41]
+                                })
+                            }).addTo(map).bindPopup('Откуда: ' + address);
+                            
+                            // Заполняем поля адреса
+                            $('#origin-street').val(address);
+                            $('#origin-full').val(address);
+                            
+                        } else if (type === 'destination') {
+                            if (destinationMarker) {
+                                map.removeLayer(destinationMarker);
+                            }
+                            
+                            destinationMarker = DG.marker([latLng.lat, latLng.lng], {
+                                icon: DG.icon({
+                                    iconUrl: 'https://maps.api.2gis.ru/2.0/icons/pin_red.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41]
+                                })
+                            }).addTo(map).bindPopup('Куда: ' + address);
+                            
+                            // Заполняем поля адреса
+                            $('#destination-street').val(address);
+                            $('#destination-full').val(address);
                         }
                         
-                        originMarker = new google.maps.Marker({
-                            position: latLng,
-                            map: map,
-                            title: 'Откуда',
-                            icon: {
-                                url: "//maps.google.com/mapfiles/ms/icons/green-dot.png"
-                            }
-                        });
-                        
-                        // Заполняем поле адреса
-                        document.getElementById('origin-street').value = address;
-                        document.getElementById('origin-full').value = address;
-                        
-                        // Заполняем поля с районом/домом, если они есть в адресе
-                        fillAddressDetails(results[0], 'origin');
-                        
-                    } else if (type === 'destination') {
-                        // Удаляем предыдущий маркер, если он существует
-                        if (destinationMarker) {
-                            destinationMarker.setMap(null);
+                        // Обновляем маршрут, если оба адреса установлены
+                        if ($('#origin-full').val() && $('#destination-full').val()) {
+                            calculateRoute();
                         }
-                        
-                        destinationMarker = new google.maps.Marker({
-                            position: latLng,
-                            map: map,
-                            title: 'Куда',
-                            icon: {
-                                url: "//maps.google.com/mapfiles/ms/icons/red-dot.png"
-                            }
-                        });
-                        
-                        // Заполняем поле адреса
-                        document.getElementById('destination-street').value = address;
-                        document.getElementById('destination-full').value = address;
-                        
-                        // Заполняем поля с районом/домом, если они есть в адресе
-                        fillAddressDetails(results[0], 'destination');
-                    }
-                    
-                    // Обновляем маршрут, если оба адреса установлены
-                    if (document.getElementById('origin-full').value && document.getElementById('destination-full').value) {
-                        calculateRoute();
+                    } else {
+                        alert('Выберите адрес на территории Киргизии');
                     }
                 } else {
-                    console.error('Ошибка геокодирования:', status);
-                    alert('Не удалось определить адрес по выбранной точке.');
+                    console.error('Не удалось определить адрес в Киргизии');
+                    alert('Не удалось определить адрес на территории Киргизии.');
                 }
+            }).catch(function(error) {
+                console.error('Ошибка геокодирования в Киргизии:', error);
+                alert('Ошибка при определении адреса в Киргизии.');
             });
         }
 
         // Расчет маршрута
         function calculateRoute() {
-            console.log('Расчет маршрута');
-            const origin = document.getElementById('origin-full').value;
-            const destination = document.getElementById('destination-full').value;
-            
-            if (!origin || !destination) {
-                console.log('Не заданы начальная или конечная точки маршрута');
-                return;
-            }
-            
-            console.log('Построение маршрута от', origin, 'до', destination);
-            
-            const request = {
-                origin: origin,
-                destination: destination,
-                travelMode: google.maps.TravelMode.DRIVING,
-                region: 'kg'
-            };
-            
-            directionsService.route(request, function(response, status) {
-                console.log('Ответ от сервиса маршрутов:', status);
-                if (status === 'OK') {
-                    directionsRenderer.setDirections(response);
+            try {
+                console.log('Расчет маршрута через 2ГИС');
+                const origin = $('#origin-full').val();
+                const destination = $('#destination-full').val();
+                
+                if (!origin || !destination) {
+                    console.log('Не заданы начальная или конечная точки маршрута');
+                    return;
+                }
+                
+                // Простой расчет расстояния (примерный)
+                if (originMarker && destinationMarker) {
+                    const originLatLng = originMarker.getLatLng();
+                    const destinationLatLng = destinationMarker.getLatLng();
                     
-                    // Получаем расстояние и время
-                    const route = response.routes[0];
-                    distance = route.legs[0].distance.value / 1000; // километры
-                    duration = route.legs[0].duration.value / 60; // минуты
+                    // Расчет расстояния по прямой (в километрах)
+                    distance = originLatLng.distanceTo(destinationLatLng) / 1000;
+                    // Примерное время в минутах (средняя скорость 30 км/ч в городе)
+                    duration = (distance / 30) * 60;
                     
                     console.log('Расстояние:', distance.toFixed(1), 'км, время:', duration.toFixed(0), 'мин');
                     
-                    document.getElementById('distance').value = `Расстояние: ${distance.toFixed(1)} км`;
+                    $('#distance').val(`Расстояние: ${distance.toFixed(1)} км`);
                     
                     // Пересчитываем стоимость
                     calculatePrice();
                     
+                    // Показываем линию маршрута
+                    if (routeLayer) {
+                        map.removeLayer(routeLayer);
+                    }
+                    
+                    routeLayer = DG.polyline([
+                        [originLatLng.lat, originLatLng.lng],
+                        [destinationLatLng.lat, destinationLatLng.lng]
+                    ], {
+                        color: '#00FFFC',
+                        weight: 5,
+                        opacity: 0.8
+                    }).addTo(map);
+                    
                     // Подстраиваем карту под маршрут
-                    const bounds = new google.maps.LatLngBounds();
-                    bounds.extend(originMarker.getPosition());
-                    bounds.extend(destinationMarker.getPosition());
-                    map.fitBounds(bounds);
-                } else {
-                    console.error('Ошибка расчета маршрута:', status);
-                    alert('Не удалось рассчитать маршрут. Пожалуйста, проверьте адреса.');
+                    const group = DG.featureGroup([originMarker, destinationMarker]);
+                    map.fitBounds(group.getBounds(), { padding: [20, 20] });
                 }
-            });
+            } catch (error) {
+                console.error('Ошибка расчета маршрута:', error);
+            }
         }
 
         // Расчет стоимости поездки
         function calculatePrice() {
             try {
-                const tariff = document.getElementById('tariff-select').value;
+                const tariff = $('#tariff-select').val();
                 console.log('Расчет цены для тарифа:', tariff);
                 
                 if (!tariff || !TARIFFS[tariff]) {
@@ -689,21 +464,13 @@
                 let price = tariffData.boardingFee;
                 
                 // Обновляем отображение тарифа
-                const tariffDisplay = document.getElementById('tariff-display');
-                if (tariffDisplay) {
-                    tariffDisplay.value = tariff;
-                    console.log('Установлен тариф в поле отображения:', tariff);
-                } else {
-                    console.error('Элемент tariff-display не найден');
-                }
+                $('#tariff-display').val(tariff);
                 
                 // Расчет стоимости в зависимости от расстояния
                 if (distance > 0) {
-                    // По умолчанию используем городской тариф
                     const pricePerKm = tariffData.cityPricePerKm;
                     const pricePerMinute = tariffData.cityPricePerMinute;
                     
-                    // Расчет стоимости по километражу и времени
                     const distancePrice = distance * pricePerKm;
                     const timePrice = duration * pricePerMinute;
                     
@@ -718,21 +485,9 @@
                 // Округляем до целого числа
                 price = Math.ceil(price);
                 
-                const priceElement = document.getElementById('price');
-                const calculatedPriceElement = document.getElementById('calculated-price');
-                const boardingFeeElement = document.getElementById('boarding-fee');
-                
-                if (priceElement) {
-                    priceElement.value = `Стоимость: ${price} сом`;
-                }
-                
-                if (calculatedPriceElement) {
-                    calculatedPriceElement.value = price;
-                }
-                
-                if (boardingFeeElement) {
-                    boardingFeeElement.value = `Посадка: ${tariffData.boardingFee} сом`;
-                }
+                $('#price').val(`Стоимость: ${price} сом`);
+                $('#calculated-price').val(price);
+                $('#boarding-fee').val(`Посадка: ${tariffData.boardingFee} сом`);
                 
                 console.log('Расчет стоимости:', {
                     тариф: tariff,
@@ -755,7 +510,7 @@
                 } catch (error) {
                     console.error('Ошибка инициализации карты после загрузки страницы:', error);
                 }
-            }, 500); // Небольшая задержка для гарантии загрузки всех элементов
+            }, 500);
         });
 
         // Обработчики событий
@@ -766,11 +521,8 @@
             
             $('#driver-phone').val(phone);
             
-            // Если тариф указан, выбираем его
             if (tariff) {
                 $('#tariff-select').val(tariff);
-                
-                // Принудительно вызываем обработчик изменения тарифа
                 $('#tariff-select').trigger('change');
             }
         });
@@ -781,14 +533,7 @@
                 console.log('Изменение тарифа на:', tariff);
                 
                 if (tariff) {
-                    // Сначала обновляем отображение тарифа напрямую
-                    const tariffDisplay = document.getElementById('tariff-display');
-                    if (tariffDisplay) {
-                        tariffDisplay.value = tariff;
-                        console.log('Установлен тариф в поле отображения при изменении селекта:', tariff);
-                    }
-                    
-                    // Затем вызываем расчет цены
+                    $('#tariff-display').val(tariff);
                     calculatePrice();
                 }
             } catch (error) {
@@ -805,6 +550,27 @@
             updateFullAddress('destination');
         });
         
+        // Валидация адресов для Киргизии при ручном вводе
+        $('#origin-street, #destination-street').on('blur', function() {
+            const address = $(this).val().toLowerCase();
+            if (address && !isKyrgyzstanAddress(address)) {
+                alert('Пожалуйста, введите адрес на территории Киргизии');
+                $(this).focus();
+            }
+        });
+        
+        // Проверка, относится ли адрес к Киргизии
+        function isKyrgyzstanAddress(address) {
+            const kyrgyzstanKeywords = [
+                'кыргызстан', 'киргизия', 'бишкек', 'ош', 'джалал-абад', 
+                'каракол', 'нарын', 'талас', 'баткен', 'чуй', 'иссык-куль',
+                'кг', 'kg', 'bishkek', 'osh', 'jalal-abad', 'karakol', 
+                'naryn', 'talas', 'batken', 'чолпон-ата', 'кербен'
+            ];
+            
+            return kyrgyzstanKeywords.some(keyword => address.includes(keyword));
+        }
+        
         function updateFullAddress(type) {
             const street = $(`#${type}-street`).val();
             const house = $(`#${type}-house`).val();
@@ -814,10 +580,15 @@
             if (house) fullAddress += `, ${house}`;
             if (district) fullAddress += `, ${district}`;
             
+            // Проверяем, что адрес относится к Киргизии
+            if (fullAddress && !isKyrgyzstanAddress(fullAddress.toLowerCase())) {
+                alert('Адрес должен находиться на территории Киргизии');
+                return;
+            }
+            
             $(`#${type}-full`).val(fullAddress);
             
-            // Пересчитываем маршрут только если оба адреса заданы
-            if (document.getElementById('origin-full').value && document.getElementById('destination-full').value) {
+            if ($('#origin-full').val() && $('#destination-full').val()) {
                 calculateRoute();
             }
         }
@@ -826,7 +597,6 @@
         $('#order-form').submit(function(e) {
             e.preventDefault();
             
-            // Проверка на заполнение обязательных полей
             const driverId = $('#driver-select').val();
             const tariff = $('#tariff-select').val();
             const paymentMethod = $('#payment-method').val();
@@ -837,24 +607,30 @@
                 alert('Выберите водителя');
                 return false;
             }
-            
             if (!tariff) {
                 alert('Выберите тариф');
                 return false;
             }
-            
             if (!paymentMethod) {
                 alert('Выберите способ оплаты');
                 return false;
             }
-            
             if (!origin) {
                 alert('Укажите адрес отправления');
                 return false;
             }
-            
             if (!destination) {
                 alert('Укажите адрес назначения');
+                return false;
+            }
+            
+            // Проверяем, что адреса находятся в пределах Киргизии
+            if (!isKyrgyzstanAddress(origin.toLowerCase())) {
+                alert('Адрес отправления должен находиться на территории Киргизии');
+                return false;
+            }
+            if (!isKyrgyzstanAddress(destination.toLowerCase())) {
+                alert('Адрес назначения должен находиться на территории Киргизии');
                 return false;
             }
             
@@ -1003,18 +779,6 @@
         resize: vertical;
     }
     
-    /* Живое время */
-    #current-time {
-        font-size: 18px;
-        font-weight: bold;
-        color: #fff;
-        background-color: #47484c;
-        padding: 8px 12px;
-        border-radius: 5px;
-        display: inline-block;
-        margin-left: 15px;
-    }
-    
     /* Улучшения для карты и маршрута */
     .route-info {
         background-color: #2d2e33;
@@ -1038,12 +802,31 @@
         width: 90%;
     }
     
+    /* Стили для контекстного меню карты */
+    .map-context-menu {
+        background-color: #2d2e33;
+        border: 1px solid #47484c;
+        border-radius: 5px;
+        padding: 5px 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        z-index: 1000;
+        color: #fff;
+    }
+    
+    .map-context-menu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #fff;
+    }
+    
+    .map-context-menu-item:hover {
+        background-color: #47484c;
+    }
+    
     @media (max-width: 576px) {
         .route-info-item {
             width: 100%;
         }
     }
 </style>
-</body>
 {% endblock %}
-</html>

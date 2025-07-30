@@ -28,8 +28,8 @@ from .routers import drivers, cars, orders, messages
 from .models import TokenResponse
 
 # Выполняем миграцию базы данных
-from .migration import run_migrations
-run_migrations()
+# from .migration import run_migrations
+# run_migrations()
 
 # Создаем все таблицы в базе данных
 Base.metadata.create_all(bind=engine)
