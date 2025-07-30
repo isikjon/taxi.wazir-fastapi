@@ -177,46 +177,41 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Подключение 2ГИС RasterJS API -->
-<script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
+<!-- Подключение 2ГИС MapGL JS API -->
+<script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
     $(document).ready(function() {
-        // Инициализация карты 2ГИС для главной страницы
+        // Инициализация карты 2ГИС MapGL для главной страницы
         function initMainMap() {
             try {
-                console.log('Инициализация главной карты 2ГИС...');
+                console.log('Инициализация главной карты 2ГИС MapGL...');
                 
-                DG.then(function () {
-                    // Центр Киргизии (Бишкек)
-                    const kyrgyzstanCenter = [41.2044, 74.7661];
-                    
-                    // Границы Киргизии (приблизительные координаты)
-                    const kyrgyzstanBounds = [
-                        [39.2, 69.2], // юго-запад
-                        [43.3, 80.3]  // северо-восток
-                    ];
-                    
-                    const mainMap = DG.map('main-map-container', {
-                        center: kyrgyzstanCenter,
-                        zoom: 7,
-                        key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
-                        maxBounds: kyrgyzstanBounds,
-                        minZoom: 6,
-                        maxZoom: 18
-                    });
-                    
-                    console.log('Главная карта 2ГИС создана для территории Киргизии');
-
-                    // Добавляем маркеры заказов на карту в будущем
-                    // Здесь можно добавить геокодирование адресов заказов только в пределах Киргизии
-                    
-                    // Настройка карты для отображения всей территории Киргизии
-                    mainMap.setView(kyrgyzstanCenter, 7);
-                    
-                    console.log('Главная карта 2ГИС успешно инициализирована для Киргизии');
+                // Центр Киргизии (Бишкек)
+                const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
+                
+                // Границы Киргизии
+                const kyrgyzstanBounds = [
+                    [69.2, 39.2], // юго-запад [lng, lat]
+                    [80.3, 43.3]  // северо-восток [lng, lat]
+                ];
+                
+                const mainMap = new mapgl.Map('main-map-container', {
+                    center: kyrgyzstanCenter,
+                    zoom: 7,
+                    key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
+                    maxBounds: kyrgyzstanBounds,
+                    minZoom: 6,
+                    maxZoom: 18
                 });
+                
+                console.log('Главная карта 2ГИС MapGL создана для территории Киргизии');
+
+                // Добавляем маркеры заказов на карту в будущем
+                // Здесь можно добавить геокодирование адресов заказов только в пределах Киргизии
+                
+                console.log('Главная карта 2ГИС MapGL успешно инициализирована для Киргизии');
             } catch (error) {
-                console.error('Ошибка при инициализации главной карты 2ГИС:', error);
+                console.error('Ошибка при инициализации главной карты 2ГИС MapGL:', error);
             }
         }
 

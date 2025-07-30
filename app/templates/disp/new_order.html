@@ -139,8 +139,8 @@
     </form>
 </div>
 
-<!-- Подключение 2ГИС RasterJS API -->
-<script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
+<!-- Подключение 2ГИС MapGL JS API -->
+<script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="{{ url_for('static', path='/assets/js/script.js') }}"></script>
 <script>
@@ -211,7 +211,7 @@
         updateKyrgyzTime();
         setInterval(updateKyrgyzTime, 1000);
 
-        // Переменные для карты 2ГИС
+        // Переменные для карты 2ГИС MapGL
         let map;
         let originMarker;
         let destinationMarker;
@@ -219,49 +219,47 @@
         let distance = 0;
         let duration = 0;
 
-        // Инициализация карты 2ГИС
+        // Инициализация карты 2ГИС MapGL
         function initMap() {
             try {
-                console.log('Инициализация карты 2ГИС...');
+                console.log('Инициализация карты 2ГИС MapGL...');
                 
-                DG.then(function () {
-                    // Центр Киргизии (Бишкек)
-                    const kyrgyzstanCenter = [41.2044, 74.7661];
-                    
-                    // Границы Киргизии (приблизительные координаты)
-                    const kyrgyzstanBounds = [
-                        [39.2, 69.2], // юго-запад
-                        [43.3, 80.3]  // северо-восток
-                    ];
-                    
-                    map = DG.map('map-container', {
-                        center: kyrgyzstanCenter,
-                        zoom: 7,
-                        key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
-                        maxBounds: kyrgyzstanBounds,
-                        minZoom: 6,
-                        maxZoom: 18
-                    });
-                    
-                    console.log('Карта 2ГИС создана для Киргизии');
-
-                    // Добавляем обработчик правой кнопки мыши для выбора точек
-                    map.on('contextmenu', function(e) {
-                        const latLng = e.latlng;
-                        
-                        // Проверяем, что координаты находятся в пределах Киргизии
-                        if (isWithinKyrgyzstan(latLng.lat, latLng.lng)) {
-                            console.log('Клик правой кнопкой по координатам в Киргизии:', latLng.lat, latLng.lng);
-                            showContextMenu(latLng, e.originalEvent);
-                        } else {
-                            alert('Выберите точку на территории Киргизии');
-                        }
-                    });
-                    
-                    console.log('Карта 2ГИС успешно инициализирована для Киргизии');
+                // Центр Киргизии (Бишкек)
+                const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
+                
+                // Границы Киргизии
+                const kyrgyzstanBounds = [
+                    [69.2, 39.2], // юго-запад [lng, lat]
+                    [80.3, 43.3]  // северо-восток [lng, lat]
+                ];
+                
+                map = new mapgl.Map('map-container', {
+                    center: kyrgyzstanCenter,
+                    zoom: 7,
+                    key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
+                    maxBounds: kyrgyzstanBounds,
+                    minZoom: 6,
+                    maxZoom: 18
                 });
+                
+                console.log('Карта 2ГИС MapGL создана для Киргизии');
+
+                // Добавляем обработчик правой кнопки мыши для выбора точек
+                map.on('contextmenu', function(e) {
+                    const coords = e.lngLat;
+                    
+                    // Проверяем, что координаты находятся в пределах Киргизии
+                    if (isWithinKyrgyzstan(coords.lat, coords.lng)) {
+                        console.log('Клик правой кнопкой по координатам в Киргизии:', coords.lat, coords.lng);
+                        showContextMenu(coords, e.originalEvent);
+                    } else {
+                        alert('Выберите точку на территории Киргизии');
+                    }
+                });
+                
+                console.log('Карта 2ГИС MapGL успешно инициализирована для Киргизии');
             } catch (error) {
-                console.error('Ошибка при инициализации карты 2ГИС:', error);
+                console.error('Ошибка при инициализации карты 2ГИС MapGL:', error);
             }
         }
 
@@ -271,7 +269,7 @@
         }
 
         // Функция для отображения контекстного меню
-        function showContextMenu(latLng, event) {
+        function showContextMenu(coords, event) {
             try {
                 // Удаляем предыдущее меню, если оно есть
                 $('.map-context-menu').remove();
@@ -308,7 +306,7 @@
                     cursor: 'pointer'
                 }).click(function() {
                     const action = $(this).data('action');
-                    setMarkerByClick(latLng, action);
+                    setMarkerByClick(coords, action);
                     $('.map-context-menu').remove();
                 });
                 
@@ -323,84 +321,52 @@
         }
         
         // Функция для установки маркера при клике
-        function setMarkerByClick(latLng, type) {
-            console.log('Установка маркера', type, 'по координатам в Киргизии:', latLng.lat, latLng.lng);
+        function setMarkerByClick(coords, type) {
+            console.log('Установка маркера', type, 'по координатам в Киргизии:', coords.lat, coords.lng);
             
-            // Обратное геокодирование для получения адреса в Киргизии
-            DG.Geocoder.geocode([latLng.lat, latLng.lng]).then(function(result) {
-                if (result && result.length > 0) {
-                    const address = result[0].formatted_address || result[0].name;
-                    
-                    // Проверяем, что адрес относится к Киргизии
-                    if (address.toLowerCase().includes('кыргызстан') || 
-                        address.toLowerCase().includes('киргизия') ||
-                        address.toLowerCase().includes('бишкек') ||
-                        address.toLowerCase().includes('ош') ||
-                        address.toLowerCase().includes('джалал-абад') ||
-                        address.toLowerCase().includes('каракол') ||
-                        address.toLowerCase().includes('нарын') ||
-                        address.toLowerCase().includes('талас') ||
-                        address.toLowerCase().includes('баткен')) {
-                        
-                        console.log('Полученный адрес в Киргизии:', address);
-                        
-                        // Устанавливаем маркер
-                        if (type === 'origin') {
-                            if (originMarker) {
-                                map.removeLayer(originMarker);
-                            }
-                            
-                            originMarker = DG.marker([latLng.lat, latLng.lng], {
-                                icon: DG.icon({
-                                    iconUrl: 'https://maps.api.2gis.ru/2.0/icons/pin_green.png',
-                                    iconSize: [25, 41],
-                                    iconAnchor: [12, 41]
-                                })
-                            }).addTo(map).bindPopup('Откуда: ' + address);
-                            
-                            // Заполняем поля адреса
-                            $('#origin-street').val(address);
-                            $('#origin-full').val(address);
-                            
-                        } else if (type === 'destination') {
-                            if (destinationMarker) {
-                                map.removeLayer(destinationMarker);
-                            }
-                            
-                            destinationMarker = DG.marker([latLng.lat, latLng.lng], {
-                                icon: DG.icon({
-                                    iconUrl: 'https://maps.api.2gis.ru/2.0/icons/pin_red.png',
-                                    iconSize: [25, 41],
-                                    iconAnchor: [12, 41]
-                                })
-                            }).addTo(map).bindPopup('Куда: ' + address);
-                            
-                            // Заполняем поля адреса
-                            $('#destination-street').val(address);
-                            $('#destination-full').val(address);
-                        }
-                        
-                        // Обновляем маршрут, если оба адреса установлены
-                        if ($('#origin-full').val() && $('#destination-full').val()) {
-                            calculateRoute();
-                        }
-                    } else {
-                        alert('Выберите адрес на территории Киргизии');
-                    }
-                } else {
-                    console.error('Не удалось определить адрес в Киргизии');
-                    alert('Не удалось определить адрес на территории Киргизии.');
+            // Простое использование координат без геокодирования (так как 2ГИС может не поддерживать геокодирование)
+            const address = `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+            
+            // Устанавливаем маркер
+            if (type === 'origin') {
+                if (originMarker) {
+                    originMarker.destroy();
                 }
-            }).catch(function(error) {
-                console.error('Ошибка геокодирования в Киргизии:', error);
-                alert('Ошибка при определении адреса в Киргизии.');
-            });
+                
+                originMarker = new mapgl.Marker(map, {
+                    coordinates: [coords.lng, coords.lat],
+                    icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
+                });
+                
+                // Заполняем поля адреса
+                $('#origin-street').val(address);
+                $('#origin-full').val(address);
+                
+            } else if (type === 'destination') {
+                if (destinationMarker) {
+                    destinationMarker.destroy();
+                }
+                
+                destinationMarker = new mapgl.Marker(map, {
+                    coordinates: [coords.lng, coords.lat],
+                    icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
+                });
+                
+                // Заполняем поля адреса
+                $('#destination-street').val(address);
+                $('#destination-full').val(address);
+            }
+            
+            // Обновляем маршрут, если оба адреса установлены
+            if ($('#origin-full').val() && $('#destination-full').val()) {
+                calculateRoute();
+            }
         }
 
         // Расчет маршрута
         function calculateRoute() {
             try {
-                console.log('Расчет маршрута через 2ГИС');
+                console.log('Расчет маршрута через 2ГИС MapGL');
                 const origin = $('#origin-full').val();
                 const destination = $('#destination-full').val();
                 
@@ -411,11 +377,11 @@
                 
                 // Простой расчет расстояния (примерный)
                 if (originMarker && destinationMarker) {
-                    const originLatLng = originMarker.getLatLng();
-                    const destinationLatLng = destinationMarker.getLatLng();
+                    const originCoords = originMarker.getCoordinates();
+                    const destinationCoords = destinationMarker.getCoordinates();
                     
                     // Расчет расстояния по прямой (в километрах)
-                    distance = originLatLng.distanceTo(destinationLatLng) / 1000;
+                    distance = calculateDistance(originCoords[1], originCoords[0], destinationCoords[1], destinationCoords[0]);
                     // Примерное время в минутах (средняя скорость 30 км/ч в городе)
                     duration = (distance / 30) * 60;
                     
@@ -428,25 +394,37 @@
                     
                     // Показываем линию маршрута
                     if (routeLayer) {
-                        map.removeLayer(routeLayer);
+                        routeLayer.destroy();
                     }
                     
-                    routeLayer = DG.polyline([
-                        [originLatLng.lat, originLatLng.lng],
-                        [destinationLatLng.lat, destinationLatLng.lng]
-                    ], {
+                    routeLayer = new mapgl.Polyline(map, {
+                        coordinates: [originCoords, destinationCoords],
                         color: '#00FFFC',
-                        weight: 5,
-                        opacity: 0.8
-                    }).addTo(map);
+                        width: 5
+                    });
                     
                     // Подстраиваем карту под маршрут
-                    const group = DG.featureGroup([originMarker, destinationMarker]);
-                    map.fitBounds(group.getBounds(), { padding: [20, 20] });
+                    const bounds = [
+                        [Math.min(originCoords[0], destinationCoords[0]), Math.min(originCoords[1], destinationCoords[1])],
+                        [Math.max(originCoords[0], destinationCoords[0]), Math.max(originCoords[1], destinationCoords[1])]
+                    ];
+                    map.fitBounds(bounds, { padding: 50 });
                 }
             } catch (error) {
                 console.error('Ошибка расчета маршрута:', error);
             }
+        }
+
+        // Функция расчета расстояния между двумя точками
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Радиус Земли в км
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
         // Расчет стоимости поездки
