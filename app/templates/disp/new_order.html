@@ -141,8 +141,6 @@
 
 <!-- Подключение 2ГИС MapGL JS API -->
 <script src="https://mapgl.2gis.com/api/js/v1"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="{{ url_for('static', path='/assets/js/script.js') }}"></script>
 <script>
     $(document).ready(function() {
         console.log('jQuery готов');
@@ -226,21 +224,20 @@
             try {
                 console.log('Инициализация карты 2ГИС MapGL...');
                 
+                // Проверяем, что MapGL доступен
+                if (typeof mapgl === 'undefined') {
+                    console.error('MapGL API не загружен');
+                    return;
+                }
+                
                 // Центр Киргизии (Бишкек)
                 const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
-                
-                // Границы Киргизии
-                const kyrgyzstanBounds = [
-                    [69.2, 39.2], // юго-запад [lng, lat]
-                    [80.3, 43.3]  // северо-восток [lng, lat]
-                ];
                 
                 map = new mapgl.Map('map-container', {
                     center: kyrgyzstanCenter,
                     zoom: 7,
                     key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
-                    maxBounds: kyrgyzstanBounds,
-                    minZoom: 6,
+                    minZoom: 5,
                     maxZoom: 18
                 });
                 

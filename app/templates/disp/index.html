@@ -195,18 +195,11 @@
                 // Центр Киргизии (Бишкек)
                 const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
                 
-                // Границы Киргизии
-                const kyrgyzstanBounds = [
-                    [69.2, 39.2], // юго-запад [lng, lat]
-                    [80.3, 43.3]  // северо-восток [lng, lat]
-                ];
-                
                 const mainMap = new mapgl.Map('main-map-container', {
                     center: kyrgyzstanCenter,
                     zoom: 7,
                     key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
-                    maxBounds: kyrgyzstanBounds,
-                    minZoom: 6,
+                    minZoom: 5,
                     maxZoom: 18
                 });
                 
