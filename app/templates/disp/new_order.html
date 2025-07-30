@@ -218,6 +218,8 @@
         let routeLayer;
         let distance = 0;
         let duration = 0;
+        let originCoords = null;
+        let destinationCoords = null;
 
         // Инициализация карты 2ГИС MapGL
         function initMap() {
@@ -324,31 +326,33 @@
         function setMarkerByClick(coords, type) {
             console.log('Установка маркера', type, 'по координатам в Киргизии:', coords.lat, coords.lng);
             
-            // Простое использование координат без геокодирования (так как 2ГИС может не поддерживать геокодирование)
+            // Простое использование координат без геокодирования
             const address = `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
-            
+                    
             // Устанавливаем маркер
             if (type === 'origin') {
                 if (originMarker) {
                     originMarker.destroy();
                 }
                 
+                originCoords = [coords.lng, coords.lat]; // Сохраняем координаты
                 originMarker = new mapgl.Marker(map, {
-                    coordinates: [coords.lng, coords.lat],
+                    coordinates: originCoords,
                     icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
                 });
                 
                 // Заполняем поля адреса
                 $('#origin-street').val(address);
                 $('#origin-full').val(address);
-                
+                        
             } else if (type === 'destination') {
                 if (destinationMarker) {
                     destinationMarker.destroy();
                 }
                 
+                destinationCoords = [coords.lng, coords.lat]; // Сохраняем координаты
                 destinationMarker = new mapgl.Marker(map, {
-                    coordinates: [coords.lng, coords.lat],
+                    coordinates: destinationCoords,
                     icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
                 });
                 
@@ -356,7 +360,7 @@
                 $('#destination-street').val(address);
                 $('#destination-full').val(address);
             }
-            
+                    
             // Обновляем маршрут, если оба адреса установлены
             if ($('#origin-full').val() && $('#destination-full').val()) {
                 calculateRoute();
@@ -369,17 +373,14 @@
                 console.log('Расчет маршрута через 2ГИС MapGL');
                 const origin = $('#origin-full').val();
                 const destination = $('#destination-full').val();
-                
+            
                 if (!origin || !destination) {
                     console.log('Не заданы начальная или конечная точки маршрута');
                     return;
                 }
-                
+            
                 // Простой расчет расстояния (примерный)
-                if (originMarker && destinationMarker) {
-                    const originCoords = originMarker.getCoordinates();
-                    const destinationCoords = destinationMarker.getCoordinates();
-                    
+                if (originCoords && destinationCoords) {
                     // Расчет расстояния по прямой (в километрах)
                     distance = calculateDistance(originCoords[1], originCoords[0], destinationCoords[1], destinationCoords[0]);
                     // Примерное время в минутах (средняя скорость 30 км/ч в городе)

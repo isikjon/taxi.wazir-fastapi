@@ -186,6 +186,12 @@
             try {
                 console.log('Инициализация главной карты 2ГИС MapGL...');
                 
+                // Проверяем, что MapGL доступен
+                if (typeof mapgl === 'undefined') {
+                    console.error('MapGL API не загружен');
+                    return;
+                }
+                
                 // Центр Киргизии (Бишкек)
                 const kyrgyzstanCenter = [74.7661, 41.2044]; // [lng, lat] для MapGL
                 
