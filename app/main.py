@@ -1803,7 +1803,7 @@ async def verify_code(request: VerifyCodeRequest, response: Response = None, db:
     print(f"Отправляем ответ: {response_data}")
     return response_data
 
-@app.post("/api/driver/update-profile")
+@app.post("/api/driver/update-profile", response_class=JSONResponse)
 async def update_profile(request: UpdateProfileRequest, db: Session = Depends(get_db)):
     """Обновление имени и фамилии пользователя"""
     # Определяем ID пользователя из запроса или из токена
