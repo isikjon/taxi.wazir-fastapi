@@ -123,9 +123,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jose.jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
+@app.get("/driver/", response_class=HTMLResponse)
+async def driver_main(request: Request):
+    return RedirectResponse(url="/driver/auth/step1")
+
 # Маршруты для диспетчерской панели
 @app.get("/", response_class=HTMLResponse)
 @app.get("/disp", response_class=HTMLResponse)
+
 async def disp_home(
     request: Request,
     db: Session = Depends(get_db),
