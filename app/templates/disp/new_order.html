@@ -54,10 +54,10 @@
                 </div>
                 <div class="main__order-details">
                     <div class="main__order-details-item main__order-details-where">
-                        <input type="text" id="origin-address" name="origin" placeholder="Откуда (адрес отправления)" class="main__btn" />
+                        <input type="text" id="origin-address" name="origin" placeholder="Откуда (адрес отправления)" class="main__btn" style="width: 100%;"/>
                     </div>
                     <div class="main__order-details-item main__order-details-whither">
-                        <input type="text" id="destination-address" name="destination" placeholder="Куда (адрес назначения)" class="main__btn" />
+                        <input type="text" id="destination-address" name="destination" placeholder="Куда (адрес назначения)" class="main__btn" style="width: 100%;"/>
                     </div>
                 </div>
                 <div class="main__order-notes">
@@ -479,10 +479,10 @@
                 const coords = { lng: lng, lat: lat };
                 
                 console.log('Получены координаты для адреса', address, ':', lng, lat);
-                
-                // Устанавливаем маркер
-                if (type === 'origin') {
-                    if (originMarker) {
+                    
+                    // Устанавливаем маркер
+                    if (type === 'origin') {
+                        if (originMarker) {
                         originMarker.destroy();
                     }
                     
@@ -493,9 +493,9 @@
                     });
                     
                     console.log('✅ Маркер точки А установлен по адресу');
-                            
-                } else if (type === 'destination') {
-                    if (destinationMarker) {
+                        
+                    } else if (type === 'destination') {
+                        if (destinationMarker) {
                         destinationMarker.destroy();
                     }
                     
@@ -510,11 +510,11 @@
                 
                 // Центрируем карту на новом маркере
                 map.setCenter([lng, lat]);
-                
-                // Обновляем маршрут, если оба адреса установлены
+                    
+                    // Обновляем маршрут, если оба адреса установлены
                 if (originCoords && destinationCoords) {
                     console.log('🗺️ Оба маркера установлены, рассчитываем маршрут...');
-                    calculateRoute();
+                        calculateRoute();
                 }
             });
         }
@@ -526,10 +526,10 @@
                 const origin = $('#origin-address').val();
                 const destination = $('#destination-address').val();
             
-                if (!origin || !destination) {
-                    console.log('Не заданы начальная или конечная точки маршрута');
-                    return;
-                }
+            if (!origin || !destination) {
+                console.log('Не заданы начальная или конечная точки маршрута');
+                return;
+            }
             
                 // Простой расчет расстояния (примерный)
                 if (originCoords && destinationCoords) {

@@ -1827,6 +1827,11 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
     return {"success": True, "message": "Профиль обновлен успешно"}
 
 # Маршруты для интерфейса водителя
+@app.get("/driver/", response_class=HTMLResponse)
+async def driver_main(request: Request):
+    """Главная страница для водителей - перенаправление на авторизацию"""
+    return RedirectResponse(url="/driver/auth/step1")
+
 @app.get("/driver/auth/step1", response_class=HTMLResponse)
 async def driver_auth_step1(request: Request):
     """Страница ввода номера телефона для водителя"""
