@@ -793,32 +793,7 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
         route_number = f"{random.randint(10000000, 99999999)}"
         
         logger.info(f"📝 Сгенерированы номера: заказ {order_number}, путевой лист {route_number}")
-        
-        # Отладочная информация для API ключа
-        logger.info(f"🔍 Отладка settings.TWOGIS_API_KEY:")
-        logger.info(f"  - Тип: {type(settings.TWOGIS_API_KEY)}")
-        logger.info(f"  - Значение: {repr(settings.TWOGIS_API_KEY)}")
-        logger.info(f"  - Длина: {len(settings.TWOGIS_API_KEY) if settings.TWOGIS_API_KEY else 'None'}")
-        
-        # Проверяем переменные окружения напрямую
-        import os
-        env_api_key = os.getenv("TWOGIS_API_KEY")
-        logger.info(f"🌍 Переменная окружения TWOGIS_API_KEY: {repr(env_api_key)}")
-        
-        # Проверяем .env файл
-        try:
-            with open('.env', 'r', encoding='utf-8') as f:
-                env_content = f.read()
-                logger.info(f"📄 Содержимое .env файла найдено, длина: {len(env_content)} символов")
-                # Ищем строку с TWOGIS_API_KEY
-                for line in env_content.split('\n'):
-                    if 'TWOGIS_API_KEY' in line:
-                        logger.info(f"🔑 Найдена строка в .env: {repr(line)}")
-        except Exception as e:
-            logger.error(f"❌ Ошибка чтения .env файла: {e}")
-        
-        logger.info(f"🔑 API ключ 2GIS: {'*' * 8 + settings.TWOGIS_API_KEY[-4:] if settings.TWOGIS_API_KEY else 'НЕ НАСТРОЕН'}")
-        logger.info(f"🔍 Полный API ключ для отладки: {settings.TWOGIS_API_KEY}")
+        logger.info(f"🔑 API ключ 2GIS настроен: {'Да' if settings.TWOGIS_API_KEY else 'Нет'}")
         
         template_data = {
             "request": request,
@@ -835,7 +810,7 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
             "twogis_api_key": settings.TWOGIS_API_KEY
         }
         
-        logger.info(f"📤 Передаем в шаблон twogis_api_key: {template_data.get('twogis_api_key', 'НЕТ КЛЮЧА')}")
+        logger.info("📤 API ключ передан в шаблон")
         
         # 2. Безопасно получаем водителей
         try:

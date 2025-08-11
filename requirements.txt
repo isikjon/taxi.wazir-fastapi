@@ -10,5 +10,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 jinja2
 aiofiles
-psycopg2
 aiohttp

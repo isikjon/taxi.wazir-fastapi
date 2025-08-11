@@ -268,11 +268,17 @@
                             setMarkerByClick(coords, 'destination');
                     } else {
                         // Если обе точки установлены, спрашиваем пользователя
-                        if (confirm('Обе точки уже установлены. Очистить и установить новую?')) {
+                        if (confirm('Обе точки уже установлены. Очистить и установить новую точку А?')) {
                             clearMarkers();
                             setMarkerByClick(coords, 'origin');
                         }
                     }
+                });
+
+                // Отключаем двойной клик для предотвращения нежелательных alert'ов
+                map.on('dblclick', function(e) {
+                    e.preventDefault();
+                    return false;
                 });
                 
                 // Добавляем элементы управления
@@ -316,7 +322,7 @@
             try {
                 console.log('🔍 Геокодирование адреса:', address);
                 
-                const response = await fetch(`/api/twogis/geocode?address=${encodeURIComponent(address)}`);
+                const response = await fetch(`/api/twogis/geocode?address=${encodeURIComponent(address)}&region=kg`);
                 const data = await response.json();
                 
                 if (data.success && data.data) {
@@ -337,7 +343,7 @@
             try {
                 if (query.length < 3) return [];
                 
-                const response = await fetch(`/api/twogis/search?query=${encodeURIComponent(query)}&limit=5`);
+                const response = await fetch(`/api/twogis/search?query=${encodeURIComponent(query)}&limit=5&region=kg`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -400,7 +406,11 @@
                 
                 originMarker = new mapgl.Marker(map, {
                             coordinates: coords,
-                    icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
+                    icon: {
+                        type: 'pin',
+                        color: '#FF4444',
+                        size: 'large'
+                    }
                 });
                 
                         $('#origin-address').val(geocodeResult.address);
@@ -412,7 +422,11 @@
                 
                 destinationMarker = new mapgl.Marker(map, {
                             coordinates: coords,
-                    icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
+                    icon: {
+                        type: 'pin',
+                        color: '#44FF44',
+                        size: 'large'
+                    }
                 });
                 
                         $('#destination-address').val(geocodeResult.address);
@@ -437,32 +451,43 @@
 
         // Функция для установки маркера при клике
         function setMarkerByClick(coords, type) {
-            console.log('📍 Установка маркера', type, 'по координатам:', coords.lat, coords.lng);
+            const lng = coords.getLng();
+            const lat = coords.getLat();
+            
+            console.log('📍 Установка маркера', type, 'по координатам:', lat, lng);
             
                     if (type === 'origin') {
                 if (originMarker) originMarker.destroy();
                     
-                originCoords = [coords.lng, coords.lat];
+                originCoords = [lng, lat];
                     originMarker = new mapgl.Marker(map, {
                         coordinates: originCoords,
-                        icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
+                        icon: {
+                            type: 'pin',
+                            color: '#FF4444',
+                            size: 'large'
+                        }
                     });
                     
                 // Пытаемся получить адрес по координатам
-                reverseGeocode(coords.lat, coords.lng, 'origin');
+                reverseGeocode(lat, lng, 'origin');
                 console.log('✅ Точка А установлена');
                         
                     } else if (type === 'destination') {
                 if (destinationMarker) destinationMarker.destroy();
                     
-                destinationCoords = [coords.lng, coords.lat];
+                destinationCoords = [lng, lat];
                     destinationMarker = new mapgl.Marker(map, {
                         coordinates: destinationCoords,
-                        icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
+                        icon: {
+                            type: 'pin',
+                            color: '#44FF44',
+                            size: 'large'
+                        }
                     });
                     
                 // Пытаемся получить адрес по координатам
-                reverseGeocode(coords.lat, coords.lng, 'destination');
+                reverseGeocode(lat, lng, 'destination');
                 console.log('✅ Точка Б установлена');
                 }
                 
@@ -529,8 +554,8 @@
                     if (routeData.geometry && routeData.geometry.coordinates) {
                         routeLayer = new mapgl.Polyline(map, {
                             coordinates: routeData.geometry.coordinates,
-                            color: '#00FFFC',
-                            width: 5
+                            color: '#2196F3',
+                            width: 6
                         });
                         console.log('🎯 Маршрут отрисован с использованием геометрии 2GIS');
                     } else {
@@ -593,8 +618,8 @@
                 
                 routeLayer = new mapgl.Polyline(map, {
                     coordinates: [originCoords, destinationCoords],
-                    color: '#FFA500', // Оранжевый цвет для простого маршрута
-                    width: 3
+                    color: '#2196F3',
+                    width: 5
                 });
                 
                 console.log('⚠️ Маршрут отрисован прямой линией (упрощенный расчет)');

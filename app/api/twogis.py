@@ -10,13 +10,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/twogis", tags=["2GIS API"])
 
 @router.get("/geocode")
-async def geocode_address(address: str = Query(..., description="Адрес для геокодирования")):
+async def geocode_address(
+    address: str = Query(..., description="Адрес для геокодирования"),
+    region: str = Query("kg", description="Код региона (kg для Киргизии)")
+):
     """
     Геокодирование адреса (преобразование текста в координаты)
     """
-    logger.info(f"🔍 Геокодирование адреса: {address}")
+    logger.info(f"🔍 Геокодирование адреса: {address}, регион: {region}")
     try:
-        result = await twogis_service.geocode_address(address)
+        result = await twogis_service.geocode_address(address, region=region)
         if result:
             logger.info(f"✅ Адрес успешно геокодирован: {result}")
             return {
@@ -33,14 +36,15 @@ async def geocode_address(address: str = Query(..., description="Адрес дл
 @router.get("/search")
 async def search_addresses(
     query: str = Query(..., description="Текст для поиска адресов"),
-    limit: int = Query(5, description="Максимальное количество результатов")
+    limit: int = Query(5, description="Максимальное количество результатов"),
+    region: str = Query("kg", description="Код региона (kg для Киргизии)")
 ):
     """
     Поиск адресов с автодополнением
     """
-    logger.info(f"🔍 Поиск адресов: {query}, лимит: {limit}")
+    logger.info(f"🔍 Поиск адресов: {query}, лимит: {limit}, регион: {region}")
     try:
-        results = await twogis_service.search_addresses(query, limit=limit)
+        results = await twogis_service.search_addresses(query, limit=limit, region=region)
         logger.info(f"✅ Найдено адресов: {len(results) if results else 0}")
         return {
             "success": True,
