@@ -1,3 +1,5 @@
+import logging
+import sys
 from fastapi import FastAPI, Depends, Request, Response, Query, Form, UploadFile, File, HTTPException, status, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,10 +17,21 @@ import secrets
 import uuid
 from pathlib import Path
 from math import ceil
+from contextlib import asynccontextmanager
+
+# Настройка подробного логирования
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('app.log', encoding='utf-8')
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Включить логирование SQL-запросов
-import logging
-logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 # Импорт модулей проекта
@@ -26,6 +39,8 @@ from . import crud, models, schemas
 from .database import engine, SessionLocal, get_db, Base
 from .routers import drivers, cars, orders, messages
 from .models import TokenResponse
+from .api import twogis
+from .config import settings
 
 # Выполняем миграцию базы данных
 # from .migration import run_migrations
@@ -66,6 +81,13 @@ app.include_router(drivers.router)
 app.include_router(cars.router)
 app.include_router(orders.router)
 app.include_router(messages.router)
+app.include_router(twogis.router)
+
+# Простой тестовый endpoint
+@app.get("/test")
+async def test_endpoint():
+    """Тестовый endpoint для проверки работы приложения"""
+    return {"status": "OK", "message": "Приложение работает!"}
 
 # Middleware для проверки авторизации
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -248,7 +270,10 @@ async def disp_home(
         "total_pages": total_pages,
         
         # Флаг применения фильтров
-        "is_filtered": is_filtered
+        "is_filtered": is_filtered,
+        
+        # API ключ 2GIS
+        "twogis_api_key": settings.TWOGIS_API_KEY
     }
     
     return templates.TemplateResponse("disp/index.html", {"request": request, **template_data})
@@ -759,12 +784,41 @@ async def disp_chat(request: Request, db: Session = Depends(get_db)):
 @app.get("/disp/new_order", response_class=HTMLResponse)
 async def disp_new_order(request: Request, db: Session = Depends(get_db)):
     """Страница создания нового заказа"""
+    logger.info("🚀 Запрос страницы создания нового заказа")
     try:
         # Упрощенная обработка данных для избежания ошибок
         # 1. Базовые значения по умолчанию
         # Генерируем случайные номера заказа (9 цифр) и путевого листа (8 цифр)
         order_number = f"{random.randint(100000000, 999999999)}"
         route_number = f"{random.randint(10000000, 99999999)}"
+        
+        logger.info(f"📝 Сгенерированы номера: заказ {order_number}, путевой лист {route_number}")
+        
+        # Отладочная информация для API ключа
+        logger.info(f"🔍 Отладка settings.TWOGIS_API_KEY:")
+        logger.info(f"  - Тип: {type(settings.TWOGIS_API_KEY)}")
+        logger.info(f"  - Значение: {repr(settings.TWOGIS_API_KEY)}")
+        logger.info(f"  - Длина: {len(settings.TWOGIS_API_KEY) if settings.TWOGIS_API_KEY else 'None'}")
+        
+        # Проверяем переменные окружения напрямую
+        import os
+        env_api_key = os.getenv("TWOGIS_API_KEY")
+        logger.info(f"🌍 Переменная окружения TWOGIS_API_KEY: {repr(env_api_key)}")
+        
+        # Проверяем .env файл
+        try:
+            with open('.env', 'r', encoding='utf-8') as f:
+                env_content = f.read()
+                logger.info(f"📄 Содержимое .env файла найдено, длина: {len(env_content)} символов")
+                # Ищем строку с TWOGIS_API_KEY
+                for line in env_content.split('\n'):
+                    if 'TWOGIS_API_KEY' in line:
+                        logger.info(f"🔑 Найдена строка в .env: {repr(line)}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка чтения .env файла: {e}")
+        
+        logger.info(f"🔑 API ключ 2GIS: {'*' * 8 + settings.TWOGIS_API_KEY[-4:] if settings.TWOGIS_API_KEY else 'НЕ НАСТРОЕН'}")
+        logger.info(f"🔍 Полный API ключ для отладки: {settings.TWOGIS_API_KEY}")
         
         template_data = {
             "request": request,
@@ -777,8 +831,11 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
             "orders": [],
             "now": datetime.now(),
             "order_number": order_number,
-            "route_number": route_number
+            "route_number": route_number,
+            "twogis_api_key": settings.TWOGIS_API_KEY
         }
+        
+        logger.info(f"📤 Передаем в шаблон twogis_api_key: {template_data.get('twogis_api_key', 'НЕТ КЛЮЧА')}")
         
         # 2. Безопасно получаем водителей
         try:
@@ -831,9 +888,11 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
             print(f"Ошибка при получении данных о заказах: {e}")
         
         # 4. Возвращаем шаблон с полученными (или дефолтными) данными
+        logger.info("✅ Возвращаем шаблон new_order.html с данными")
         return templates.TemplateResponse("disp/new_order.html", template_data)
     
     except Exception as e:
+        logger.error(f"❌ Критическая ошибка в маршруте disp_new_order: {e}")
         print(f"Критическая ошибка в маршруте disp_new_order: {e}")
         # В случае ошибки возвращаем базовый шаблон с минимумом данных
         return templates.TemplateResponse("disp/new_order.html", {
@@ -847,7 +906,8 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
             "orders": [],
             "now": datetime.now(),
             "order_number": f"{random.randint(100000000, 999999999)}",
-            "route_number": f"{random.randint(10000000, 99999999)}"
+            "route_number": f"{random.randint(10000000, 99999999)}",
+            "twogis_api_key": settings.TWOGIS_API_KEY
         })
 
 @app.get("/disp/pay_balance", response_class=HTMLResponse)
@@ -3440,7 +3500,7 @@ async def driver_tarifs_page(request: Request, db: Session = Depends(get_db), to
         # Получаем список доступных тарифов из JSON-файла
         import json
         try:
-            with open("fast/static/assets/js/driver_data.json", "r", encoding="utf-8") as f:
+            with open("app/data/driver_data.json", "r", encoding="utf-8") as f:
                 driver_data = json.load(f)
                 available_tariffs = driver_data.get("tariffs", [])
         except (FileNotFoundError, json.JSONDecodeError) as e:

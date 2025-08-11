@@ -3097,7 +3097,7 @@ async def driver_tarifs_page(request: Request, db: Session = Depends(get_db), to
         # Получаем список доступных тарифов из JSON-файла
         import json
         try:
-            with open("fast/static/assets/js/driver_data.json", "r", encoding="utf-8") as f:
+            with open("app/data/driver_data.json", "r", encoding="utf-8") as f:
                 driver_data = json.load(f)
                 available_tariffs = driver_data.get("tariffs", [])
         except (FileNotFoundError, json.JSONDecodeError) as e:

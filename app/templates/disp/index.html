@@ -198,7 +198,7 @@
                 const mainMap = new mapgl.Map('main-map-container', {
                     center: oshCenter,
                     zoom: 12, // Увеличиваем зум для города
-                    key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
+                    key: '{{ twogis_api_key or "" }}',
                     minZoom: 5,
                     maxZoom: 18
                 });

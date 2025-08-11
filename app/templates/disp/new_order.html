@@ -1,5 +1,33 @@
 {% extends "base.html" %}
-{% block header_title %}Новый заказ{% endblock %}
+
+{% block title %}Новый заказ - taxi.wazir.kg{% endblock %}
+
+{% block header_title %}{% endblock %}
+
+{% block header_right %}
+<div class="main__header-search">
+    <div class="main__header-search-item">
+        <form action="#">
+            <input type="search" placeholder="Поиск">
+            <button><img
+                    src="{{ url_for('static', path='/assets/img/ico/search.png') }}"
+                    alt="search"></button>
+        </form>
+    </div>
+    <div class="main__header-search-profile">
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/notif.png') }}"
+                    alt="notif"></a>
+        </div>
+        <div class="main__header-search-profile-item">
+            <a href="#"><img
+                    src="{{ url_for('static', path='/assets/img/ico/user.png') }}"
+                    alt="profile"></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
 {% block content %}
 <div class="main__order-wrapper">
@@ -101,13 +129,13 @@
                 </div>
             </div>
             <div class="main__order-map">
-                <div class="main__order-map-item" id="map-container">
+                <div class="main__order-map-item" id="map">
                     <!-- 2ГИС карта будет загружена сюда -->
                 </div>
                 <div class="main__order-map-settings">
-                    <div class="main__order-map-settings">
+                    <div class="main__order-map-settings" style="display: flex; justify-content: space-between; flex-direction: unset; gap: 20px;">
                         <button type="button" class="main__btn">Данные для рассчета</button>
-                        <button type="button" id="clear-markers-btn" class="main__btn-short" style="background-color: #dc3545; margin-left: 10px;">Очистить маркеры</button>
+                        <button type="button" id="clear-markers-btn" class="main__btn-short" style="background-color: #dc3545;">Очистить маркеры</button>
                     </div>
                     <div class="route-info">
                         <div class="route-info-item">
@@ -118,6 +146,9 @@
                         </div>
                         <div class="route-info-item">
                             <input type="text" id="distance" readonly class="main__btn-short" value="Расстояние: 0 км">
+                        </div>
+                        <div class="route-info-item">
+                            <input type="text" id="duration" readonly class="main__btn-short" value="Время в пути: 0 мин">
                         </div>
                         <div class="route-info-item">
                             <input type="text" id="price" readonly class="main__btn-short" value="Стоимость: 0 сом">
@@ -135,7 +166,7 @@
 </div>
 
 <!-- Подключение 2ГИС MapGL JS API -->
-<script src="https://mapgl.2gis.com/api/js/v1"></script>
+<script src="https://mapgl.2gis.com/api/js"></script>
 <script>
     // Ждём загрузки DOM и jQuery
     document.addEventListener('DOMContentLoaded', function() {
@@ -153,408 +184,364 @@
     function initApp() {
         console.log('jQuery готов');
         
-        // Константы для тарифов
-        const TARIFFS = {
-            'Эконом': {
-                boardingFee: 48,
-                waitingFreeMinutes: 3,
-                waitingPricePerMinute: 5,
-                cityPricePerKm: 8.5,
-                cityPricePerMinute: 3.9,
-                outsideCityPricePerKm: 23,
-                outsideCityPricePerMinute: 3.9
-            },
-            'Комфорт': {
-                boardingFee: 60,
-                waitingFreeMinutes: 3,
-                waitingPricePerMinute: 6,
-                cityPricePerKm: 10.5,
-                cityPricePerMinute: 4.9,
-                outsideCityPricePerKm: 25,
-                outsideCityPricePerMinute: 4.9
-            },
-            'Комфорт+': {
-                boardingFee: 75,
-                waitingFreeMinutes: 3,
-                waitingPricePerMinute: 6.5,
-                cityPricePerKm: 13,
-                cityPricePerMinute: 6.2,
-                outsideCityPricePerKm: 28,
-                outsideCityPricePerMinute: 6.2
-            },
-            'Бизнес': {
-                minimumPrice: 80,
-                boardingFee: 80,
-                waitingFreeMinutes: 3,
-                waitingPricePerMinute: 7,
-                cityPricePerKm: 14,
-                cityPricePerMinute: 6.5,
-                outsideCityPricePerKm: 30,
-                outsideCityPricePerMinute: 6.5
-            }
-        };
-        
-        // Функция обновления времени (Киргизское время, GMT+6)
-        function updateKyrgyzTime() {
-            try {
-                const now = new Date();
-                // Получаем UTC время и добавляем 6 часов для Киргизии (GMT+6)
-                const kyrgyzTime = new Date(now.getTime() + (6 * 60 * 60 * 1000));
-                
-                const orderTimeElement = document.getElementById('order-time');
-                if (orderTimeElement) {
-                    orderTimeElement.value = kyrgyzTime.toLocaleTimeString('ru-RU', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: false,
-                        timeZone: 'Asia/Bishkek'
-                    });
-                }
-            } catch (error) {
-                console.error('Ошибка при обновлении времени:', error);
-            }
-        }
-        
-        updateKyrgyzTime();
-        setInterval(updateKyrgyzTime, 1000);
-
-        // База данных полных адресов Киргизии (с номерами домов)
-        const kyrgyzstanAddresses = [
-            // Город Ош - популярные адреса
-            'ул. Ленина, 1', 'ул. Ленина, 5', 'ул. Ленина, 12', 'ул. Ленина, 18', 'ул. Ленина, 25',
-            'ул. Курманжан Датка, 2', 'ул. Курманжан Датка, 8', 'ул. Курманжан Датка, 15', 'ул. Курманжан Датка, 22',
-            'ул. Навои, 3', 'ул. Навои, 7', 'ул. Навои, 14', 'ул. Навои, 20', 'ул. Навои, 28',
-            'ул. Кувандык, 4', 'ул. Кувандык, 9', 'ул. Кувандык, 16', 'ул. Кувандык, 24',
-            'ул. Исанова, 6', 'ул. Исанова, 11', 'ул. Исанова, 17', 'ул. Исанова, 23',
-            'ул. Мырзалы Аматова, 2', 'ул. Мырзалы Аматова, 10', 'ул. Мырзалы Аматова, 19',
-            'ул. Токтогула, 5', 'ул. Токтогула, 13', 'ул. Токтогула, 21', 'ул. Токтогула, 30',
-            'ул. Абдрахманова, 1', 'ул. Абдрахманова, 8', 'ул. Абдрахманова, 15',
-            'ул. Мадания, 3', 'ул. Мадания, 12', 'ул. Мадания, 26',
-            'ул. Карасу, 2', 'ул. Карасу, 7', 'ул. Карасу, 14', 'ул. Карасу, 21',
-            'ул. Салиева, 4', 'ул. Салиева, 11', 'ул. Салиева, 18',
-            'ул. Омурзакова, 6', 'ул. Омурзакова, 13', 'ул. Омурзакова, 20',
-            'ул. Айтматова, 1', 'ул. Айтматова, 9', 'ул. Айтматова, 16',
-            'пр. Жайлау, 5', 'пр. Жайлау, 12', 'пр. Жайлау, 19',
-            'пр. Масалиева, 3', 'пр. Масалиева, 10', 'пр. Масалиева, 17',
-            'мкр. Аэропорт, 1', 'мкр. Аэропорт, 2', 'мкр. Аэропорт, 3',
-            'мкр. Центр, 1', 'мкр. Центр, 2', 'мкр. Центр, 4',
-            
-            // Бишкек - основные адреса
-            'ул. Киевская, 1', 'ул. Киевская, 15', 'ул. Киевская, 25', 'ул. Киевская, 42',
-            'ул. Токтогула, 3', 'ул. Токтогула, 18', 'ул. Токтогула, 33', 'ул. Токтогула, 48',
-            'ул. Манас, 5', 'ул. Манас, 12', 'ул. Манас, 28', 'ул. Манас, 35',
-            'ул. Чуй, 2', 'ул. Чуй, 19', 'ул. Чуй, 36', 'ул. Чуй, 51',
-            'ул. Исанова, 4', 'ул. Исанова, 21', 'ул. Исанова, 38',
-            'ул. Боконбаева, 7', 'ул. Боконбаева, 16', 'ул. Боконбаева, 29',
-            'ул. Московская, 1', 'ул. Московская, 13', 'ул. Московская, 24',
-            'ул. Турусбекова, 6', 'ул. Турусбекова, 17', 'ул. Турусбекова, 32',
-            'ул. Жибек Жолу, 2', 'ул. Жибек Жолу, 14', 'ул. Жибек Жолу, 27',
-            'пр. Мира, 5', 'пр. Мира, 18', 'пр. Мира, 31', 'пр. Мира, 44',
-            'пр. Чуй, 3', 'пр. Чуй, 22', 'пр. Чуй, 41', 'пр. Чуй, 56',
-            'пр. Ден Сяопина, 1', 'пр. Ден Сяопина, 8', 'пр. Ден Сяопина, 15',
-            'мкр. Джал, 1', 'мкр. Джал, 3', 'мкр. Джал, 6',
-            'мкр. Асанбай, 2', 'мкр. Асанбай, 4', 'мкр. Асанбай, 7',
-            
-            // Джалал-Абад
-            'ул. Эркиндик, 1', 'ул. Эркиндик, 12', 'ул. Эркиндик, 23',
-            'ул. Токтогула, 5', 'ул. Токтогула, 16', 'ул. Токтогула, 27',
-            'ул. Ленина, 3', 'ул. Ленина, 14', 'ул. Ленина, 25',
-            'ул. Советская, 2', 'ул. Советская, 9', 'ул. Советская, 18',
-            
-            // Каракол
-            'ул. Токтогула, 1', 'ул. Токтогула, 8', 'ул. Токтогула, 15',
-            'ул. Абдрахманова, 4', 'ул. Абдрахманова, 11', 'ул. Абдрахманова, 19',
-            'ул. Гагарина, 2', 'ул. Гагарина, 7', 'ул. Гагарина, 14',
-            'ул. Московская, 6', 'ул. Московская, 13', 'ул. Московская, 20',
-            
-            // Нарын
-            'ул. Ленина, 1', 'ул. Ленина, 9', 'ул. Ленина, 16',
-            'ул. Бердике Баатыра, 3', 'ул. Бердике Баатыра, 12', 'ул. Бердике Баатыра, 21',
-            'ул. Салиева, 5', 'ул. Салиева, 14', 'ул. Салиева, 23',
-            
-            // Талас
-            'ул. Бердике Баатыра, 2', 'ул. Бердике Баатыра, 10', 'ул. Бердике Баатыра, 18',
-            'ул. Фрунзе, 4', 'ул. Фрунзе, 13', 'ул. Фрунзе, 22',
-            'ул. Ленина, 1', 'ул. Ленина, 8', 'ул. Ленина, 17',
-            
-            // Баткен
-            'ул. Ленина, 1', 'ул. Ленина, 6', 'ул. Ленина, 12',
-            'ул. Салиева, 3', 'ул. Салиева, 9', 'ул. Салиева, 15',
-            
-            // Популярные места и ориентиры
-            'Ошский рынок', 'Центральная мечеть, Ош', 'Аэропорт Ош',
-            'ТЦ Ош-Плаза', 'Парк Навои, Ош', 'Железнодорожный вокзал, Ош',
-            'Медицинский центр, Ош', 'Университет, Ош', 'Стадион, Ош',
-            'Ала-Тоо площадь, Бишкек', 'ТЦ Вефа, Бишкек', 'Ошский рынок, Бишкек',
-            'Аэропорт Манас, Бишкек', 'Парк Ататюрк, Бишкек', 'ЖД вокзал, Бишкек'
-        ];
-
-        // Переменные для карты 2ГИС MapGL
+        // Глобальные переменные для карты и маршрутов
         let map;
-        let originMarker;
-        let destinationMarker;
-        let routeLayer;
-        let distance = 0;
-        let duration = 0;
+        let originMarker = null;
+        let destinationMarker = null;
+        let routeLayer = null;
         let originCoords = null;
         let destinationCoords = null;
-        let clickCounter = 0; // Счетчик кликов: 0/2 = точка А, 1 = точка Б
+        let distance = 0;
+        let duration = 0;
+        
+        // Тарифы для расчета стоимости
+        const TARIFFS = {
+            'Эконом': {
+                boardingFee: 50,
+                cityPricePerKm: 15,
+                cityPricePerMinute: 0.5,
+                minimumPrice: 50
+            },
+            'Комфорт': {
+                boardingFee: 80,
+                cityPricePerKm: 20,
+                cityPricePerMinute: 0.8,
+                minimumPrice: 80
+            },
+            'Комфорт+': {
+                boardingFee: 100,
+                cityPricePerKm: 25,
+                cityPricePerMinute: 1.0,
+                minimumPrice: 100
+            },
+            'Бизнес': {
+                boardingFee: 150,
+                cityPricePerKm: 35,
+                cityPricePerMinute: 1.5,
+                minimumPrice: 150
+            },
+            'Премиум': {
+                boardingFee: 200,
+                cityPricePerKm: 45,
+                cityPricePerMinute: 2.0,
+                minimumPrice: 200
+            }
+        };
 
-        // Инициализация карты 2ГИС MapGL
+        // Инициализация карты 2GIS
         function initMap() {
             try {
-                console.log('Инициализация карты 2ГИС MapGL...');
+                console.log('🗺️ Инициализация карты 2GIS...');
                 
-                // Проверяем, что MapGL доступен
+                // Проверяем, загружена ли библиотека 2GIS
                 if (typeof mapgl === 'undefined') {
-                    console.error('MapGL API не загружен');
+                    console.error('❌ Библиотека 2GIS MapGL не загружена');
                     return;
                 }
                 
-                // Центр города Ош, Киргизия
-                const oshCenter = [72.8019, 40.5138]; // [lng, lat] для MapGL - город Ош
+                // Создаем карту
+                const apiKey = '{{ twogis_api_key or "" }}';
+                console.log('🔑 API ключ для карты:', apiKey);
                 
-                map = new mapgl.Map('map-container', {
-                    center: oshCenter,
-                    zoom: 12, // Увеличиваем зум для города
-                    key: '3025505a-cdb6-4ddc-819b-1c546552efe3',
-                    minZoom: 5,
-                    maxZoom: 18
+                if (!apiKey || apiKey.trim() === '') {
+                    console.error('❌ API ключ 2GIS не передан в шаблон!');
+                    return;
+                }
+                
+                map = new mapgl.Map('map', {
+                    center: [72.8019, 40.5138], // Ош, Киргизия
+                    zoom: 12,
+                    key: apiKey // API ключ из конфигурации
                 });
                 
-                console.log('Карта 2ГИС MapGL создана для города Ош');
+                console.log('✅ Карта 2GIS инициализирована');
 
-                // Добавляем обработчик ЛЕВОЙ кнопки мыши для установки точек
+                // Обработчик клика по карте
                 map.on('click', function(e) {
                     const coords = e.lngLat;
-                    
-                    // Проверяем, что координаты находятся в пределах Киргизии
-                    if (isWithinKyrgyzstan(coords.lat, coords.lng)) {
-                        console.log('✅ Клик левой кнопкой по координатам в Киргизии:', coords.lat, coords.lng);
+                    console.log('📍 Клик по карте:', coords);
                         
-                        // Поочередно устанавливаем точки А и Б
-                        if (clickCounter % 2 === 0) {
-                            // Устанавливаем точку А (откуда)
+                    // Определяем, какую точку устанавливаем
+                    if (!originCoords) {
                             setMarkerByClick(coords, 'origin');
-                            console.log('🅰️ Установлена точка А (откуда)');
-                        } else {
-                            // Устанавливаем точку Б (куда)
+                    } else if (!destinationCoords) {
                             setMarkerByClick(coords, 'destination');
-                            console.log('🅱️ Установлена точка Б (куда)');
-                        }
-                        
-                        clickCounter++;
                     } else {
-                        console.warn('⚠️ Точка находится вне территории Киргизии:', coords.lat, coords.lng);
-                        // Не блокируем - все равно устанавливаем маркер
-                        if (clickCounter % 2 === 0) {
+                        // Если обе точки установлены, спрашиваем пользователя
+                        if (confirm('Обе точки уже установлены. Очистить и установить новую?')) {
+                            clearMarkers();
                             setMarkerByClick(coords, 'origin');
-                            console.log('🅰️ Установлена точка А (вне Киргизии)');
-                        } else {
-                            setMarkerByClick(coords, 'destination');
-                            console.log('🅱️ Установлена точка Б (вне Киргизии)');
                         }
-                        clickCounter++;
                     }
                 });
                 
-                console.log('Карта 2ГИС MapGL успешно инициализирована для города Ош');
-                console.log('💡 Инструкция:');
-                console.log('   • Кликайте левой кнопкой: 1-й клик = точка А, 2-й клик = точка Б');
-                console.log('   • Или вводите адреса в поля - маркеры ставятся автоматически');
-                console.log('   • Выбирайте из списка автодополнения для быстрого ввода');
+                // Добавляем элементы управления
+                // map.addControl(new mapgl.NavigationControl()); // Удален NavigationControl
+                
             } catch (error) {
-                console.error('Ошибка при инициализации карты 2ГИС MapGL:', error);
+                console.error('❌ Ошибка инициализации карты:', error);
             }
         }
 
-        // Проверка, находится ли точка в пределах Киргизии (расширенные границы)
-        function isWithinKyrgyzstan(lat, lng) {
-            // Расширяем границы для более точного покрытия Киргизии
-            return (lat >= 39.0 && lat <= 43.5 && lng >= 69.0 && lng <= 80.5);
+        // Функция для очистки всех маркеров
+        function clearMarkers() {
+            if (originMarker) {
+                originMarker.destroy();
+                originMarker = null;
+            }
+            if (destinationMarker) {
+                destinationMarker.destroy();
+                destinationMarker = null;
+            }
+            if (routeLayer) {
+                routeLayer.destroy();
+                routeLayer = null;
+            }
+            originCoords = null;
+            destinationCoords = null;
+            distance = 0;
+            duration = 0;
+            
+            $('#origin-address').val('');
+            $('#destination-address').val('');
+            $('#distance').val('Расстояние: 0 км');
+            $('#duration').val('Время в пути: 0 мин');
+            $('#price').val('Стоимость: 0 сом');
+            $('#calculated-price').val('0');
+            $('#boarding-fee').val('Посадка: 0 сом');
         }
 
-        // Функция для геокодирования адреса (получение координат по адресу)
-        function geocodeAddress(address, callback) {
-            // Упрощенная функция геокодирования на основе наших данных
-            const addressCoords = {
-                // Основные координаты городов и улиц
-                'ош': [72.8019, 40.5138],
-                'бишкек': [74.5975, 42.8746],
-                'джалал-абад': [72.9358, 40.9333],
-                'каракол': [78.3933, 42.4906],
-                'нарын': [76.0000, 41.4286],
-                'талас': [72.2424, 42.5228],
-                'баткен': [70.8167, 40.0642],
+        // Функция для геокодирования адреса через 2GIS API
+        async function geocodeAddress(address) {
+            try {
+                console.log('🔍 Геокодирование адреса:', address);
                 
-                // Конкретные улицы в Оше (координаты примерные)
-                'ул. ленина': [72.8019, 40.5138],
-                'ул. курманжан датка': [72.8050, 40.5150],
-                'ул. навои': [72.8100, 40.5120],
-                'ул. карасу': [72.7950, 40.5160],
-                'ул. токтогула': [72.8080, 40.5140],
-                'ул. исанова': [72.8030, 40.5130],
+                const response = await fetch(`/api/twogis/geocode?address=${encodeURIComponent(address)}`);
+                const data = await response.json();
                 
-                // Улицы в Бишкеке
-                'ул. чуй': [74.5975, 42.8746],
-                'ул. киевская': [74.6000, 42.8760],
-                'ул. московская': [74.6020, 42.8740],
-                'пр. мира': [74.5950, 42.8750],
-                
-                // Популярные места
-                'ошский рынок': [72.8000, 40.5145],
-                'аэропорт ош': [72.7929, 40.6090],
-                'аэропорт манас': [74.4776, 43.0612],
-                'ала-тоо площадь': [74.5900, 42.8760]
-            };
-            
-            const normalizedAddress = address.toLowerCase();
-            
-            // Ищем точное совпадение
-            for (const [key, coords] of Object.entries(addressCoords)) {
-                if (normalizedAddress.includes(key)) {
-                    callback(coords[0], coords[1]); // lng, lat
-                    return;
+                if (data.success && data.data) {
+                    console.log('✅ Адрес найден:', data.data);
+                    return data.data;
+                } else {
+                    console.log('❌ Адрес не найден');
+                    return null;
                 }
+            } catch (error) {
+                console.error('❌ Ошибка геокодирования:', error);
+                return null;
             }
-            
-            // Если не нашли точного совпадения, используем координаты Оша по умолчанию
-            callback(72.8019, 40.5138);
         }
 
-        // Функция для установки маркера при клике (улучшенная)
-        function setMarkerByClick(coords, type) {
-            console.log('Установка маркера', type, 'по координатам:', coords.lat, coords.lng);
+        // Функция для поиска адресов с автодополнением
+        async function searchAddresses(query) {
+            try {
+                if (query.length < 3) return [];
+                
+                const response = await fetch(`/api/twogis/search?query=${encodeURIComponent(query)}&limit=5`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    return data.data;
+                } else {
+                    return [];
+                }
+            } catch (error) {
+                console.error('❌ Ошибка поиска адресов:', error);
+                return [];
+            }
+        }
+
+        // Функция для получения маршрута через 2GIS API
+        async function getRouteFromAPI(origin, destination) {
+            try {
+                console.log('🗺️ Получение маршрута через 2GIS API...');
+                
+                const response = await fetch('/api/twogis/route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'origin_lat': origin[1],
+                        'origin_lon': origin[0],
+                        'destination_lat': destination[1],
+                        'destination_lon': destination[0],
+                        'transport_type': 'car'
+                    })
+                });
             
-            // Простое использование координат
-            const address = `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    console.log('✅ Маршрут получен:', data.data);
+                    return data.data;
+                } else {
+                    console.log('❌ Маршрут не получен');
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка получения маршрута:', error);
+                return null;
+            }
+        }
+
+        // Функция для установки маркера по адресу
+        async function setMarkerByAddress(address, type) {
+            try {
+                console.log(`🔍 Поиск координат для адреса (${type}):`, address);
+                
+                const geocodeResult = await geocodeAddress(address);
+                if (geocodeResult) {
+                    const coords = [geocodeResult.lon, geocodeResult.lat];
                     
-            // Устанавливаем маркер
             if (type === 'origin') {
-                if (originMarker) {
-                    originMarker.destroy();
-                }
+                        originCoords = coords;
+                        if (originMarker) originMarker.destroy();
                 
-                originCoords = [coords.lng, coords.lat]; // Сохраняем координаты
                 originMarker = new mapgl.Marker(map, {
-                    coordinates: originCoords,
+                            coordinates: coords,
                     icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
                 });
                 
-                // Заполняем поле адреса
-                $('#origin-address').val(address);
-                console.log('✅ Точка А установлена:', address);
+                        $('#origin-address').val(geocodeResult.address);
+                        console.log('✅ Точка А установлена по адресу');
                         
             } else if (type === 'destination') {
-                if (destinationMarker) {
-                    destinationMarker.destroy();
-                }
+                        destinationCoords = coords;
+                        if (destinationMarker) destinationMarker.destroy();
                 
-                destinationCoords = [coords.lng, coords.lat]; // Сохраняем координаты
                 destinationMarker = new mapgl.Marker(map, {
-                    coordinates: destinationCoords,
+                            coordinates: coords,
                     icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
                 });
                 
-                // Заполняем поле адреса
-                $('#destination-address').val(address);
-                console.log('✅ Точка Б установлена:', address);
+                        $('#destination-address').val(geocodeResult.address);
+                        console.log('✅ Точка Б установлена по адресу');
             }
                     
-            // Обновляем маршрут, если оба адреса установлены
-            if ($('#origin-address').val() && $('#destination-address').val()) {
-                console.log('🗺️ Оба адреса установлены, рассчитываем маршрут...');
+                    // Обновляем маршрут, если обе точки установлены
+                    if (originCoords && destinationCoords) {
                 calculateRoute();
+            }
+                    
+                    return true;
+                } else {
+                    console.log('❌ Не удалось найти координаты для адреса');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка установки маркера по адресу:', error);
+                return false;
             }
         }
 
-        // Функция для установки маркера по адресу (новая)
-        function setMarkerByAddress(address, type) {
-            if (!address || address.length < 2) return;
+        // Функция для установки маркера при клике
+        function setMarkerByClick(coords, type) {
+            console.log('📍 Установка маркера', type, 'по координатам:', coords.lat, coords.lng);
             
-            console.log('Геокодирование адреса:', address, 'для типа:', type);
-            
-            geocodeAddress(address, function(lng, lat) {
-                const coords = { lng: lng, lat: lat };
-                
-                console.log('Получены координаты для адреса', address, ':', lng, lat);
-                    
-                    // Устанавливаем маркер
                     if (type === 'origin') {
-                        if (originMarker) {
-                        originMarker.destroy();
-                    }
+                if (originMarker) originMarker.destroy();
                     
-                    originCoords = [lng, lat];
+                originCoords = [coords.lng, coords.lat];
                     originMarker = new mapgl.Marker(map, {
                         coordinates: originCoords,
                         icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
                     });
                     
-                    console.log('✅ Маркер точки А установлен по адресу');
+                // Пытаемся получить адрес по координатам
+                reverseGeocode(coords.lat, coords.lng, 'origin');
+                console.log('✅ Точка А установлена');
                         
                     } else if (type === 'destination') {
-                        if (destinationMarker) {
-                        destinationMarker.destroy();
-                    }
+                if (destinationMarker) destinationMarker.destroy();
                     
-                    destinationCoords = [lng, lat];
+                destinationCoords = [coords.lng, coords.lat];
                     destinationMarker = new mapgl.Marker(map, {
                         coordinates: destinationCoords,
                         icon: 'https://docs.2gis.com/img/nav-gp-pin.svg'
                     });
                     
-                    console.log('✅ Маркер точки Б установлен по адресу');
+                // Пытаемся получить адрес по координатам
+                reverseGeocode(coords.lat, coords.lng, 'destination');
+                console.log('✅ Точка Б установлена');
                 }
                 
-                // Центрируем карту на новом маркере
-                map.setCenter([lng, lat]);
-                    
-                    // Обновляем маршрут, если оба адреса установлены
+            // Обновляем маршрут, если обе точки установлены
                 if (originCoords && destinationCoords) {
-                    console.log('🗺️ Оба маркера установлены, рассчитываем маршрут...');
                         calculateRoute();
                 }
-            });
         }
 
-        // Расчет маршрута
-        function calculateRoute() {
+        // Обратная геокодировка (координаты -> адрес)
+        async function reverseGeocode(lat, lon, type) {
             try {
-                console.log('Расчет маршрута через 2ГИС MapGL');
-                const origin = $('#origin-address').val();
-                const destination = $('#destination-address').val();
+                // Используем простой формат координат как адрес
+                const address = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                
+                if (type === 'origin') {
+                    $('#origin-address').val(address);
+                } else if (type === 'destination') {
+                    $('#destination-address').val(address);
+                }
+            } catch (error) {
+                console.error('❌ Ошибка обратной геокодировки:', error);
+            }
+        }
+
+        // Расчет маршрута через 2GIS API
+        async function calculateRoute() {
+            try {
+                console.log('🗺️ Расчет маршрута через 2GIS API...');
             
-            if (!origin || !destination) {
-                console.log('Не заданы начальная или конечная точки маршрута');
+                if (!originCoords || !destinationCoords) {
+                    console.log('❌ Не заданы начальная или конечная точки маршрута');
                 return;
             }
             
-                // Простой расчет расстояния (примерный)
-                if (originCoords && destinationCoords) {
-                    // Расчет расстояния по прямой (в километрах)
-                    distance = calculateDistance(originCoords[1], originCoords[0], destinationCoords[1], destinationCoords[0]);
-                    // Примерное время в минутах (средняя скорость 30 км/ч в городе)
-                    duration = (distance / 30) * 60;
+                // Получаем маршрут через API
+                const routeData = await getRouteFromAPI(originCoords, destinationCoords);
+                
+                if (routeData) {
+                    // Обновляем данные о маршруте
+                    distance = routeData.distance / 1000; // переводим в километры
+                    duration = routeData.duration / 60;   // переводим в минуты
                     
-                    console.log('Расстояние:', distance.toFixed(1), 'км, время:', duration.toFixed(0), 'мин');
+                    console.log('📏 Маршрут рассчитан:', {
+                        расстояние: distance.toFixed(1) + ' км',
+                        время: duration.toFixed(0) + ' мин',
+                        тип_транспорта: routeData.transport_type || 'автомобиль'
+                    });
                     
+                    // Обновляем отображение
                     $('#distance').val(`Расстояние: ${distance.toFixed(1)} км`);
+                    $('#duration').val(`Время в пути: ${duration.toFixed(0)} мин`);
                     
                     // Пересчитываем стоимость
-                    calculatePrice();
+                    const calculatedPrice = calculatePrice();
+                    console.log('💰 Стоимость пересчитана:', calculatedPrice + ' сом');
                     
                     // Показываем линию маршрута
                     if (routeLayer) {
                         routeLayer.destroy();
                     }
                     
+                    // Если есть геометрия маршрута, используем её
+                    if (routeData.geometry && routeData.geometry.coordinates) {
+                        routeLayer = new mapgl.Polyline(map, {
+                            coordinates: routeData.geometry.coordinates,
+                            color: '#00FFFC',
+                            width: 5
+                        });
+                        console.log('🎯 Маршрут отрисован с использованием геометрии 2GIS');
+                    } else {
+                        // Иначе рисуем прямую линию
                     routeLayer = new mapgl.Polyline(map, {
                         coordinates: [originCoords, destinationCoords],
                         color: '#00FFFC',
                         width: 5
                     });
+                        console.log('⚠️ Маршрут отрисован прямой линией (нет геометрии)');
+                    }
                     
                     // Подстраиваем карту под маршрут
                     const bounds = [
@@ -562,9 +549,55 @@
                         [Math.max(originCoords[0], destinationCoords[0]), Math.max(originCoords[1], destinationCoords[1])]
                     ];
                     map.fitBounds(bounds, { padding: 50 });
+                    
+                    console.log('✅ Маршрут успешно построен и отображен на карте');
+                    
+                } else {
+                    // Fallback на простой расчет
+                    console.log('⚠️ Используем упрощенный расчет маршрута');
+                    calculateSimpleRoute();
                 }
+                
             } catch (error) {
-                console.error('Ошибка расчета маршрута:', error);
+                console.error('❌ Ошибка расчета маршрута:', error);
+                // Fallback на простой расчет
+                calculateSimpleRoute();
+            }
+        }
+
+        // Упрощенный расчет маршрута (fallback)
+        function calculateSimpleRoute() {
+            if (originCoords && destinationCoords) {
+                // Расчет расстояния по прямой
+                distance = calculateDistance(originCoords[1], originCoords[0], destinationCoords[1], destinationCoords[0]);
+                // Примерное время в минутах (средняя скорость 30 км/ч в городе)
+                duration = (distance / 30) * 60;
+                
+                console.log('📏 Простой расчет маршрута:', {
+                    расстояние: distance.toFixed(1) + ' км (по прямой)',
+                    время: duration.toFixed(0) + ' мин (примерно)',
+                    скорость: '30 км/ч (городская)'
+                });
+                
+                $('#distance').val(`Расстояние: ${distance.toFixed(1)} км (по прямой)`);
+                $('#duration').val(`Время в пути: ${duration.toFixed(0)} мин (примерно)`);
+                
+                // Пересчитываем стоимость
+                const calculatedPrice = calculatePrice();
+                console.log('💰 Стоимость пересчитана (простой расчет):', calculatedPrice + ' сом');
+                
+                // Показываем прямую линию
+                if (routeLayer) {
+                    routeLayer.destroy();
+                }
+                
+                routeLayer = new mapgl.Polyline(map, {
+                    coordinates: [originCoords, destinationCoords],
+                    color: '#FFA500', // Оранжевый цвет для простого маршрута
+                    width: 3
+                });
+                
+                console.log('⚠️ Маршрут отрисован прямой линией (упрощенный расчет)');
             }
         }
 
@@ -584,10 +617,10 @@
         function calculatePrice() {
             try {
                 const tariff = $('#tariff-select').val();
-                console.log('Расчет цены для тарифа:', tariff);
+                console.log('💰 Расчет цены для тарифа:', tariff);
                 
                 if (!tariff || !TARIFFS[tariff]) {
-                    console.error('Тариф не выбран или не найден в списке тарифов:', tariff);
+                    console.error('❌ Тариф не выбран или не найден в списке тарифов:', tariff);
                     return;
                 }
 
@@ -597,8 +630,8 @@
                 // Обновляем отображение тарифа
                 $('#tariff-display').val(tariff);
                 
-                // Расчет стоимости в зависимости от расстояния
-                if (distance > 0) {
+                // Проверяем, что у нас есть данные о расстоянии и времени
+                if (distance > 0 && duration > 0) {
                     const pricePerKm = tariffData.cityPricePerKm;
                     const pricePerMinute = tariffData.cityPricePerMinute;
                     
@@ -606,28 +639,56 @@
                     const timePrice = duration * pricePerMinute;
                     
                     price += distancePrice + timePrice;
+                    
+                    console.log('📊 Детали расчета:', {
+                        посадка: tariffData.boardingFee + ' сом',
+                        расстояние: distance.toFixed(1) + ' км × ' + pricePerKm + ' сом/км = ' + distancePrice.toFixed(0) + ' сом',
+                        время: duration.toFixed(0) + ' мин × ' + pricePerMinute + ' сом/мин = ' + timePrice.toFixed(0) + ' сом',
+                        промежуточная_сумма: (tariffData.boardingFee + distancePrice + timePrice).toFixed(0) + ' сом'
+                    });
+                } else {
+                    console.log('⚠️ Нет данных о расстоянии или времени, используется только стоимость посадки');
+                    if (distance <= 0) {
+                        $('#distance').val('Расстояние не рассчитано');
+                    }
+                    if (duration <= 0) {
+                        $('#duration').val('Время не рассчитано');
+                    }
                 }
                 
                 // Минимальная стоимость для бизнес-класса
                 if (tariff === 'Бизнес' && price < tariffData.minimumPrice) {
                     price = tariffData.minimumPrice;
+                    console.log('🏢 Применена минимальная стоимость для бизнес-класса:', tariffData.minimumPrice + ' сом');
                 }
                 
                 // Округляем до целого числа
                 price = Math.ceil(price);
                 
+                // Обновляем отображение
                 $('#price').val(`Стоимость: ${price} сом`);
                 $('#calculated-price').val(price);
                 $('#boarding-fee').val(`Посадка: ${tariffData.boardingFee} сом`);
                 
-                console.log('Расчет стоимости:', {
+                // Добавляем информацию о времени в пути
+                if (duration > 0) {
+                    $('#duration').val(`Время в пути: ${duration.toFixed(0)} мин`);
+                }
+                
+                console.log('✅ Итоговый расчет стоимости:', {
                     тариф: tariff,
-                    расстояние: distance.toFixed(1) + ' км',
-                    время: duration.toFixed(0) + ' мин',
-                    цена: price + ' сом'
+                    расстояние: distance > 0 ? distance.toFixed(1) + ' км' : 'не рассчитано',
+                    время: duration > 0 ? duration.toFixed(0) + ' мин' : 'не рассчитано',
+                    стоимость_посадки: tariffData.boardingFee + ' сом',
+                    итоговая_цена: price + ' сом'
                 });
+                
+                return price;
+                
             } catch (error) {
-                console.error('Ошибка при расчете стоимости:', error);
+                console.error('❌ Ошибка при расчете стоимости:', error);
+                $('#price').val('Ошибка расчета');
+                return 0;
             }
         }
 
@@ -710,27 +771,25 @@
                     $dropdown.empty().hide();
                     
                     if (value.length >= 2) {
-                        const matches = kyrgyzstanAddresses.filter(address => 
-                            address.toLowerCase().includes(value)
-                        ).slice(0, 15); // Показываем максимум 15 вариантов
-                        
-                        if (matches.length > 0) {
-                            matches.forEach(address => {
-                                const $item = $('<div class="autocomplete-item">' + address + '</div>');
+                        searchAddresses(value).then(addresses => {
+                            if (addresses.length > 0) {
+                                addresses.forEach(address => {
+                                    const $item = $('<div class="autocomplete-item">' + address.name + '</div>');
                                 $item.on('click', function() {
-                                    $input.val(address);
+                                        $input.val(address.name);
                                     $dropdown.hide();
-                                    console.log('✅ Выбран адрес из автодополнения:', address);
+                                        console.log('✅ Выбран адрес из автодополнения:', address.name);
                                     
                                     // Сразу устанавливаем маркер при выборе из списка
                                     const type = $input.attr('id').includes('origin') ? 'origin' : 'destination';
                                     console.log('🎯 Устанавливаем маркер для выбранного адреса:', type);
-                                    setMarkerByAddress(address, type);
+                                        setMarkerByAddress(address.name, type);
                                 });
                                 $dropdown.append($item);
                             });
                             $dropdown.show();
                         }
+                        });
                     }
                 });
                 
@@ -851,48 +910,7 @@
         // Обработчик для кнопки "Очистить маркеры"
         $('#clear-markers-btn').click(function() {
             if (confirm('Очистить все маркеры и поля адресов?')) {
-                // Очищаем маркер точки А
-                if (originMarker) {
-                    originMarker.destroy();
-                    originMarker = null;
-                    console.log('🗑️ Маркер точки А удален');
-                }
-                originCoords = null;
-                $('#origin-address').val('');
-                
-                // Очищаем маркер точки Б
-                if (destinationMarker) {
-                    destinationMarker.destroy();
-                    destinationMarker = null;
-                    console.log('🗑️ Маркер точки Б удален');
-                }
-                destinationCoords = null;
-                $('#destination-address').val('');
-                
-                // Очищаем маршрут
-                if (routeLayer) {
-                    routeLayer.destroy();
-                    routeLayer = null;
-                    console.log('🗑️ Маршрут удален');
-                }
-                
-                // Сбрасываем расчеты
-                distance = 0;
-                duration = 0;
-                $('#distance').val('Расстояние: 0 км');
-                $('#price').val('Стоимость: 0 сом');
-                $('#calculated-price').val(0);
-                $('#boarding-fee').val('Посадка: 48 сом');
-                
-                // Сбрасываем счетчик кликов
-                clickCounter = 0;
-                
-                // Центрируем карту на Ош
-                if (map) {
-                    map.setCenter([72.8019, 40.5138]);
-                    map.setZoom(12);
-                }
-                
+                clearMarkers();
                 console.log('✅ Все данные очищены, карта сброшена к начальному состоянию');
             }
         });

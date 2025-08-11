@@ -1,0 +1,320 @@
+{
+    "carBrands": [
+        "Toyota",
+        "Honda",
+        "Hyundai",
+        "Kia",
+        "Chevrolet",
+        "Nissan",
+        "Lexus",
+        "Mazda",
+        "Mitsubishi",
+        "Volkswagen",
+        "BMW",
+        "Mercedes-Benz",
+        "Audi",
+        "Ford",
+        "Renault", 
+        "Lada",
+        "UAZ",
+        "Daewoo",
+        "Skoda",
+        "Subaru"
+    ],
+    "carModels": {
+        "Toyota": [
+            "Camry",
+            "Corolla",
+            "RAV4",
+            "Land Cruiser",
+            "Prius",
+            "Highlander",
+            "Yaris",
+            "Avalon"
+        ],
+        "Honda": [
+            "Civic",
+            "Accord",
+            "CR-V",
+            "Pilot",
+            "Fit",
+            "HR-V",
+            "Odyssey"
+        ],
+        "Hyundai": [
+            "Solaris",
+            "Elantra",
+            "Tucson",
+            "Santa Fe",
+            "Creta",
+            "Sonata",
+            "i30",
+            "Accent"
+        ],
+        "Kia": [
+            "Rio",
+            "Optima",
+            "Sportage",
+            "Sorento",
+            "Cerato",
+            "Soul",
+            "Seltos",
+            "K5"
+        ],
+        "Chevrolet": [
+            "Cruze",
+            "Aveo",
+            "Spark",
+            "Captiva",
+            "Orlando",
+            "Malibu",
+            "Niva"
+        ],
+        "Nissan": [
+            "Qashqai",
+            "X-Trail",
+            "Juke",
+            "Almera",
+            "Teana",
+            "Patrol",
+            "Note",
+            "Tiida"
+        ],
+        "Lexus": [
+            "RX",
+            "ES",
+            "NX",
+            "LX",
+            "IS",
+            "GX",
+            "UX"
+        ],
+        "Mazda": [
+            "3",
+            "6",
+            "CX-5",
+            "CX-7",
+            "CX-9",
+            "CX-30",
+            "MX-5"
+        ],
+        "Mitsubishi": [
+            "Outlander",
+            "Pajero",
+            "ASX",
+            "Lancer",
+            "L200",
+            "Eclipse Cross",
+            "Galant"
+        ],
+        "Volkswagen": [
+            "Polo",
+            "Passat",
+            "Tiguan",
+            "Touareg",
+            "Golf",
+            "Jetta",
+            "Touran"
+        ],
+        "BMW": [
+            "3 Series",
+            "5 Series",
+            "X3",
+            "X5",
+            "X6",
+            "7 Series",
+            "X1"
+        ],
+        "Mercedes-Benz": [
+            "E-Class",
+            "C-Class",
+            "S-Class",
+            "GLE",
+            "GLC",
+            "A-Class",
+            "GLA"
+        ],
+        "Audi": [
+            "A4",
+            "A6",
+            "Q5",
+            "Q7",
+            "A3",
+            "Q3",
+            "A5"
+        ],
+        "Ford": [
+            "Focus",
+            "Mondeo",
+            "Kuga",
+            "Explorer",
+            "Fiesta",
+            "EcoSport",
+            "Transit"
+        ],
+        "Renault": [
+            "Logan",
+            "Duster",
+            "Kaptur",
+            "Sandero",
+            "Arkana",
+            "Fluence",
+            "Megane"
+        ],
+        "Lada": [
+            "Granta",
+            "Vesta",
+            "XRAY",
+            "Largus",
+            "Kalina",
+            "Priora",
+            "Niva"
+        ],
+        "UAZ": [
+            "Patriot",
+            "Hunter",
+            "Pickup",
+            "Profi",
+            "Буханка",
+            "Хантер"
+        ],
+        "Daewoo": [
+            "Nexia",
+            "Matiz",
+            "Gentra",
+            "Lanos",
+            "Lacetti"
+        ],
+        "Skoda": [
+            "Octavia",
+            "Rapid",
+            "Kodiaq",
+            "Superb",
+            "Karoq",
+            "Fabia"
+        ],
+        "Subaru": [
+            "Forester",
+            "Outback",
+            "Impreza",
+            "XV",
+            "Legacy",
+            "WRX"
+        ]
+    },
+    "carColors": [
+        "Белый",
+        "Черный",
+        "Серебристый",
+        "Серый",
+        "Красный",
+        "Синий",
+        "Зеленый",
+        "Коричневый",
+        "Бежевый",
+        "Желтый",
+        "Оранжевый",
+        "Фиолетовый",
+        "Золотой",
+        "Бордовый",
+        "Голубой"
+    ],
+    "productionYears": [
+        "2024",
+        "2023",
+        "2022",
+        "2021",
+        "2020",
+        "2019",
+        "2018",
+        "2017",
+        "2016",
+        "2015",
+        "2014",
+        "2013",
+        "2012",
+        "2011",
+        "2010",
+        "2009",
+        "2008",
+        "2007",
+        "2006",
+        "2005",
+        "2004",
+        "2003",
+        "2002",
+        "2001",
+        "2000",
+        "1999",
+        "1998",
+        "1997",
+        "1996",
+        "1995",
+        "1994",
+        "1993",
+        "1992",
+        "1991"
+    ],
+    "transmissionTypes": [
+        "Механическая",
+        "Автоматическая"
+    ],
+    "boosterOptions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+    ],
+    "tariffs": [
+        "Эконом",
+        "Комфорт",
+        "Комфорт+",
+        "Бизнес",
+        "Премиум"
+    ],
+    "categories": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "BE",
+        "CE",
+        "DE"
+    ],
+    "autoparkCompanies": [
+        "ОсОО Титан",
+        "ОсОО Лидер Такси",
+        "ИП Иванов Taxi",
+        "ОсОО ВИП Сервис",
+        "ОсОО Комфорт Авто",
+        "ОсОО Автопарк №1",
+        "ОсОО Премиум Транспорт",
+        "ОсОО Бишкек Такси",
+        "ОсОО АвтоМир",
+        "ИП Петров Т.А."
+    ],
+    "kyrgyzCities": [
+        "Бишкек",
+        "Ош",
+        "Джалал-Абад",
+        "Каракол",
+        "Токмок",
+        "Нарын",
+        "Талас",
+        "Балыкчы",
+        "Кызыл-Кия",
+        "Узген",
+        "Кара-Балта",
+        "Кант",
+        "Сулюкта",
+        "Баткен",
+        "Чолпон-Ата",
+        "Кемин",
+        "Кара-Суу",
+        "Майлуу-Суу",
+        "Исфана",
+        "Кочкор"
+    ]
+}
