@@ -195,8 +195,8 @@
         let directionsService;
         let directionsRenderer;
         let geocoder;
-        let originAutocomplete;
-        let destinationAutocomplete;
+        let placesAutocompleteService;
+        let placesDetailsService;
         let firstPoint;
         let secondPoint;
         let selecting = 'a';
@@ -259,8 +259,12 @@
                 geocoder = new google.maps.Geocoder();
                 console.log('✅ Google Maps инициализирован');
 
-                // Автодополнение адресов
-                initAutocomplete(KG_BOUNDS);
+                // Сервисы Places
+                placesAutocompleteService = new google.maps.places.AutocompleteService();
+                placesDetailsService = new google.maps.places.PlacesService(map);
+
+                // Кастомный автокомплит адресов
+                initCustomAutocomplete(KG_BOUNDS);
 
                 // Обработчик клика по карте
                 map.addListener('click', function(e) {
@@ -325,57 +329,105 @@
             }
         }
 
-        // Инициализация Google Places Autocomplete для полей ввода
-        function initAutocomplete(bounds) {
-            const originInput = document.getElementById('origin-address');
-            const destinationInput = document.getElementById('destination-address');
+        // Кастомный автокомплит: только адреса в КР, без Plus Codes
+        function initCustomAutocomplete(bounds) {
+            setupInputAutocomplete('origin-address', 'origin', bounds);
+            setupInputAutocomplete('destination-address', 'destination', bounds);
+        }
 
-            const options = {
-                fields: ['geometry', 'formatted_address', 'name', 'types', 'place_id'],
-                componentRestrictions: { country: ['kg'] },
-                types: ['address'],
-                bounds: bounds,
-                strictBounds: true
-            };
+        function setupInputAutocomplete(inputId, type, bounds) {
+            const input = document.getElementById(inputId);
+            // Создаем контейнер для подсказок прямо под инпутом
+            const wrapper = input.parentElement; // .main__order-details-item имеет position: relative
+            const dropdown = document.createElement('div');
+            dropdown.className = 'autocomplete-dropdown';
+            wrapper.appendChild(dropdown);
 
-            originAutocomplete = new google.maps.places.Autocomplete(originInput, options);
-            destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput, options);
+            let lastRequestId = 0;
 
-            originAutocomplete.addListener('place_changed', function() {
-                const place = originAutocomplete.getPlace();
-                if (!place.geometry || !place.geometry.location) return;
-                // Игнорируем Plus Codes
-                if (Array.isArray(place.types) && place.types.includes('plus_code')) return;
-                const loc = place.geometry.location;
-                const coords = { lat: loc.lat(), lng: loc.lng() };
-                firstPoint = coords;
-                // Удаляем временные маркеры
-                markers.forEach(m => m.setMap(null));
-                markers = [];
-                if (originMarker) originMarker.setMap(null);
-                originMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF3B30', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
-                selecting = secondPoint ? 'end' : 'b';
-                map.panTo(coords);
-                if (firstPoint && secondPoint) buildRoute();
+            input.addEventListener('input', function() {
+                const query = input.value.trim();
+                if (query.length < 3) {
+                    dropdown.style.display = 'none';
+                    dropdown.innerHTML = '';
+                    return;
+                }
+                const requestId = ++lastRequestId;
+                placesAutocompleteService.getPlacePredictions({
+                    input: query,
+                    bounds: bounds,
+                    componentRestrictions: { country: 'kg' },
+                    // Вариант только адресов
+                    types: ['address']
+                }, function(predictions, status) {
+                    if (requestId !== lastRequestId) return;
+                    if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                        dropdown.style.display = 'none';
+                        dropdown.innerHTML = '';
+                        return;
+                    }
+                    // Фильтр Plus Codes и всего, что похоже на код
+                    const filtered = predictions.filter(p => {
+                        const isPlus = (p.types && p.types.includes('plus_code')) || /\w{4}\+\w{2,}/i.test(p.structured_formatting?.main_text || '') || /\w{4}\+\w{2,}/i.test(p.description || '');
+                        return !isPlus;
+                    });
+                    renderPredictions(dropdown, filtered, function(pred) {
+                        // Получаем детали места и ставим маркер
+                        placesDetailsService.getDetails({
+                            placeId: pred.place_id,
+                            fields: ['geometry', 'formatted_address']
+                        }, function(place, detStatus) {
+                            if (detStatus !== google.maps.places.PlacesServiceStatus.OK || !place || !place.geometry) return;
+                            const loc = place.geometry.location;
+                            const coords = { lat: loc.lat(), lng: loc.lng() };
+                            input.value = place.formatted_address || pred.description;
+
+                            // очищаем временные маркеры
+                            markers.forEach(m => m.setMap(null));
+                            markers = [];
+
+                            if (type === 'origin') {
+                                firstPoint = coords;
+                                if (originMarker) originMarker.setMap(null);
+                                originMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF3B30', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
+                                selecting = secondPoint ? 'end' : 'b';
+                            } else {
+                                secondPoint = coords;
+                                if (destinationMarker) destinationMarker.setMap(null);
+                                destinationMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#34C759', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
+                                selecting = firstPoint ? 'end' : 'a';
+                            }
+
+                            map.panTo(coords);
+                            dropdown.style.display = 'none';
+                            dropdown.innerHTML = '';
+                            if (firstPoint && secondPoint) buildRoute();
+                        });
+                    });
+                });
             });
 
-            destinationAutocomplete.addListener('place_changed', function() {
-                const place = destinationAutocomplete.getPlace();
-                if (!place.geometry || !place.geometry.location) return;
-                // Игнорируем Plus Codes
-                if (Array.isArray(place.types) && place.types.includes('plus_code')) return;
-                const loc = place.geometry.location;
-                const coords = { lat: loc.lat(), lng: loc.lng() };
-                secondPoint = coords;
-                // Удаляем временные маркеры
-                markers.forEach(m => m.setMap(null));
-                markers = [];
-                if (destinationMarker) destinationMarker.setMap(null);
-                destinationMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#34C759', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
-                selecting = firstPoint ? 'end' : 'a';
-                map.panTo(coords);
-                if (firstPoint && secondPoint) buildRoute();
+            // Скрытие при клике вне
+            document.addEventListener('click', function(ev) {
+                if (!wrapper.contains(ev.target)) {
+                    dropdown.style.display = 'none';
+                }
             });
+        }
+
+        function renderPredictions(container, predictions, onSelect) {
+            container.innerHTML = '';
+            predictions.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = p.description;
+                item.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    onSelect(p);
+                });
+                container.appendChild(item);
+            });
+            container.style.display = predictions.length > 0 ? 'block' : 'none';
         }
 
         function buildRoute() {
@@ -812,13 +864,8 @@
     .autocomplete-item:last-child {
         border-bottom: none;
     }
-    /* Google Places dropdown */
-    .pac-container {
-        z-index: 9999 !important;
-        margin-top: 6px !important; /* всегда ниже инпута */
-        border-radius: 6px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    }
+    /* Прячем стандартный Google Places dropdown (используем свой) */
+    .pac-container { display: none !important; }
 
     /* Улучшение стилей для полей ввода адресов */
     .main__order-details-item {
