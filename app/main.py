@@ -11,7 +11,8 @@ from datetime import datetime, timedelta, timezone, date
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field, validator, ValidationError
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, IntegrityError
+from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 import jose.jwt
 import secrets
 import uuid
