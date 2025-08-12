@@ -195,10 +195,14 @@
         let directionsService;
         let directionsRenderer;
         let geocoder;
+        let originAutocomplete;
+        let destinationAutocomplete;
         let firstPoint;
         let secondPoint;
         let selecting = 'a';
         let markers = [];
+        let originMarker = null;
+        let destinationMarker = null;
         let distance = 0;
         let duration = 0;
         
@@ -250,6 +254,9 @@
                 geocoder = new google.maps.Geocoder();
                 console.log('✅ Google Maps инициализирован');
 
+                // Автодополнение адресов
+                initAutocomplete();
+
                 // Обработчик клика по карте
                 map.addListener('click', function(e) {
                     const latLng = e.latLng;
@@ -273,10 +280,14 @@
 
                     if (selecting === 'a') {
                         firstPoint = coords;
+                        if (originMarker) originMarker.setMap(null);
+                        originMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF3B30', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
                         selecting = 'b';
                         getAddressByCoordinates(coords.lat, coords.lng, 'origin');
                     } else if (selecting === 'b') {
                         secondPoint = coords;
+                        if (destinationMarker) destinationMarker.setMap(null);
+                        destinationMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#34C759', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
                         selecting = 'end';
                         getAddressByCoordinates(coords.lat, coords.lng, 'destination');
                     }
@@ -307,6 +318,64 @@
             } catch (error) {
                 console.error('❌ Ошибка инициализации:', error);
             }
+        }
+
+        // Инициализация Google Places Autocomplete для полей ввода
+        function initAutocomplete() {
+            const originInput = document.getElementById('origin-address');
+            const destinationInput = document.getElementById('destination-address');
+
+            const options = {
+                fields: ['geometry', 'formatted_address', 'name'],
+                componentRestrictions: { country: ['kg'] }
+            };
+
+            originAutocomplete = new google.maps.places.Autocomplete(originInput, options);
+            destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput, options);
+
+            originAutocomplete.addListener('place_changed', function() {
+                const place = originAutocomplete.getPlace();
+                if (!place.geometry || !place.geometry.location) return;
+                const loc = place.geometry.location;
+                const coords = { lat: loc.lat(), lng: loc.lng() };
+                firstPoint = coords;
+                if (originMarker) originMarker.setMap(null);
+                originMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF3B30', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
+                selecting = secondPoint ? 'end' : 'b';
+                if (firstPoint && secondPoint) buildRoute();
+            });
+
+            destinationAutocomplete.addListener('place_changed', function() {
+                const place = destinationAutocomplete.getPlace();
+                if (!place.geometry || !place.geometry.location) return;
+                const loc = place.geometry.location;
+                const coords = { lat: loc.lat(), lng: loc.lng() };
+                secondPoint = coords;
+                if (destinationMarker) destinationMarker.setMap(null);
+                destinationMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#34C759', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
+                selecting = firstPoint ? 'end' : 'a';
+                if (firstPoint && secondPoint) buildRoute();
+            });
+        }
+
+        function buildRoute() {
+            directionsService.route({
+                origin: firstPoint,
+                destination: secondPoint,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, function(response, status) {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(response);
+                    const leg = response.routes[0].legs[0];
+                    distance = (leg.distance && leg.distance.value ? leg.distance.value : 0) / 1000; // км
+                    duration = (leg.duration && leg.duration.value ? leg.duration.value : 0) / 60; // мин
+                    updateRouteInfo();
+                    calculatePrice();
+                } else {
+                    console.warn('⚠️ Google Directions не вернул маршрут, fallback', status);
+                    calculateSimpleRoute();
+                }
+            });
         }
 
         // Обновление информации о маршруте
@@ -414,6 +483,8 @@
                 marker.setMap(null);
             });
             markers = [];
+            if (originMarker) { originMarker.setMap(null); originMarker = null; }
+            if (destinationMarker) { destinationMarker.setMap(null); destinationMarker = null; }
             
             $('#origin-address').val('');
             $('#destination-address').val('');
