@@ -67,9 +67,16 @@
     
     /* Стили для карты */
     #main-map-container {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        position: relative;
+        width: 100% !important;
+        height: 400px !important;
+        background-color: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        margin-top: 20px !important;
+        display: block !important;
+        min-height: 400px !important;
     }
     
     /* Загрузочный индикатор для карты */
@@ -81,6 +88,14 @@
         transform: translate(-50%, -50%);
         color: #6c757d;
         font-size: 14px;
+        z-index: 1;
+    }
+    
+    /* Убеждаемся, что карта видна */
+    .main__map {
+        width: 100% !important;
+        margin: 20px 0 !important;
+        padding: 0 !important;
     }
 </style>
 {% endblock %}
@@ -269,30 +284,68 @@
 
 {% block extra_js %}
 <!-- Подключение Google Maps JS API -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key or '' }}&libraries=places&v=weekly"></script>
+<script>
+    // Проверяем наличие API ключа
+    const googleApiKey = "{{ google_api_key or '' }}";
+    console.log('🔑 Google API Key:', googleApiKey ? 'присутствует' : 'отсутствует');
+    
+    if (!googleApiKey) {
+        console.error('❌ Google Maps API ключ не найден!');
+        document.getElementById('main-map-container').innerHTML = '<div style="padding: 40px; text-align: center; color: #dc3545;">⚠️ Ошибка: Google Maps API ключ не настроен</div>';
+    } else {
+        // Загружаем Google Maps API с правильными параметрами
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}&libraries=places&v=weekly&loading=async`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+</script>
 
 <script>
     $(document).ready(function() {
+        console.log('🚀 Страница загружена, начинаем инициализацию...');
+        console.log('🔍 jQuery версия:', $.fn.jquery);
+        
+        // Проверяем видимость контейнера карты
+        const mapContainer = document.getElementById('main-map-container');
+        if (mapContainer) {
+            console.log('📋 Контейнер карты найден в DOM');
+            console.log('📐 Размеры контейнера:', {
+                width: mapContainer.offsetWidth,
+                height: mapContainer.offsetHeight,
+                display: getComputedStyle(mapContainer).display,
+                visibility: getComputedStyle(mapContainer).visibility
+            });
+        } else {
+            console.error('❌ Контейнер карты НЕ найден в DOM!');
+        }
+        
         // Инициализация Google Maps с проверкой загрузки API
         function waitForGoogleMaps() {
+            console.log('⏳ Проверяем загрузку Google Maps API...');
+            
             if (window.google && window.google.maps) {
+                console.log('✅ Google Maps API загружен');
                 initMainMap();
             } else {
-                console.log('⏳ Ожидание загрузки Google Maps API...');
-                setTimeout(waitForGoogleMaps, 100);
+                console.log('🔄 Google Maps API еще не загружен, ждем...');
+                setTimeout(waitForGoogleMaps, 500);
             }
         }
         
         // Функция инициализации карты
         function initMainMap() {
             try {
-                console.log('🗺️ Инициализация Google Maps...');
+                console.log('🗺️ Начинаем инициализацию Google Maps...');
+                console.log('🔍 Проверяем google.maps:', typeof window.google, typeof window.google?.maps);
                 
                 const mapContainer = document.getElementById('main-map-container');
                 if (!mapContainer) {
-                    console.warn('⚠️ Контейнер карты не найден');
+                    console.error('❌ Контейнер карты #main-map-container не найден');
                     return;
                 }
+                console.log('✅ Контейнер карты найден:', mapContainer);
                 
                 // Проверяем, не инициализирована ли карта уже
                 if (window.mainMapInstance) {
@@ -300,10 +353,18 @@
                     return;
                 }
                 
+                // Устанавливаем размеры контейнера принудительно
+                mapContainer.style.width = '100%';
+                mapContainer.style.height = '400px';
+                mapContainer.style.backgroundColor = '#f0f0f0';
+                console.log('📐 Размеры контейнера установлены');
+                
                 // Центр города Ош, Киргизия
                 const oshCenter = { lat: 40.5138, lng: 72.8019 };
+                console.log('📍 Координаты центра карты:', oshCenter);
                 
                 // Создаем карту
+                console.log('🔧 Создаем экземпляр Google Map...');
                 window.mainMapInstance = new google.maps.Map(mapContainer, {
                     center: oshCenter,
                     zoom: 12,
@@ -313,13 +374,33 @@
                     fullscreenControl: false
                 });
                 
-                console.log('✅ Google Maps успешно инициализирован');
+                console.log('✅ Google Maps карта создана успешно');
+                
+                // Добавляем обработчик события загрузки карты
+                google.maps.event.addListenerOnce(window.mainMapInstance, 'tilesloaded', function() {
+                    console.log('🎯 Карта полностью загружена');
+                });
                 
                 // Загружаем заказы для карты
+                console.log('📋 Запускаем загрузку заказов...');
                 loadOrdersForMap();
                 
             } catch (error) {
                 console.error('❌ Ошибка инициализации Google Maps:', error);
+                console.error('📋 Стек ошибки:', error.stack);
+                
+                // Показываем ошибку пользователю
+                const mapContainer = document.getElementById('main-map-container');
+                if (mapContainer) {
+                    mapContainer.innerHTML = `
+                        <div style="padding: 40px; text-align: center; color: #dc3545; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+                            <h4>❌ Ошибка загрузки карты</h4>
+                            <p>${error.message}</p>
+                            <small>Проверьте консоль браузера для подробностей</small>
+                        </div>
+                    `;
+                }
+                
                 // Повторная попытка через 2 секунды
                 setTimeout(waitForGoogleMaps, 2000);
             }
