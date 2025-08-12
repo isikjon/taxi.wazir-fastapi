@@ -1,5 +1,90 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<style>
+    /* Стили для статусов заказов */
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-выполняется {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .status-завершен {
+        background-color: #d1edff;
+        color: #0c5460;
+        border: 1px solid #b8daff;
+    }
+    
+    .status-отменен {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    /* Стили для фильтров */
+    .main__subheader-tabs button.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    
+    /* Стили для таблицы */
+    .order-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .status-cell {
+        text-align: center;
+    }
+    
+    /* Стили для пустого состояния */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state img {
+        width: 48px;
+        height: 48px;
+        opacity: 0.5;
+        margin-bottom: 16px;
+    }
+    
+    .empty-state p {
+        margin: 0;
+        font-size: 16px;
+    }
+    
+    /* Стили для карты */
+    #main-map-container {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        position: relative;
+    }
+    
+    /* Загрузочный индикатор для карты */
+    #main-map-container:empty::before {
+        content: "⏳ Загрузка карты...";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #6c757d;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
 {% block title %}Главная Диспетчерская - taxi.wazir.kg{% endblock %}
 
 {% block header_title %}{% endblock %}
@@ -84,7 +169,7 @@
         <button id="filter-cancelled"
             class="{% if status_filter == 'Отменен' %}active{% endif %}">
             <span class="cancelled"></span>
-            Отмененные
+            Отменен
         </button>
         {% if is_filtered %}
         <button id="reset-filters" class="main__btn-short">Сбросить
@@ -184,32 +269,41 @@
 
 {% block extra_js %}
 <!-- Подключение Google Maps JS API -->
-<script>
-    // Функция инициализации карты (вызывается Google Maps API)
-    function initGoogleMaps() {
-        if (typeof initMainMap === 'function') {
-            initMainMap();
-        }
-    }
-</script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key or '' }}&libraries=places&v=weekly&callback=initGoogleMaps"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key or '' }}&libraries=places&v=weekly"></script>
 <script>
     $(document).ready(function() {
-        // Инициализация Google Maps для главной страницы
-        function initMainMap() {
-            if (!window.google || !window.google.maps) {
-                console.warn('Google Maps API не загружен, повторная попытка...');
-                setTimeout(initMainMap, 500);
-                return;
+        // Инициализация Google Maps с проверкой загрузки API
+        function waitForGoogleMaps() {
+            if (window.google && window.google.maps) {
+                initMainMap();
+            } else {
+                console.log('⏳ Ожидание загрузки Google Maps API...');
+                setTimeout(waitForGoogleMaps, 100);
             }
-            
+        }
+        
+        // Функция инициализации карты
+        function initMainMap() {
             try {
-                console.log('🗺️ Инициализация Google Maps для главной страницы...');
+                console.log('🗺️ Инициализация Google Maps...');
+                
+                const mapContainer = document.getElementById('main-map-container');
+                if (!mapContainer) {
+                    console.warn('⚠️ Контейнер карты не найден');
+                    return;
+                }
+                
+                // Проверяем, не инициализирована ли карта уже
+                if (window.mainMapInstance) {
+                    console.log('ℹ️ Карта уже инициализирована');
+                    return;
+                }
                 
                 // Центр города Ош, Киргизия
                 const oshCenter = { lat: 40.5138, lng: 72.8019 };
                 
-                const mainMap = new google.maps.Map(document.getElementById('main-map-container'), {
+                // Создаем карту
+                window.mainMapInstance = new google.maps.Map(mapContainer, {
                     center: oshCenter,
                     zoom: 12,
                     gestureHandling: 'greedy',
@@ -218,24 +312,21 @@
                     fullscreenControl: false
                 });
                 
-                console.log('✅ Google Maps инициализирован');
+                console.log('✅ Google Maps успешно инициализирован');
                 
-                // Карта инициализирована и готова к работе
-                // В будущем здесь можно добавить загрузку заказов через API
-                console.log('�� Карта готова для отображения заказов');
+                // В будущем здесь можно добавить заказы на карту
+                console.log('📊 Карта готова для отображения заказов');
                 
-                console.log('✅ Карта с заказами готова');
             } catch (error) {
                 console.error('❌ Ошибка инициализации Google Maps:', error);
+                // Повторная попытка через 2 секунды
+                setTimeout(waitForGoogleMaps, 2000);
             }
         }
         
-        // Карта инициализируется через callback от Google Maps API
-        // Если API уже загружен, инициализируем сразу
-        if (window.google && window.google.maps) {
-            initMainMap();
-        }
-
+        // Запускаем инициализацию
+        waitForGoogleMaps();
+        
         // Создаем календарь
         let datePickerVisible = false;
         let selectedStartDate = $('#start-date').val() ? new Date($('#start-date').val()) : null;
@@ -505,11 +596,21 @@
 
         // Функция фильтрации заказов
         function filterOrders() {
+            console.log('🔍 Начинаем фильтрацию заказов...');
+            
             const searchValue = $('#header-search').val().toLowerCase();
             const statusFilter = getActiveStatusFilter();
             const dateFilter = $('#date-filter').val();
             const startDate = $('#start-date').val();
             const endDate = $('#end-date').val();
+            
+            console.log('📋 Параметры фильтрации:', {
+                search: searchValue,
+                status: statusFilter,
+                date: dateFilter,
+                startDate: startDate,
+                endDate: endDate
+            });
             
             // Собираем параметры
             const params = new URLSearchParams(window.location.search);
@@ -552,8 +653,11 @@
                 params.set('page', '1');
             }
             
+            const newUrl = window.location.pathname + '?' + params.toString();
+            console.log('🌐 Новый URL:', newUrl);
+            
             // Перенаправляем на URL с фильтрами
-            window.location.href = window.location.pathname + '?' + params.toString();
+            window.location.href = newUrl;
         }
         
         // Получаем активный статусный фильтр
@@ -582,14 +686,22 @@
         
         // Обработчики статусных фильтров
         $('#filter-free, #filter-busy, #filter-cancelled').on('click', function() {
+            console.log('🔘 Нажата кнопка фильтра:', $(this).attr('id'));
+            
             // Если кнопка уже активна, отключаем фильтр
             if ($(this).hasClass('active')) {
+                console.log('🔄 Отключаем фильтр');
                 $(this).removeClass('active');
             } else {
                 // Иначе снимаем активность с других кнопок и активируем выбранную
+                console.log('🔛 Включаем фильтр');
                 $('#filter-free, #filter-busy, #filter-cancelled').removeClass('active');
                 $(this).addClass('active');
             }
+            
+            const activeFilter = getActiveStatusFilter();
+            console.log('📊 Активный фильтр:', activeFilter);
+            
             filterOrders();
         });
         
