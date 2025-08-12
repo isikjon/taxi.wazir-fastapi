@@ -11,13 +11,14 @@ from datetime import datetime, timedelta, timezone, date
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field, validator, ValidationError
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, IntegrityError
 import jose.jwt
 import secrets
 import uuid
 from pathlib import Path
 from math import ceil
 from contextlib import asynccontextmanager
+import hashlib
 
 # Настройка подробного логирования
 logging.basicConfig(
@@ -4960,6 +4961,105 @@ async def create_order_from_form(
         raise HTTPException(
             status_code=500,
             detail=f"Ошибка создания заказа: {str(e)}"
+        )
+
+@app.get("/api/orders/map", response_class=JSONResponse)
+async def get_orders_for_map(
+    db: Session = Depends(get_db),
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    date: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Получение заказов для отображения на карте"""
+    try:
+        logger.info(f"🗺️ Запрос заказов для карты с фильтрами: status={status}, search={search}")
+        
+        # Получаем заказы с теми же фильтрами, что и в основном списке
+        query = db.query(models.Order).join(models.Driver)
+        
+        # Применяем фильтры
+        if status:
+            query = query.filter(models.Order.status == status)
+            
+        if search:
+            search_filter = or_(
+                models.Order.order_number.ilike(f"%{search}%"),
+                models.Order.origin.ilike(f"%{search}%"),
+                models.Order.destination.ilike(f"%{search}%"),
+                models.Driver.first_name.ilike(f"%{search}%"),
+                models.Driver.last_name.ilike(f"%{search}%"),
+                models.Driver.phone.ilike(f"%{search}%")
+            )
+            query = query.filter(search_filter)
+            
+        # Фильтры по дате
+        if date and date != 'all':
+            if date == 'today':
+                today = datetime.now().date()
+                query = query.filter(func.date(models.Order.created_at) == today)
+            elif date == 'yesterday':
+                yesterday = datetime.now().date() - timedelta(days=1)
+                query = query.filter(func.date(models.Order.created_at) == yesterday)
+            elif date == 'week':
+                week_ago = datetime.now().date() - timedelta(days=7)
+                query = query.filter(func.date(models.Order.created_at) >= week_ago)
+        
+        if start_date:
+            try:
+                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+                query = query.filter(func.date(models.Order.created_at) >= start_date_obj)
+            except ValueError:
+                pass
+                
+        if end_date:
+            try:
+                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+                query = query.filter(func.date(models.Order.created_at) <= end_date_obj)
+            except ValueError:
+                pass
+        
+        # Получаем заказы
+        orders = query.order_by(models.Order.created_at.desc()).limit(50).all()
+        
+        # Формируем данные для карты
+        orders_data = []
+        for order in orders:
+            orders_data.append({
+                "id": order.id,
+                "order_number": order.order_number or str(order.id),
+                "origin": order.origin,
+                "destination": order.destination,
+                "status": order.status or "Выполняется",
+                "driver_name": f"{order.driver.first_name} {order.driver.last_name}",
+                "driver_phone": order.driver.phone or "",
+                "price": str(order.price) if order.price else "",
+                "tariff": order.tariff or order.driver.tariff or "",
+                "time": order.time,
+                "created_at": order.created_at.strftime('%d.%m.%y %H:%M')
+            })
+        
+        logger.info(f"✅ Найдено {len(orders_data)} заказов для карты")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "orders": orders_data,
+                "total": len(orders_data)
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения заказов для карты: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "orders": []
+            }
         )
 
 if __name__ == "__main__":
