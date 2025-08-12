@@ -184,13 +184,22 @@
 
 {% block extra_js %}
 <!-- Подключение Google Maps JS API -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key or '' }}&libraries=places&v=weekly"></script>
+<script>
+    // Функция инициализации карты (вызывается Google Maps API)
+    function initGoogleMaps() {
+        if (typeof initMainMap === 'function') {
+            initMainMap();
+        }
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key or '' }}&libraries=places&v=weekly&callback=initGoogleMaps"></script>
 <script>
     $(document).ready(function() {
         // Инициализация Google Maps для главной страницы
         function initMainMap() {
             if (!window.google || !window.google.maps) {
-                setTimeout(initMainMap, 100);
+                console.warn('Google Maps API не загружен, повторная попытка...');
+                setTimeout(initMainMap, 500);
                 return;
             }
             
@@ -211,28 +220,9 @@
                 
                 console.log('✅ Google Maps инициализирован');
                 
-                // Демо данные заказов (в будущем можно загружать через API)
-                const orders = [
-                    {% if orders and orders|length > 0 %}
-                    // Здесь будут реальные заказы через API
-                    {% endif %}
-                    // Демо данные для тестирования карты
-                    {
-                        id: 1,
-                        order_number: "DEMO001",
-                        origin: "Медицинский Факультет ОшГУ, Ош, Кыргызстан",
-                        destination: "Кыргыз Почтасы №18, Ломоносов, Ош, Кыргызстан",
-                        status: "Выполняется",
-                        driver_name: "Демо Водитель",
-                        price: "120",
-                        tariff: "Эконом"
-                    }
-                ];
-                
-                console.log('📊 Заказов для отображения:', orders.length);
-                
-                // Создаём маркеры и маршруты для заказов
-                addOrdersToMap(mainMap, orders);
+                // Карта инициализирована и готова к работе
+                // В будущем здесь можно добавить загрузку заказов через API
+                console.log('�� Карта готова для отображения заказов');
                 
                 console.log('✅ Карта с заказами готова');
             } catch (error) {
@@ -240,112 +230,10 @@
             }
         }
         
-        // Функция добавления заказов на карту
-        function addOrdersToMap(map, orders) {
-            const geocoder = new google.maps.Geocoder();
-            const directionsService = new google.maps.DirectionsService();
-            let processedCount = 0;
-            
-            orders.forEach((order, index) => {
-                // Геокодируем адрес отправления
-                geocoder.geocode({ address: order.origin + ', Кыргызстан' }, (results, status) => {
-                    if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
-                        const originLocation = results[0].geometry.location;
-                        
-                        // Определяем цвет маркера по статусу
-                        let markerColor = '#fdcb6e'; // желтый для "Выполняется"
-                        if (order.status === 'Завершен') markerColor = '#00b894'; // зеленый
-                        else if (order.status === 'Отменен') markerColor = '#e17055'; // красный
-                        
-                        // Создаём маркер для места отправления
-                        const originMarker = new google.maps.Marker({
-                            position: originLocation,
-                            map: map,
-                            title: `Заказ ${order.order_number} - Откуда`,
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 8,
-                                fillColor: markerColor,
-                                fillOpacity: 1,
-                                strokeColor: '#FFFFFF',
-                                strokeWeight: 2
-                            }
-                        });
-                        
-                        // Инфо-окно для маркера
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: `
-                                <div style="padding: 8px; font-family: Arial, sans-serif;">
-                                    <h4 style="margin: 0 0 8px 0; color: #333;">Заказ ${order.order_number}</h4>
-                                    <p style="margin: 4px 0;"><strong>Статус:</strong> <span style="color: ${markerColor};">${order.status}</span></p>
-                                    <p style="margin: 4px 0;"><strong>Откуда:</strong> ${order.origin}</p>
-                                    <p style="margin: 4px 0;"><strong>Куда:</strong> ${order.destination}</p>
-                                    <p style="margin: 4px 0;"><strong>Водитель:</strong> ${order.driver_name}</p>
-                                    ${order.price ? `<p style="margin: 4px 0;"><strong>Стоимость:</strong> ${order.price} сом</p>` : ''}
-                                    ${order.tariff ? `<p style="margin: 4px 0;"><strong>Тариф:</strong> ${order.tariff}</p>` : ''}
-                                </div>
-                            `
-                        });
-                        
-                        originMarker.addListener('click', () => {
-                            infoWindow.open(map, originMarker);
-                        });
-                        
-                        // Если заказ активен (Выполняется), строим маршрут
-                        if (order.status === 'Выполняется') {
-                            geocoder.geocode({ address: order.destination + ', Кыргызстан' }, (destResults, destStatus) => {
-                                if (destStatus === google.maps.GeocoderStatus.OK && destResults.length > 0) {
-                                    const destinationLocation = destResults[0].geometry.location;
-                                    
-                                    // Маркер назначения
-                                    const destinationMarker = new google.maps.Marker({
-                                        position: destinationLocation,
-                                        map: map,
-                                        title: `Заказ ${order.order_number} - Куда`,
-                                        icon: {
-                                            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                            scale: 6,
-                                            fillColor: markerColor,
-                                            fillOpacity: 1,
-                                            strokeColor: '#FFFFFF',
-                                            strokeWeight: 2
-                                        }
-                                    });
-                                    
-                                    // Строим маршрут
-                                    const directionsRenderer = new google.maps.DirectionsRenderer({
-                                        suppressMarkers: true,
-                                        polylineOptions: {
-                                            strokeColor: markerColor,
-                                            strokeWeight: 4,
-                                            strokeOpacity: 0.8
-                                        }
-                                    });
-                                    directionsRenderer.setMap(map);
-                                    
-                                    directionsService.route({
-                                        origin: originLocation,
-                                        destination: destinationLocation,
-                                        travelMode: google.maps.TravelMode.DRIVING
-                                    }, (response, status) => {
-                                        if (status === google.maps.DirectionsStatus.OK) {
-                                            directionsRenderer.setDirections(response);
-                                            console.log(`✅ Маршрут построен для заказа ${order.order_number}`);
-                                        } else {
-                                            console.warn(`⚠️ Не удалось построить маршрут для заказа ${order.order_number}:`, status);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                        
-                        processedCount++;
-                        console.log(`📍 Обработан заказ ${order.order_number} (${processedCount}/${orders.length})`);
-                    } else {
-                        console.warn(`⚠️ Не удалось геокодировать адрес для заказа ${order.order_number}:`, order.origin);
-                    }
-                });
-            });
+        // Карта инициализируется через callback от Google Maps API
+        // Если API уже загружен, инициализируем сразу
+        if (window.google && window.google.maps) {
+            initMainMap();
         }
 
         // Создаем календарь

@@ -273,7 +273,8 @@ async def disp_home(
         "is_filtered": is_filtered,
         
         # API ключ 2GIS
-        "twogis_api_key": settings.TWOGIS_API_KEY
+        "twogis_api_key": settings.TWOGIS_API_KEY,
+        "google_api_key": settings.GOOGLE_MAPS_API
     }
     
     return templates.TemplateResponse("disp/index.html", {"request": request, **template_data})
