@@ -230,7 +230,7 @@
                     console.error('❌ Библиотека 2GIS MapGL не загружена');
                     return;
                 }
-
+                
                 const apiKey = '{{ twogis_api_key or "" }}';
                 console.log('🔑 API ключ для карты:', apiKey);
                 
@@ -274,19 +274,14 @@
                     });
                     
                     if (selecting !== 'end') {
-                        // Создаем маркер точно в месте клика с точными координатами
+                        // Создаем маркер БЕЗ смещения - используем точные координаты клика
                         const marker = new mapgl.Marker(map, {
-                            coordinates: [coords[0], coords[1]], // lng, lat
-                            color: selecting === 'a' ? '#FF0000' : '#00FF00',
-                            anchor: 'center' // центрируем маркер точно по координатам
+                            coordinates: coords,
+                            color: selecting === 'a' ? '#FF0000' : '#00FF00'
                         });
                         
                         markers.push(marker);
-                        console.log('🎯 Маркер создан:', {
-                            coordinates: [coords[0], coords[1]], 
-                            color: selecting === 'a' ? 'красный' : 'зелёный',
-                            anchor: 'center'
-                        });
+                        console.log('🎯 Маркер создан ТОЧНО в координатах клика:', coords);
                     }
 
                     if (selecting === 'a') {
@@ -337,15 +332,15 @@
                                 // Обновляем интерфейс
                                 updateRouteInfo();
                                 calculatePrice();
-                            } else {
+                    } else {
                                 console.warn('⚠️ Нет данных маршрута, используем fallback');
-                                calculateSimpleRoute();
-                            }
-                            
+                    calculateSimpleRoute();
+                }
+                
                         }).catch(function(error) {
                             console.error('❌ Ошибка построения маршрута:', error);
-                            // Fallback на простой расчет
-                            calculateSimpleRoute();
+                // Fallback на простой расчет
+                calculateSimpleRoute();
                         });
                     }
                 });
@@ -500,12 +495,12 @@
         });
 
         $('#tariff-select').change(function() {
-            const tariff = $(this).val();
-            console.log('Изменение тарифа на:', tariff);
-            
-            if (tariff) {
-                $('#tariff-display').val(tariff);
-                calculatePrice();
+                const tariff = $(this).val();
+                console.log('Изменение тарифа на:', tariff);
+                
+                if (tariff) {
+                    $('#tariff-display').val(tariff);
+                    calculatePrice();
             }
         });
 
@@ -515,7 +510,7 @@
                 clearRoute();
             }
         });
-
+        
         // Обработка формы
         $('#order-form').submit(function(e) {
             e.preventDefault();
