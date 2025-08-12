@@ -262,38 +262,46 @@
                 // Обработчик клика по карте
                 map.on('click', function(e) {
                     const coords = [e.lngLat[0], e.lngLat[1]]; // lng, lat
-                    console.log('📍 Клик по карте:', coords);
+                    const pixelCoords = e.point; // пиксельные координаты клика
+                    
+                    console.log('📍 Клик по карте:', {
+                        geographical: coords,
+                        pixel: pixelCoords,
+                        selecting: selecting
+                    });
                     
                     if (selecting !== 'end') {
-                        // Визуализируем точки до построения маршрута
-                        markers.push(
-                            new mapgl.Marker(map, {
-                                coordinates: coords,
-                                color: selecting === 'a' ? '#FF4444' : '#44FF44'
-                            })
-                        );
+                        // Создаем маркер точно в месте клика
+                        const marker = new mapgl.Marker(map, {
+                            coordinates: coords,
+                            color: selecting === 'a' ? '#FF4444' : '#44FF44'
+                        });
+                        
+                        markers.push(marker);
+                        console.log('🎯 Маркер создан на координатах:', coords);
                     }
 
                     if (selecting === 'a') {
                         firstPoint = coords;
                         selecting = 'b';
-                        console.log('✅ Точка А установлена');
+                        console.log('✅ Точка А установлена на:', coords);
                         
-                        // Обновляем поле адреса
-                        $('#origin-address').val(`${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}`);
+                        // Получаем адрес по координатам
+                        getAddressByCoordinates(coords[1], coords[0], 'origin');
                         
                     } else if (selecting === 'b') {
                         secondPoint = coords;
                         selecting = 'end';
-                        console.log('✅ Точка Б установлена');
+                        console.log('✅ Точка Б установлена на:', coords);
                         
-                        // Обновляем поле адреса
-                        $('#destination-address').val(`${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}`);
+                        // Получаем адрес по координатам
+                        getAddressByCoordinates(coords[1], coords[0], 'destination');
                     }
 
                     // Если обе точки выбраны - строим маршрут
                     if (firstPoint && secondPoint) {
                         console.log('🗺️ Построение маршрута через Directions API...');
+                        console.log('От:', firstPoint, 'До:', secondPoint);
                         
                         directions.carRoute({
                             points: [firstPoint, secondPoint]
@@ -557,6 +565,46 @@
                 window.location.reload();
             }
         });
+    }
+
+    // Обратная геокодировка (координаты -> адрес)
+    async function getAddressByCoordinates(lat, lon, type) {
+        try {
+            console.log(`🔍 Получение адреса для координат: ${lat}, ${lon}`);
+            
+            const response = await fetch(`/api/twogis/reverse-geocode?lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+            
+            if (data.success && data.address) {
+                console.log(`✅ Адрес найден: ${data.address}`);
+                
+                if (type === 'origin') {
+                    $('#origin-address').val(data.address);
+                } else if (type === 'destination') {
+                    $('#destination-address').val(data.address);
+                }
+            } else {
+                console.warn('⚠️ Адрес не найден, используем координаты');
+                // Fallback на координаты
+                const coordsStr = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                
+                if (type === 'origin') {
+                    $('#origin-address').val(coordsStr);
+                } else if (type === 'destination') {
+                    $('#destination-address').val(coordsStr);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка получения адреса:', error);
+            // Fallback на координаты
+            const coordsStr = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            
+            if (type === 'origin') {
+                $('#origin-address').val(coordsStr);
+            } else if (type === 'destination') {
+                $('#destination-address').val(coordsStr);
+            }
+        }
     }
 </script>
 <style>

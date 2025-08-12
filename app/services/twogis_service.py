@@ -238,6 +238,75 @@ class TwoGISService:
             print(f"❌ Ошибка при получении матрицы расстояний: {e}")
             return None
     
+    async def reverse_geocode(self, lat: float, lon: float) -> Optional[str]:
+        """
+        Обратная геокодировка (координаты -> адрес)
+        
+        Args:
+            lat: Широта
+            lon: Долгота
+            
+        Returns:
+            Строка с адресом или None если не найден
+        """
+        if not self.api_key:
+            logger.error("❌ API ключ 2GIS не настроен для обратной геокодировки")
+            return None
+            
+        cache_key = f"reverse_{lat:.6f}_{lon:.6f}"
+        
+        # Проверяем кэш
+        if cache_key in self._geocoding_cache:
+            cached_result = self._geocoding_cache[cache_key]
+            if time.time() - cached_result['timestamp'] < settings.GEOCODING_CACHE_TTL:
+                logger.info(f"🗄️ Возвращаем адрес из кэша: {cached_result['data']}")
+                return cached_result['data']
+        
+        try:
+            # Используем геокодер 2GIS для обратного поиска
+            params = {
+                'point': f"{lon},{lat}",  # 2GIS ожидает lon,lat
+                'key': self.api_key,
+                'types': 'building,adm_div',
+                'radius_m': 100,  # радиус поиска 100 метров
+                'output_format': 'json'
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                logger.info(f"🔄 Обратная геокодировка через 2GIS API: {lat}, {lon}")
+                
+                async with session.get(self.geocoder_url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        if data.get('result') and data['result'].get('items'):
+                            # Берем первый результат
+                            item = data['result']['items'][0]
+                            address_name = item.get('full_name', '')
+                            
+                            if address_name:
+                                # Кэшируем результат
+                                self._geocoding_cache[cache_key] = {
+                                    'data': address_name,
+                                    'timestamp': time.time()
+                                }
+                                
+                                logger.info(f"✅ Адрес найден: {address_name}")
+                                return address_name
+                            else:
+                                logger.warning(f"⚠️ Адрес не найден в результатах API")
+                                return None
+                        else:
+                            logger.warning(f"⚠️ Пустой результат от API геокодера")
+                            return None
+                    else:
+                        logger.error(f"❌ HTTP ошибка при обратной геокодировке: {response.status}")
+                        return None
+                        
+        except Exception as e:
+            logger.error(f"❌ Ошибка обратной геокодировки: {e}")
+            return None
+
     async def search_addresses(self, query: str, region: str = "kg", limit: int = 5) -> List[Dict]:
         """
         Поиск адресов с автодополнением

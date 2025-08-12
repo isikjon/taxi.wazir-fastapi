@@ -33,6 +33,36 @@ async def geocode_address(
         logger.error(f"❌ Ошибка геокодирования адреса {address}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Ошибка геокодирования: {str(e)}")
 
+@router.get("/reverse-geocode")
+async def reverse_geocode(
+    lat: float = Query(..., description="Широта"),
+    lon: float = Query(..., description="Долгота")
+):
+    """
+    Обратная геокодировка (координаты -> адрес)
+    """
+    logger.info(f"🔄 Обратная геокодировка: {lat}, {lon}")
+    try:
+        result = await twogis_service.reverse_geocode(lat, lon)
+        if result:
+            logger.info(f"✅ Адрес найден: {result}")
+            return {
+                "success": True,
+                "address": result
+            }
+        else:
+            logger.warning(f"⚠️ Адрес не найден для координат: {lat}, {lon}")
+            return {
+                "success": False,
+                "address": f"{lat:.6f}, {lon:.6f}"
+            }
+    except Exception as e:
+        logger.error(f"❌ Ошибка обратной геокодировки {lat}, {lon}: {str(e)}")
+        return {
+            "success": False,
+            "address": f"{lat:.6f}, {lon:.6f}"
+        }
+
 @router.get("/search")
 async def search_addresses(
     query: str = Query(..., description="Текст для поиска адресов"),
