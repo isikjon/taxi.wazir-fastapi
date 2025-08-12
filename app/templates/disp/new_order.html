@@ -129,9 +129,7 @@
                 </div>
             </div>
             <div class="main__order-map">
-                <div class="main__order-map-item" id="map">
-                    <!-- 2ГИС карта будет загружена сюда -->
-                </div>
+                <div class="main__order-map-item" id="map"></div>
                 <div class="main__order-map-settings">
                     <div class="main__order-map-settings" style="display: flex; justify-content: space-between; flex-direction: unset; gap: 20px;">
                         <button type="button" class="main__btn">Данные для рассчета</button>
@@ -165,703 +163,219 @@
     </form>
 </div>
 
-<!-- Подключение 2ГИС MapGL JS API и Directions API -->
-<script src="https://mapgl.2gis.com/api/js/v1"></script>
-<script src="https://unpkg.com/@2gis/mapgl-directions@^2/dist/directions.js"></script>
+<!-- Загрузка Google Maps JS API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api }}&libraries=places"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function waitForJQuery() {
-            if (typeof $ !== 'undefined') {
-                initApp();
-            } else {
-                setTimeout(waitForJQuery, 100);
-            }
+    let map;
+    let firstMarker = null;
+    let secondMarker = null;
+    let selecting = 'a';
+    let directionsService;
+    let directionsRenderer;
+    let geocoder;
+
+    const OSH = { lat: 40.5138, lng: 72.8019 };
+
+    const TARIFFS = {
+        'Эконом': { boardingFee: 50, cityPricePerKm: 15, cityPricePerMinute: 0.5, minimumPrice: 50 },
+        'Комфорт': { boardingFee: 80, cityPricePerKm: 20, cityPricePerMinute: 0.8, minimumPrice: 80 },
+        'Комфорт+': { boardingFee: 100, cityPricePerKm: 25, cityPricePerMinute: 1.0, minimumPrice: 100 },
+        'Бизнес': { boardingFee: 150, cityPricePerKm: 35, cityPricePerMinute: 1.5, minimumPrice: 150 },
+    };
+
+    function initMap() {
+        if (!window.google || !window.google.maps) {
+            console.error('Google Maps API не загружен');
+            return;
         }
-        waitForJQuery();
-    });
-
-    function initApp() {
-        console.log('🚀 Инициализация приложения с Directions API');
-        
-        // Глобальные переменные
-        let map;
-        let directions;
-        let firstPoint;
-        let secondPoint;
-        let selecting = 'a';
-        let markers = [];
-        let distance = 0;
-        let duration = 0;
-        
-        // Тарифы для расчета стоимости
-        const TARIFFS = {
-            'Эконом': {
-                boardingFee: 50,
-                cityPricePerKm: 15,
-                cityPricePerMinute: 0.5,
-                minimumPrice: 50
-            },
-            'Комфорт': {
-                boardingFee: 80,
-                cityPricePerKm: 20,
-                cityPricePerMinute: 0.8,
-                minimumPrice: 80
-            },
-            'Комфорт+': {
-                boardingFee: 100,
-                cityPricePerKm: 25,
-                cityPricePerMinute: 1.0,
-                minimumPrice: 100
-            },
-            'Бизнес': {
-                boardingFee: 150,
-                cityPricePerKm: 35,
-                cityPricePerMinute: 1.5,
-                minimumPrice: 150
-            }
-        };
-
-        // Инициализация карты 2GIS с Directions API
-        function initMap() {
-            try {
-                console.log('🗺️ Инициализация карты с Directions API...');
-                
-                if (typeof mapgl === 'undefined') {
-                    console.error('❌ Библиотека 2GIS MapGL не загружена');
-                    return;
-                }
-                
-                const apiKey = '{{ twogis_api_key or "" }}';
-                console.log('🔑 API ключ для карты:', apiKey);
-                
-                if (!apiKey || apiKey.trim() === '') {
-                    console.error('❌ API ключ 2GIS не передан в шаблон!');
-                    return;
-                }
-                
-                // Создаем карту
-                map = new mapgl.Map('map', {
-                    center: [72.8019, 40.5138], // Ош, Киргизия
-                    zoom: 12,
-                    key: apiKey
-                });
-                
-                console.log('✅ Карта инициализирована');
-
-                // Инициализируем Directions API
-                if (typeof mapgl.Directions !== 'undefined') {
-                    directions = new mapgl.Directions(map, {
-                        directionsApiKey: apiKey
-                    });
-                    console.log('✅ Directions API инициализирован');
-                    } else {
-                    console.error('❌ Directions API не доступен');
-                    return;
-                }
-
-                // ДИАГНОСТИКА CSS ПОЗИЦИОНИРОВАНИЯ
-                const mapContainer = document.getElementById('map');
-                const mapRect = mapContainer.getBoundingClientRect();
-                console.log('🗺️ ДИАГНОСТИКА КОНТЕЙНЕРА КАРТЫ:', {
-                    container_element: mapContainer,
-                    bounding_rect: mapRect,
-                    computed_style: window.getComputedStyle(mapContainer),
-                    position: window.getComputedStyle(mapContainer).position,
-                    transform: window.getComputedStyle(mapContainer).transform,
-                    parent_styles: window.getComputedStyle(mapContainer.parentElement)
-                });
-                
-                // ОТЛАДКА МЫШИ - отслеживание в реальном времени
-                let lastMouseUpdate = 0;
-                map.on('mousemove', function(e) {
-                    const now = Date.now();
-                    if (now - lastMouseUpdate > 1000) { // Раз в секунду
-                        const mouseCoords = [e.lngLat[0], e.lngLat[1]];
-                        const pixelCoords = e.point;
-                        
-                        console.log('🖱️ ДВИЖЕНИЕ МЫШИ:', {
-                            geo_coords: mouseCoords,
-                            pixel_coords: pixelCoords,
-                            formatted: `${mouseCoords[1].toFixed(6)}, ${mouseCoords[0].toFixed(6)}`,
-                            container_offset: {
-                                x: pixelCoords[0] + mapRect.left,
-                                y: pixelCoords[1] + mapRect.top
-                            }
-                        });
-                        
-                        window.lastMouseCoords = mouseCoords;
-                        window.lastPixelCoords = pixelCoords;
-                        lastMouseUpdate = now;
-                    }
-                });
-
-                // Обработчик клика по карте
-                map.on('click', function(e) {
-                    // Получаем точные координаты клика
-                    const lngLat = e.lngLat;
-                    const coords = [lngLat[0], lngLat[1]]; // lng, lat
-                    const pixelCoords = e.point; // пиксельные координаты клика
-                    
-                    // ПОЛНАЯ ДИАГНОСТИКА КЛИКА
-                    const mapRect = mapContainer.getBoundingClientRect();
-                    console.log('📍 ПОЛНАЯ ДИАГНОСТИКА КЛИКА:', {
-                        event_coords: coords,
-                        pixel_coords: pixelCoords,
-                        last_mouse_coords: window.lastMouseCoords,
-                        РАЗНОСТЬ_КООРДИНАТ: window.lastMouseCoords ? {
-                            lat_diff: (coords[1] - window.lastMouseCoords[1]) * 100000,
-                            lng_diff: (coords[0] - window.lastMouseCoords[0]) * 100000,
-                            pixel_diff: window.lastPixelCoords ? [
-                                pixelCoords[0] - window.lastPixelCoords[0],
-                                pixelCoords[1] - window.lastPixelCoords[1]
-                            ] : 'нет данных'
-                        } : 'нет данных мыши',
-                        container_info: {
-                            rect: mapRect,
-                            scroll: { x: window.scrollX, y: window.scrollY },
-                            offset: { x: pixelCoords[0] + mapRect.left, y: pixelCoords[1] + mapRect.top }
-                        },
-                        selecting: selecting
-                    });
-                    
-                    if (selecting !== 'end') {
-                        // Точный круговой маркер без якоря/offset (WebGL-отрисовка)
-                        const marker = new mapgl.CircleMarker(map, {
-                            coordinates: coords,
-                            radius: 8,
-                            color: selecting === 'a' ? '#FF3B30' : '#34C759',
-                            strokeWidth: 2,
-                            strokeColor: '#FFFFFF'
-                        });
-                        
-                        markers.push(marker);
-                        console.log('🎯 СОЗДАНИЕ МАРКЕРА:', {
-                            input_coords: coords,
-                            pixel_click: pixelCoords,
-                            container_rect: mapRect,
-                            ПРОБЛЕМА: 'Смотри разность координат выше!'
-                        });
-                        
-                        // Проверяем где реально создался маркер через 100мс
-                        setTimeout(function() {
-                            console.log('🔍 ФИНАЛЬНАЯ ПОЗИЦИЯ МАРКЕРА:', {
-                                original_coords: coords,
-                                marker_element: marker,
-                                DOM_проверка: 'Инспектируй маркер в DevTools'
-                            });
-                        }, 100);
-                    }
-
-                    if (selecting === 'a') {
-                        firstPoint = coords;
-                        selecting = 'b';
-                        console.log('✅ Точка А установлена:', coords);
-                        
-                        // Получаем адрес по координатам
-                        getAddressByCoordinates(coords[1], coords[0], 'origin');
-                        
-                    } else if (selecting === 'b') {
-                        secondPoint = coords;
-                        selecting = 'end';
-                        console.log('✅ Точка Б установлена:', coords);
-                        
-                        // Получаем адрес по координатам
-                        getAddressByCoordinates(coords[1], coords[0], 'destination');
-                    }
-
-                    // Если обе точки выбраны - строим маршрут
-                    if (firstPoint && secondPoint) {
-                        console.log('🗺️ Построение маршрута через Directions API...');
-                        console.log('От:', firstPoint, 'До:', secondPoint);
-                        
-                        directions.carRoute({
-                            points: [firstPoint, secondPoint]
-                        }).then(function(result) {
-                            console.log('✅ Маршрут построен:', result);
-                            
-                            // Убираем временные маркеры
-                            markers.forEach(function(marker) {
-                                marker.destroy();
-                            });
-                            markers = [];
-                            
-                            // Получаем данные маршрута
-                            if (result && result.length > 0) {
-                                const route = result[0];
-                                
-                                distance = route.distance / 1000; // км
-                                duration = route.duration / 60;   // мин
-                                
-                                console.log('📊 Данные маршрута:', {
-                                    distance: distance.toFixed(1) + ' км',
-                                    duration: duration.toFixed(0) + ' мин'
-                                });
-                                
-                                // Обновляем интерфейс
-                                updateRouteInfo();
-                                calculatePrice();
-                } else {
-                                console.warn('⚠️ Нет данных маршрута, используем fallback');
-                    calculateSimpleRoute();
-                }
-                
-                        }).catch(function(error) {
-                            console.error('❌ Ошибка построения маршрута:', error);
-                // Fallback на простой расчет
-                calculateSimpleRoute();
-                        });
-                    }
-                });
-
-                console.log('✅ Карта и Directions API готовы к работе');
-                
-            } catch (error) {
-                console.error('❌ Ошибка инициализации:', error);
-            }
-        }
-
-        // Обновление информации о маршруте
-        function updateRouteInfo() {
-            $('#distance').val(`Расстояние: ${distance.toFixed(1)} км`);
-            $('#duration').val(`Время в пути: ${duration.toFixed(0)} мин`);
-        }
-
-        // Расчет стоимости поездки
-        function calculatePrice() {
-            try {
-                const tariff = $('#tariff-select').val();
-                console.log('💰 Расчет цены для тарифа:', tariff);
-                
-                if (!tariff || !TARIFFS[tariff]) {
-                    console.error('❌ Тариф не выбран:', tariff);
-                    return;
-                }
-
-                const tariffData = TARIFFS[tariff];
-                let price = tariffData.boardingFee;
-                
-                $('#tariff-display').val(tariff);
-                
-                if (distance > 0 && duration > 0) {
-                    const distancePrice = distance * tariffData.cityPricePerKm;
-                    const timePrice = duration * tariffData.cityPricePerMinute;
-                    
-                    price += distancePrice + timePrice;
-                    
-                    console.log('📊 Детали расчета:', {
-                        посадка: tariffData.boardingFee + ' сом',
-                        расстояние: distance.toFixed(1) + ' км × ' + tariffData.cityPricePerKm + ' = ' + distancePrice.toFixed(0) + ' сом',
-                        время: duration.toFixed(0) + ' мин × ' + tariffData.cityPricePerMinute + ' = ' + timePrice.toFixed(0) + ' сом'
-                    });
-                }
-                
-                if (tariff === 'Бизнес' && price < tariffData.minimumPrice) {
-                    price = tariffData.minimumPrice;
-                }
-                
-                price = Math.ceil(price);
-                
-                $('#price').val(`Стоимость: ${price} сом`);
-                $('#calculated-price').val(price);
-                $('#boarding-fee').val(`Посадка: ${tariffData.boardingFee} сом`);
-                
-                console.log('✅ Цена рассчитана:', price + ' сом');
-                
-                return price;
-                
-            } catch (error) {
-                console.error('❌ Ошибка расчета цены:', error);
-                $('#price').val('Ошибка расчета');
-                return 0;
-            }
-        }
-
-        // Fallback расчет (если Directions API не работает)
-        function calculateSimpleRoute() {
-            if (firstPoint && secondPoint) {
-                const lat1 = firstPoint[1]; // lng
-                const lng1 = firstPoint[0]; // lat
-                const lat2 = secondPoint[1]; // lng
-                const lng2 = secondPoint[0]; // lat
-                
-                distance = calculateDistance(lat1, lng1, lat2, lng2);
-                duration = (distance / 30) * 60; // 30 км/ч средняя скорость
-                
-                console.log('📏 Простой расчет:', {
-                    distance: distance.toFixed(1) + ' км',
-                    duration: duration.toFixed(0) + ' мин'
-                });
-                
-                updateRouteInfo();
-                calculatePrice();
-            }
-        }
-
-        // Расчет расстояния между точками
-        function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                    Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        // Очистка маркеров и маршрута
-        function clearRoute() {
-            selecting = 'a';
-            firstPoint = undefined;
-            secondPoint = undefined;
-            distance = 0;
-            duration = 0;
-            
-            if (directions) {
-                directions.clear();
-            }
-            
-            markers.forEach(function(marker) {
-                marker.destroy();
-            });
-            markers = [];
-            
-            $('#origin-address').val('');
-            $('#destination-address').val('');
-            $('#distance').val('Расстояние: 0 км');
-            $('#duration').val('Время в пути: 0 мин');
-            $('#price').val('Стоимость: 0 сом');
-            $('#calculated-price').val('0');
-            
-            console.log('✅ Маршрут очищен');
-        }
-
-        // Инициализация при загрузке
-        $(window).on('load', function() {
-            console.log('Страница загружена, инициализация карты...');
-            setTimeout(function() {
-                try {
-                    initMap();
-                } catch (error) {
-                    console.error('Ошибка инициализации:', error);
-                }
-            }, 500);
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: OSH,
+            zoom: 12,
+            clickableIcons: false,
+            gestureHandling: 'greedy',
         });
 
-        // Обработчики событий
+        geocoder = new google.maps.Geocoder();
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true });
+        directionsRenderer.setMap(map);
+
+        map.addListener('click', (e) => onMapClick(e.latLng));
+
+        document.getElementById('clear-markers-btn').addEventListener('click', clearRoute);
+    }
+
+    function onMapClick(latLng) {
+        if (selecting !== 'end') {
+            const marker = new google.maps.Marker({
+                position: latLng,
+                map,
+                optimized: true,
+            });
+            if (selecting === 'a') {
+                if (firstMarker) firstMarker.setMap(null);
+                firstMarker = marker;
+                selecting = 'b';
+                reverseGeocode(latLng, 'origin');
+            } else if (selecting === 'b') {
+                if (secondMarker) secondMarker.setMap(null);
+                secondMarker = marker;
+                selecting = 'end';
+                reverseGeocode(latLng, 'destination');
+            }
+        }
+
+        if (firstMarker && secondMarker) {
+            buildRoute(firstMarker.getPosition(), secondMarker.getPosition());
+        }
+    }
+
+    function buildRoute(a, b) {
+        directionsService.route({
+            origin: a,
+            destination: b,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK) {
+                directionsRenderer.setDirections(result);
+                const leg = result.routes[0].legs[0];
+                const distanceKm = leg.distance.value / 1000;
+                const durationMin = leg.duration.value / 60;
+                updateRouteInfo(distanceKm, durationMin);
+                calculatePrice(distanceKm, durationMin);
+            } else {
+                // Fallback: простая эвристика
+                const distanceKm = haversine(a.lat(), a.lng(), b.lat(), b.lng());
+                const durationMin = (distanceKm / 30) * 60;
+                updateRouteInfo(distanceKm, durationMin);
+                calculatePrice(distanceKm, durationMin);
+            }
+        });
+    }
+
+    function updateRouteInfo(distanceKm, durationMin) {
+        document.getElementById('distance').value = `Расстояние: ${distanceKm.toFixed(1)} км`;
+        document.getElementById('duration').value = `Время в пути: ${durationMin.toFixed(0)} мин`;
+    }
+
+    function calculatePrice(distanceKm, durationMin) {
+        const tariff = document.getElementById('tariff-select').value;
+        if (!tariff || !TARIFFS[tariff]) return;
+        const t = TARIFFS[tariff];
+        let price = t.boardingFee + (distanceKm * t.cityPricePerKm) + (durationMin * t.cityPricePerMinute);
+        if (tariff === 'Бизнес' && price < t.minimumPrice) {
+            price = t.minimumPrice;
+        }
+        price = Math.ceil(price);
+        document.getElementById('price').value = `Стоимость: ${price} сом`;
+        document.getElementById('calculated-price').value = String(price);
+        document.getElementById('boarding-fee').value = `Посадка: ${t.boardingFee} сом`;
+        document.getElementById('tariff-display').value = tariff;
+    }
+
+    function reverseGeocode(latLng, type) {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                const address = results[0].formatted_address;
+                if (type === 'origin') {
+                    document.getElementById('origin-address').value = address;
+                } else {
+                    document.getElementById('destination-address').value = address;
+                }
+            } else {
+                const coordsStr = `${latLng.lat().toFixed(6)}, ${latLng.lng().toFixed(6)}`;
+                if (type === 'origin') {
+                    document.getElementById('origin-address').value = coordsStr;
+                } else {
+                    document.getElementById('destination-address').value = coordsStr;
+                }
+            }
+        });
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    // Инициализация после загрузки скрипта Google
+    const waitForGoogle = setInterval(() => {
+        if (window.google && window.google.maps) {
+            clearInterval(waitForGoogle);
+            initMap();
+        }
+    }, 100);
+
+    // Обработчики UI
+    document.addEventListener('DOMContentLoaded', function() {
         $('#driver-select').change(function() {
             const selectedOption = $(this).find('option:selected');
             const phone = selectedOption.data('phone');
             const tariff = selectedOption.data('tariff');
-            
             $('#driver-phone').val(phone);
-            
             if (tariff) {
-                $('#tariff-select').val(tariff);
-                $('#tariff-select').trigger('change');
+                $('#tariff-select').val(tariff).trigger('change');
             }
         });
 
         $('#tariff-select').change(function() {
-                const tariff = $(this).val();
-                console.log('Изменение тарифа на:', tariff);
-                
-                if (tariff) {
-                    $('#tariff-display').val(tariff);
-                    calculatePrice();
+            const tariff = $(this).val();
+            if (tariff && firstMarker && secondMarker) {
+                const a = firstMarker.getPosition();
+                const b = secondMarker.getPosition();
+                const distanceKm = haversine(a.lat(), a.lng(), b.lat(), b.lng());
+                const durationMin = (distanceKm / 30) * 60;
+                calculatePrice(distanceKm, durationMin);
             }
         });
 
-        // Кнопка очистки
         $('#clear-markers-btn').click(function() {
-            if (confirm('Очистить маршрут и начать заново?')) {
-                clearRoute();
-            }
+            clearRoute();
         });
-        
-        // Обработка формы
+
         $('#order-form').submit(function(e) {
             e.preventDefault();
-            
             const driverId = $('#driver-select').val();
             const tariff = $('#tariff-select').val();
             const paymentMethod = $('#payment-method').val();
             const origin = $('#origin-address').val();
             const destination = $('#destination-address').val();
-            
-            if (!driverId) {
-                alert('Выберите водителя');
+            if (!driverId || !tariff || !paymentMethod || !origin || !destination) {
+                alert('Заполните все поля');
                 return false;
             }
-            if (!tariff) {
-                alert('Выберите тариф');
-                return false;
-            }
-            if (!paymentMethod) {
-                alert('Выберите способ оплаты');
-                return false;
-            }
-            if (!origin) {
-                alert('Укажите адрес отправления');
-                return false;
-            }
-            if (!destination) {
-                alert('Укажите адрес назначения');
-                return false;
-            }
-            
             $.ajax({
                 type: 'POST',
                 url: '/api/orders/',
                 data: $(this).serialize(),
-                success: function(response) {
-                    alert('Заказ успешно создан!');
-                    window.location.href = '/disp/';
-                },
-                error: function(error) {
-                    alert('Ошибка при создании заказа: ' + (error.responseJSON ? error.responseJSON.detail : 'Проверьте соединение с сервером'));
-                }
+                success: function() { window.location.href = '/disp/'; },
+                error: function(error) { alert('Ошибка: ' + (error.responseJSON ? error.responseJSON.detail : 'Проверьте соединение с сервером')); }
             });
         });
-        
-        $('#cancel-btn').click(function() {
-            if (confirm('Вы уверены, что хотите отменить создание заказа?')) {
-                window.location.href = '/disp/';
-            }
-        });
-        
-        $(document).keydown(function(e) {
-            if (e.keyCode === 113) { // F2
-                e.preventDefault();
-                window.location.reload();
-            }
-        });
-    }
 
-    // Обратная геокодировка (координаты -> адрес)
-    async function getAddressByCoordinates(lat, lon, type) {
-        try {
-            console.log(`🔍 Получение адреса для координат: ${lat}, ${lon}`);
-            
-            const response = await fetch(`/api/twogis/reverse-geocode?lat=${lat}&lon=${lon}`);
-            const data = await response.json();
-            
-            if (data.success && data.address) {
-                console.log(`✅ Адрес найден: ${data.address}`);
-                
-                if (type === 'origin') {
-                    $('#origin-address').val(data.address);
-                } else if (type === 'destination') {
-                    $('#destination-address').val(data.address);
-                }
-            } else {
-                console.warn('⚠️ Адрес не найден, используем координаты');
-                // Fallback на координаты
-                const coordsStr = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-                
-                if (type === 'origin') {
-                    $('#origin-address').val(coordsStr);
-                } else if (type === 'destination') {
-                    $('#destination-address').val(coordsStr);
-                }
-            }
-        } catch (error) {
-            console.error('❌ Ошибка получения адреса:', error);
-            // Fallback на координаты
-            const coordsStr = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-            
-            if (type === 'origin') {
-                $('#origin-address').val(coordsStr);
-            } else if (type === 'destination') {
-                $('#destination-address').val(coordsStr);
-            }
-        }
+        $('#cancel-btn').click(function() {
+            if (confirm('Отменить создание заказа?')) window.location.href = '/disp/';
+        });
+    });
+
+    function clearRoute() {
+        selecting = 'a';
+        if (firstMarker) { firstMarker.setMap(null); firstMarker = null; }
+        if (secondMarker) { secondMarker.setMap(null); secondMarker = null; }
+        if (directionsRenderer) directionsRenderer.set('directions', null);
+        $('#origin-address').val('');
+        $('#destination-address').val('');
+        $('#distance').val('Расстояние: 0 км');
+        $('#duration').val('Время в пути: 0 мин');
+        $('#price').val('Стоимость: 0 сом');
+        $('#calculated-price').val('0');
     }
 </script>
 <style>
-    /* Адаптивные стили */
-    .main__order-wrapper {
-        border-radius: 5px;
-    }
-    .main__order-header {
-        flex-wrap: wrap;
-    }
-    .main__btn {
-        padding: 12px 30px;
-    }
-    .main__order-subheader {
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-    .main__order-subheader-item {
-        width: 100%;
-    } 
-    .main__subheader-filing {
-        width: 100%;
-    }
-    #tariff-select,
-    #payment-method {
-        width: 100%;
-    }
-    .main__order-subheader-item .main__btn-short {
-        width: 100%;
-    }
-    .main__order-notes {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-    } 
-    .main__order-notes-text {
-        width: 65%;
-    }
-    @media (max-width: 1200px) {
-        .main__order-wrapper-blocks {
-            flex-direction: column;
-        }
-        .main__order-settings, .main__order-map {
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .main__header-tags ul li {
-            padding: 10px 15px;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .main__header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .main__header-logo, .main__header-tags, .main__header-search {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .main__subheader-add {
-            flex-wrap: wrap;
-        }
-        .main__order-header, .main__order-subheader {
-            flex-direction: column;
-        }
-        .main__order-header-item, .main__order-subheader-item {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .main__order-details-item {
-            flex-direction: column;
-        }
-        .main__order-details-item input {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .main__order-map-item {
-            height: 300px;
-        }
-    }
-    
-    /* Улучшения существующих стилей */
-    .main__order-map-item {
-        min-height: 400px;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    /* Фикс смещения маркера: убираем дробную высоту контейнера карты */
-    #map {
-        width: 100%;
-        height: 420px; /* задаем целое значение высоты, чтобы исключить субпиксельную погрешность */
-    }
-    
-    .main__btn, .main__btn-short, .main__btn-green {
-        transition: all 0.3s ease;
-    }
-    
-    .main__btn:hover, .main__btn-short:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    .main__btn-green:hover {
-        background-color: #35a63a;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    .main__order-notes-text textarea {
-        width: 100%;
-        min-height: 80px;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #47484c;
-        background-color: #2d2e33;
-        color: #fff;
-        resize: vertical;
-    }
-    
-    /* Улучшения для карты и маршрута */
-    .route-info {
-        background-color: #2d2e33;
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 15px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-    
-    .route-info-item {
-        background-color: #47484c;
-        padding: 10px 15px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-        width: 100%;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .route-info-item input {
-        width: 90%;
-    }
-    
-    /* Стили для автодополнения адресов */
-    .autocomplete-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background-color: #2d2e33;
-        border: 1px solid #47484c;
-        border-top: none;
-        border-radius: 0 0 5px 5px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 1000;
-        display: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .autocomplete-item {
-        padding: 10px 15px;
-        cursor: pointer;
-        color: #fff;
-        border-bottom: 1px solid #47484c;
-        transition: background-color 0.2s;
-    }
-    
-    .autocomplete-item:hover {
-        background-color: #47484c;
-    }
-    
-    .autocomplete-item:last-child {
-        border-bottom: none;
-    }
-    
-    /* Улучшение стилей для полей ввода адресов */
-    .main__order-details-item {
-        position: relative;
-    }
-    
-    @media (max-width: 576px) {
-        .route-info-item {
-            width: 100%;
-        }
-    }
+    #map { width: 100%; height: 420px; }
 </style>
 {% endblock %}
