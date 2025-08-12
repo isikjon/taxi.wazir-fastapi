@@ -261,7 +261,7 @@
 
                 // Обработчик клика по карте
                 map.on('click', function(e) {
-                    const coords = e.lngLat;
+                    const coords = [e.lngLat[0], e.lngLat[1]]; // lng, lat
                     console.log('📍 Клик по карте:', coords);
                     
                     if (selecting !== 'end') {
@@ -269,11 +269,7 @@
                         markers.push(
                             new mapgl.Marker(map, {
                                 coordinates: coords,
-                                icon: {
-                                    type: 'pin',
-                                    color: selecting === 'a' ? '#FF4444' : '#44FF44',
-                                    size: 'large'
-                                }
+                                color: selecting === 'a' ? '#FF4444' : '#44FF44'
                             })
                         );
                     }
@@ -284,7 +280,7 @@
                         console.log('✅ Точка А установлена');
                         
                         // Обновляем поле адреса
-                        $('#origin-address').val(`${coords.getLat().toFixed(6)}, ${coords.getLng().toFixed(6)}`);
+                        $('#origin-address').val(`${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}`);
                         
                     } else if (selecting === 'b') {
                         secondPoint = coords;
@@ -292,7 +288,7 @@
                         console.log('✅ Точка Б установлена');
                         
                         // Обновляем поле адреса
-                        $('#destination-address').val(`${coords.getLat().toFixed(6)}, ${coords.getLng().toFixed(6)}`);
+                        $('#destination-address').val(`${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}`);
                     }
 
                     // Если обе точки выбраны - строим маршрут
@@ -311,8 +307,8 @@
                             markers = [];
                             
                             // Получаем данные маршрута
-                            if (result && result.routes && result.routes.length > 0) {
-                                const route = result.routes[0];
+                            if (result && result.length > 0) {
+                                const route = result[0];
                                 
                                 distance = route.distance / 1000; // км
                                 duration = route.duration / 60;   // мин
@@ -325,6 +321,9 @@
                                 // Обновляем интерфейс
                                 updateRouteInfo();
                                 calculatePrice();
+                            } else {
+                                console.warn('⚠️ Нет данных маршрута, используем fallback');
+                                calculateSimpleRoute();
                             }
                             
                         }).catch(function(error) {
@@ -401,10 +400,10 @@
         // Fallback расчет (если Directions API не работает)
         function calculateSimpleRoute() {
             if (firstPoint && secondPoint) {
-                const lat1 = firstPoint.getLat();
-                const lng1 = firstPoint.getLng();
-                const lat2 = secondPoint.getLat();
-                const lng2 = secondPoint.getLng();
+                const lat1 = firstPoint[1]; // lng
+                const lng1 = firstPoint[0]; // lat
+                const lat2 = secondPoint[1]; // lng
+                const lng2 = secondPoint[0]; // lat
                 
                 distance = calculateDistance(lat1, lng1, lat2, lng2);
                 duration = (distance / 30) * 60; // 30 км/ч средняя скорость

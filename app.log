@@ -1769,3 +1769,27 @@ FROM drivers
  LIMIT %(param_1)s OFFSET %(param_2)s
 2025-08-13 00:57:38,280 - sqlalchemy.engine.Engine - INFO - [generated in 0.00579s] {'param_1': 100, 'param_2': 0}
 2025-08-13 00:57:38,447 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-08-13 01:00:09,120 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 01:00:09,122 - sqlalchemy.engine.Engine - INFO - SELECT orders.id AS orders_id, orders.time AS orders_time, orders.origin AS orders_origin, orders.destination AS orders_destination, orders.driver_id AS orders_driver_id, orders.created_at AS orders_created_at, orders.status AS orders_status, orders.price AS orders_price, orders.notes AS orders_notes, orders.payment_method AS orders_payment_method 
+FROM orders 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-08-13 01:00:09,123 - sqlalchemy.engine.Engine - INFO - [cached since 151s ago] {'param_1': 100, 'param_2': 0}
+2025-08-13 01:00:09,288 - sqlalchemy.engine.Engine - INFO - SELECT drivers.id AS drivers_id, drivers.unique_id AS drivers_unique_id, drivers.full_name AS drivers_full_name, drivers.birth_date AS drivers_birth_date, drivers.callsign AS drivers_callsign, drivers.city AS drivers_city, drivers.driver_license_number AS drivers_driver_license_number, drivers.driver_license_issue_date AS drivers_driver_license_issue_date, drivers.balance AS drivers_balance, drivers.tariff AS drivers_tariff, drivers.taxi_park AS drivers_taxi_park, drivers.phone AS drivers_phone, drivers.status AS drivers_status, drivers.activity AS drivers_activity, drivers.rating AS drivers_rating, drivers.is_mobile_registered AS drivers_is_mobile_registered, drivers.registration_date AS drivers_registration_date, drivers.address AS drivers_address 
+FROM drivers 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-08-13 01:00:09,289 - sqlalchemy.engine.Engine - INFO - [cached since 151s ago] {'param_1': 100, 'param_2': 0}
+2025-08-13 01:00:09,385 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-08-13 01:00:11,161 - app.main - INFO - 🚀 Запрос страницы создания нового заказа
+2025-08-13 01:00:11,179 - app.main - INFO - 📝 Сгенерированы номера: заказ 664490888, путевой лист 43194623
+2025-08-13 01:00:11,225 - app.main - INFO - 🔑 API ключ 2GIS настроен: Нет
+2025-08-13 01:00:11,226 - app.main - INFO - 📤 API ключ передан в шаблон
+2025-08-13 01:00:11,227 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 01:00:11,231 - sqlalchemy.engine.Engine - INFO - SELECT drivers.id AS drivers_id, drivers.unique_id AS drivers_unique_id, drivers.full_name AS drivers_full_name, drivers.birth_date AS drivers_birth_date, drivers.callsign AS drivers_callsign, drivers.city AS drivers_city, drivers.driver_license_number AS drivers_driver_license_number, drivers.driver_license_issue_date AS drivers_driver_license_issue_date, drivers.balance AS drivers_balance, drivers.tariff AS drivers_tariff, drivers.taxi_park AS drivers_taxi_park, drivers.phone AS drivers_phone, drivers.status AS drivers_status, drivers.activity AS drivers_activity, drivers.rating AS drivers_rating, drivers.is_mobile_registered AS drivers_is_mobile_registered, drivers.registration_date AS drivers_registration_date, drivers.address AS drivers_address 
+FROM drivers
+2025-08-13 01:00:11,232 - sqlalchemy.engine.Engine - INFO - [generated in 0.00141s] {}
+2025-08-13 01:00:11,412 - sqlalchemy.engine.Engine - INFO - SELECT orders.id AS orders_id, orders.time AS orders_time, orders.origin AS orders_origin, orders.destination AS orders_destination, orders.driver_id AS orders_driver_id, orders.created_at AS orders_created_at, orders.status AS orders_status, orders.price AS orders_price 
+FROM orders ORDER BY orders.created_at DESC 
+ LIMIT %(param_1)s
+2025-08-13 01:00:11,413 - sqlalchemy.engine.Engine - INFO - [generated in 0.00110s] {'param_1': 5}
+2025-08-13 01:00:11,495 - app.main - INFO - ✅ Возвращаем шаблон new_order.html с данными
+2025-08-13 01:00:11,576 - sqlalchemy.engine.Engine - INFO - ROLLBACK
