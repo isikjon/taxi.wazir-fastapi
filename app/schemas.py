@@ -70,12 +70,14 @@ class Driver(DriverBase):
 
 # Order schemas
 class OrderBase(BaseModel):
+    order_number: str
     time: str
     origin: str
     destination: str
     driver_id: int
-    status: Optional[str] = "Свободен"
+    status: Optional[str] = "Выполняется"
     price: Optional[float] = None
+    tariff: Optional[str] = None
     notes: Optional[str] = None
     payment_method: Optional[str] = None
 

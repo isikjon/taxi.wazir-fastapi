@@ -72,14 +72,14 @@
         <button><a href="{{ url_for('disp_new_order') }}"> + Новый
                 (F2)</a></button>
         <button id="filter-free"
-            class="{% if status_filter == 'Свободен' %}active{% endif %}">
-            <span class="free"></span>
-            Свободные
+            class="{% if status_filter == 'Выполняется' %}active{% endif %}">
+            <span class="executing"></span>
+            Выполняется
         </button>
         <button id="filter-busy"
-            class="{% if status_filter == 'Занят' %}active{% endif %}">
-            <span class="busy"></span>
-            Занятые
+            class="{% if status_filter == 'Завершен' %}active{% endif %}">
+            <span class="completed"></span>
+            Завершен
         </button>
         <button id="filter-cancelled"
             class="{% if status_filter == 'Отменен' %}active{% endif %}">
@@ -115,13 +115,14 @@
                 <th>Позывной</th>
                 <th>Стоимость</th>
                 <th>Тариф</th>
+                <th>Статус</th>
             </tr>
         </thead>
         <tbody id="orders-table-body">
             {% if orders %}
             {% for order in orders %}
             <tr class="order-row" data-id="{{ order.id }}">
-                <td>{{ order.id }}</td>
+                <td>{{ order.order_number|default(order.id) }}</td>
                 <td>{{ order.created_at.strftime('%d.%m.%y') }}</td>
                 <td>{{ order.time }}</td>
                 <td>{{ order.driver.phone|default('+996 XXX XX-XX-XX') }}</td>
@@ -129,12 +130,17 @@
                 <td>{{ order.destination }}</td>
                 <td>{{ order.driver.callsign }}</td>
                 <td>{{ order.price|default('') }}</td>
-                <td>{{ order.driver.tariff }}</td>
+                <td>{{ order.tariff|default(order.driver.tariff) }}</td>
+                <td class="status-cell">
+                    <span class="status-badge status-{{ order.status|lower|replace(' ', '-')|replace('ё', 'е') }}">
+                        {{ order.status|default('Выполняется') }}
+                    </span>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
             <tr>
-                <td colspan="9" class="no-data">
+                <td colspan="10" class="no-data">
                     <div class="empty-state">
                         <img
                             src="{{ url_for('static', path='/assets/img/ico/car.png') }}"
@@ -540,9 +546,9 @@
         // Получаем активный статусный фильтр
         function getActiveStatusFilter() {
             if ($('#filter-free').hasClass('active')) {
-                return 'Свободен';
+                return 'Выполняется';
             } else if ($('#filter-busy').hasClass('active')) {
-                return 'Занят';
+                return 'Завершен';
             } else if ($('#filter-cancelled').hasClass('active')) {
                 return 'Отменен';
             }
@@ -776,6 +782,51 @@
                     font-size: 12px;
                     color: #bbb;
                     text-align: center;
+                }
+                
+                /* Стили для статусных бейджей */
+                .status-cell {
+                    text-align: center;
+                }
+                
+                .status-badge {
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                .status-выполняется {
+                    background-color: #ffeaa7;
+                    color: #d63031;
+                    border: 1px solid #fdcb6e;
+                }
+                
+                .status-завершен {
+                    background-color: #00b894;
+                    color: white;
+                    border: 1px solid #00a085;
+                }
+                
+                .status-отменен {
+                    background-color: #e17055;
+                    color: white;
+                    border: 1px solid #d63031;
+                }
+                
+                /* Стили для кнопок фильтров */
+                .executing {
+                    background-color: #fdcb6e;
+                }
+                
+                .completed {
+                    background-color: #00b894;
+                }
+                
+                .cancelled {
+                    background-color: #e17055;
                 }
             `)
             .appendTo('head');

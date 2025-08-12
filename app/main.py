@@ -4891,6 +4891,76 @@ async def verify_driver_photo(
             content={"success": False, "detail": f"Ошибка сервера: {str(e)}"}
         )
 
+@app.post("/api/orders/")
+async def create_order_from_form(
+    request: Request,
+    db: Session = Depends(get_db),
+    order_number: str = Form(...),
+    order_date: str = Form(...),
+    order_time: str = Form(...),
+    route_number: str = Form(...),
+    driver_id: int = Form(...),
+    tariff: str = Form(...),
+    payment_method: str = Form(...),
+    origin: str = Form(...),
+    destination: str = Form(...),
+    notes: Optional[str] = Form(None),
+    price: Optional[str] = Form(None)
+):
+    """Создание заказа из формы диспетчерской"""
+    try:
+        logger.info(f"📝 Создание заказа: {order_number}")
+        
+        # Проверяем существование водителя
+        driver = crud.get_driver(db, driver_id=driver_id)
+        if not driver:
+            raise HTTPException(status_code=404, detail="Водитель не найден")
+        
+        # Конвертируем цену
+        order_price = None
+        if price and price.strip():
+            try:
+                order_price = float(price.strip())
+            except ValueError:
+                logger.warning(f"⚠️ Некорректная цена: {price}")
+        
+        # Создаём объект заказа
+        order_data = schemas.OrderCreate(
+            order_number=order_number,
+            time=order_time,
+            origin=origin,
+            destination=destination,
+            driver_id=driver_id,
+            status="Выполняется",
+            price=order_price,
+            tariff=tariff,
+            notes=notes,
+            payment_method=payment_method
+        )
+        
+        # Создаём заказ в БД
+        new_order = crud.create_order(db=db, order=order_data)
+        logger.info(f"✅ Заказ {order_number} создан успешно")
+        
+        return JSONResponse(
+            status_code=201,
+            content={
+                "success": True,
+                "message": "Заказ успешно создан",
+                "order_id": new_order.id,
+                "order_number": new_order.order_number
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Ошибка создания заказа: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ошибка создания заказа: {str(e)}"
+        )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 

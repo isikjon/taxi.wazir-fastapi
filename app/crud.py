@@ -265,12 +265,14 @@ def get_driver_orders(db: Session, driver_id: int):
 
 def create_order(db: Session, order: schemas.OrderCreate):
     db_order = models.Order(
+        order_number=order.order_number,
         time=order.time,
         origin=order.origin,
         destination=order.destination,
         driver_id=order.driver_id,
         status=order.status,
         price=order.price,
+        tariff=order.tariff,
         notes=order.notes,
         payment_method=order.payment_method
     )

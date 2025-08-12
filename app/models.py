@@ -97,13 +97,15 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
+    order_number = Column(String(20), nullable=False, unique=True)  # Номер заказа
     time = Column(String(5), nullable=False)  # чч:мм
     origin = Column(Text, nullable=False)  # Откуда
     destination = Column(Text, nullable=False)  # Куда
     driver_id = Column(Integer, ForeignKey("drivers.id"))
     created_at = Column(DateTime, server_default=func.now())
-    status = Column(String(50), default="Свободен")  # Свободен, Занят, Отменен
+    status = Column(String(50), default="Выполняется")  # Выполняется, Завершен, Отменен
     price = Column(Float, nullable=True)  # Стоимость поездки
+    tariff = Column(String(50), nullable=True)  # Тариф (Эконом, Комфорт, и т.д.)
     notes = Column(Text, nullable=True)  # Примечание от диспетчера
     payment_method = Column(String(50), nullable=True)  # Способ оплаты
     

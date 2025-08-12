@@ -258,7 +258,7 @@
                 directionsRenderer.setMap(map);
                 geocoder = new google.maps.Geocoder();
                 console.log('✅ Google Maps инициализирован');
-
+                
                 // Сервисы Places
                 placesAutocompleteService = new google.maps.places.AutocompleteService();
                 placesDetailsService = new google.maps.places.PlacesService(map);
@@ -270,7 +270,7 @@
                 map.addListener('click', function(e) {
                     const latLng = e.latLng;
                     const coords = { lat: latLng.lat(), lng: latLng.lng() };
-
+                    
                     if (selecting !== 'end') {
                         const marker = new google.maps.Marker({
                             position: coords,
@@ -381,7 +381,7 @@
                             const loc = place.geometry.location;
                             const coords = { lat: loc.lat(), lng: loc.lng() };
                             input.value = place.formatted_address || pred.description;
-
+                                
                             // очищаем временные маркеры
                             markers.forEach(m => m.setMap(null));
                             markers = [];
@@ -391,7 +391,7 @@
                                 if (originMarker) originMarker.setMap(null);
                                 originMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF3B30', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
                                 selecting = secondPoint ? 'end' : 'b';
-                            } else {
+                } else {
                                 secondPoint = coords;
                                 if (destinationMarker) destinationMarker.setMap(null);
                                 destinationMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#34C759', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
@@ -446,7 +446,7 @@
                 } else {
                     console.warn('⚠️ Google Directions не вернул маршрут, fallback', status);
                     calculateSimpleRoute();
-                }
+            }
             });
         }
 
@@ -620,6 +620,12 @@
             const paymentMethod = $('#payment-method').val();
             const origin = $('#origin-address').val();
             const destination = $('#destination-address').val();
+            const orderNumber = $('#order-number').val();
+            const orderDate = $('#order-date').val();
+            const orderTime = $('#order-time').val();
+            const routeNumber = $('#route-number').val();
+            const notes = $('#notes').val();
+            const calculatedPrice = $('#calculated-price').val();
             
             if (!driverId) {
                 alert('Выберите водителя');
@@ -642,17 +648,37 @@
                 return false;
             }
             
-            $.ajax({
-                type: 'POST',
-                url: '/api/orders/',
-                data: $(this).serialize(),
-                success: function(response) {
-                    alert('Заказ успешно создан!');
+            // Формируем данные для отправки
+            const formData = new FormData();
+            formData.append('order_number', orderNumber);
+            formData.append('order_date', orderDate);
+            formData.append('order_time', orderTime);
+            formData.append('route_number', routeNumber);
+            formData.append('driver_id', driverId);
+            formData.append('tariff', tariff);
+            formData.append('payment_method', paymentMethod);
+            formData.append('origin', origin);
+            formData.append('destination', destination);
+            formData.append('notes', notes || '');
+            formData.append('price', calculatedPrice || '0');
+            
+            // Отправляем данные
+            fetch('/api/orders/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Заказ ${data.order_number} успешно создан!`);
                     window.location.href = '/disp/';
-                },
-                error: function(error) {
-                    alert('Ошибка при создании заказа: ' + (error.responseJSON ? error.responseJSON.detail : 'Проверьте соединение с сервером'));
+                } else {
+                    throw new Error(data.detail || 'Неизвестная ошибка');
                 }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Ошибка при создании заказа: ' + error.message);
             });
         });
         
@@ -866,7 +892,7 @@
     }
     /* Прячем стандартный Google Places dropdown (используем свой) */
     .pac-container { display: none !important; }
-
+    
     /* Улучшение стилей для полей ввода адресов */
     .main__order-details-item {
         position: relative;
