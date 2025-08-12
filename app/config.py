@@ -7,21 +7,20 @@ load_dotenv()
 # Отладочная информация
 print(f"🔧 config.py: Загружаем переменные окружения...")
 print(f"🔧 config.py: TWOGIS_API_KEY из os.getenv: {repr(os.getenv('TWOGIS_API_KEY'))}")
-print(f"🔧 config.py: GOOGLE_MAPS_API из os.getenv: {repr(os.getenv('GOOGLE_MAPS_API'))}")
 
 class Settings:
     # 2GIS API Configuration
     TWOGIS_API_KEY = os.getenv("TWOGIS_API_KEY")  # Берем из .env файла
     TWOGIS_SECRET_KEY = os.getenv("TWOGIS_SECRET_KEY", "")  # Опциональный
     
-    # Google Maps API Configuration
-    GOOGLE_MAPS_API = os.getenv("GOOGLE_MAPS_API", "")
-    
     # 2GIS API Endpoints
     TWOGIS_GEOCODER_URL = "https://catalog.api.2gis.com/3.0/items/geocode"
     TWOGIS_ROUTING_URL = "https://routing.api.2gis.com/routing/2.0/route"
     TWOGIS_DISTANCE_MATRIX_URL = "https://routing.api.2gis.com/routing/2.0/distancematrix"
     TWOGIS_SEARCH_URL = "https://catalog.api.2gis.com/3.0/items/search"
+    
+    # Google Maps API Configuration
+    GOOGLE_MAPS_API = os.getenv("GOOGLE_MAPS_API")
     
     # Default coordinates for Kyrgyzstan (Osh city center)
     DEFAULT_LAT = 40.5138

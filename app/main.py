@@ -808,7 +808,7 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
             "order_number": order_number,
             "route_number": route_number,
             "twogis_api_key": settings.TWOGIS_API_KEY,
-            "google_maps_api": settings.GOOGLE_MAPS_API
+            "google_api_key": settings.GOOGLE_MAPS_API
         }
         
         logger.info("📤 API ключ передан в шаблон")
@@ -883,8 +883,7 @@ async def disp_new_order(request: Request, db: Session = Depends(get_db)):
             "now": datetime.now(),
             "order_number": f"{random.randint(100000000, 999999999)}",
             "route_number": f"{random.randint(10000000, 99999999)}",
-            "twogis_api_key": settings.TWOGIS_API_KEY,
-            "google_maps_api": settings.GOOGLE_MAPS_API
+            "twogis_api_key": settings.TWOGIS_API_KEY
         })
 
 @app.get("/disp/pay_balance", response_class=HTMLResponse)
@@ -4148,7 +4147,7 @@ async def driver_diagnostics_page(request: Request, db: Session = Depends(get_db
         # Если нет верификации со статусом accepted, проверяем наличие СТС у автомобиля
         if not sts_photo_passed:
             sts_photo_passed = car is not None and hasattr(car, "sts") and car.sts is not None
-            
+        
         # Проверка фотоконтроля ВУ через ту же запись в DriverVerification
         # Используем ту же запись верификации, что и для СТС
         license_photo_passed = photo_verification is not None
