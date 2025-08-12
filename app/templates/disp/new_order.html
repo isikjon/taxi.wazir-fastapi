@@ -328,7 +328,9 @@
                         // Создаем маркер БЕЗ смещения - используем точные координаты клика
                         const marker = new mapgl.Marker(map, {
                             coordinates: coords,
-                            color: selecting === 'a' ? '#FF0000' : '#00FF00'
+                            icon: 'https://docs.2gis.com/img/dotMarker.svg',
+                            size: [20, 20],
+                            anchor: [0.5, 0.5]
                         });
                         
                         markers.push(marker);
