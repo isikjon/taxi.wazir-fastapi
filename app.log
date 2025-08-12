@@ -1556,3 +1556,216 @@ FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace
 WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
 2025-08-11 14:07:52,671 - sqlalchemy.engine.Engine - INFO - [cached since 1.05s ago] {'table_name': 'driver_verifications', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
 2025-08-11 14:07:52,753 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-08-13 00:46:54,215 - app.services.twogis_service - INFO - 🚀 TwoGISService инициализирован с API ключом: ********8294
+2025-08-13 00:46:54,216 - app.services.twogis_service - INFO - ℹ️ Секретный ключ не настроен (необязательно)
+2025-08-13 00:46:55,035 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-08-13 00:46:55,035 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:46:55,187 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-08-13 00:46:55,192 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:46:55,342 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-08-13 00:46:55,343 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:46:55,498 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 00:46:55,502 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:55,503 - sqlalchemy.engine.Engine - INFO - [generated in 0.00052s] {'table_name': 'drivers', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:55,661 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:55,662 - sqlalchemy.engine.Engine - INFO - [cached since 0.1593s ago] {'table_name': 'cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:55,743 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:55,745 - sqlalchemy.engine.Engine - INFO - [cached since 0.2425s ago] {'table_name': 'orders', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:55,824 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:55,824 - sqlalchemy.engine.Engine - INFO - [cached since 0.3222s ago] {'table_name': 'messages', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:55,904 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:55,920 - sqlalchemy.engine.Engine - INFO - [cached since 0.4179s ago] {'table_name': 'balance_transactions', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:55,999 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:56,000 - sqlalchemy.engine.Engine - INFO - [cached since 0.4976s ago] {'table_name': 'driver_users', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:56,079 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:56,080 - sqlalchemy.engine.Engine - INFO - [cached since 0.5773s ago] {'table_name': 'driver_cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:56,155 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:56,156 - sqlalchemy.engine.Engine - INFO - [cached since 0.6533s ago] {'table_name': 'driver_documents', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:56,231 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:46:56,240 - sqlalchemy.engine.Engine - INFO - [cached since 0.7376s ago] {'table_name': 'driver_verifications', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:46:56,320 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-08-13 00:47:02,125 - python_multipart.multipart - DEBUG - Calling on_field_start with no data
+2025-08-13 00:47:02,128 - python_multipart.multipart - DEBUG - Calling on_field_name with data[0:8]
+2025-08-13 00:47:02,128 - python_multipart.multipart - DEBUG - Calling on_field_data with data[9:14]
+2025-08-13 00:47:02,129 - python_multipart.multipart - DEBUG - Calling on_field_end with no data
+2025-08-13 00:47:02,129 - python_multipart.multipart - DEBUG - Calling on_field_start with no data
+2025-08-13 00:47:02,129 - python_multipart.multipart - DEBUG - Calling on_field_name with data[15:23]
+2025-08-13 00:47:02,130 - python_multipart.multipart - DEBUG - Calling on_field_data with data[24:29]
+2025-08-13 00:47:02,130 - python_multipart.multipart - DEBUG - Calling on_field_end with no data
+2025-08-13 00:47:02,130 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-08-13 00:47:02,319 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 00:47:02,330 - sqlalchemy.engine.Engine - INFO - SELECT orders.id AS orders_id, orders.time AS orders_time, orders.origin AS orders_origin, orders.destination AS orders_destination, orders.driver_id AS orders_driver_id, orders.created_at AS orders_created_at, orders.status AS orders_status, orders.price AS orders_price, orders.notes AS orders_notes, orders.payment_method AS orders_payment_method 
+FROM orders 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-08-13 00:47:02,331 - sqlalchemy.engine.Engine - INFO - [generated in 0.00140s] {'param_1': 100, 'param_2': 0}
+2025-08-13 00:47:02,500 - sqlalchemy.engine.Engine - INFO - SELECT drivers.id AS drivers_id, drivers.unique_id AS drivers_unique_id, drivers.full_name AS drivers_full_name, drivers.birth_date AS drivers_birth_date, drivers.callsign AS drivers_callsign, drivers.city AS drivers_city, drivers.driver_license_number AS drivers_driver_license_number, drivers.driver_license_issue_date AS drivers_driver_license_issue_date, drivers.balance AS drivers_balance, drivers.tariff AS drivers_tariff, drivers.taxi_park AS drivers_taxi_park, drivers.phone AS drivers_phone, drivers.status AS drivers_status, drivers.activity AS drivers_activity, drivers.rating AS drivers_rating, drivers.is_mobile_registered AS drivers_is_mobile_registered, drivers.registration_date AS drivers_registration_date, drivers.address AS drivers_address 
+FROM drivers 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-08-13 00:47:02,501 - sqlalchemy.engine.Engine - INFO - [generated in 0.00123s] {'param_1': 100, 'param_2': 0}
+2025-08-13 00:47:02,713 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-08-13 00:48:25,537 - app.services.twogis_service - INFO - 🚀 TwoGISService инициализирован с API ключом: ********8294
+2025-08-13 00:48:25,537 - app.services.twogis_service - INFO - ℹ️ Секретный ключ не настроен (необязательно)
+2025-08-13 00:48:26,416 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-08-13 00:48:26,417 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:48:26,577 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-08-13 00:48:26,578 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:48:26,740 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-08-13 00:48:26,740 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:48:26,904 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 00:48:26,914 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:26,915 - sqlalchemy.engine.Engine - INFO - [generated in 0.00141s] {'table_name': 'drivers', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,079 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,080 - sqlalchemy.engine.Engine - INFO - [cached since 0.1665s ago] {'table_name': 'cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,163 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,164 - sqlalchemy.engine.Engine - INFO - [cached since 0.2505s ago] {'table_name': 'orders', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,244 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,245 - sqlalchemy.engine.Engine - INFO - [cached since 0.3311s ago] {'table_name': 'messages', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,324 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,325 - sqlalchemy.engine.Engine - INFO - [cached since 0.411s ago] {'table_name': 'balance_transactions', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,405 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,406 - sqlalchemy.engine.Engine - INFO - [cached since 0.4924s ago] {'table_name': 'driver_users', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,490 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,491 - sqlalchemy.engine.Engine - INFO - [cached since 0.577s ago] {'table_name': 'driver_cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,570 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,571 - sqlalchemy.engine.Engine - INFO - [cached since 0.657s ago] {'table_name': 'driver_documents', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,653 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:27,655 - sqlalchemy.engine.Engine - INFO - [cached since 0.7408s ago] {'table_name': 'driver_verifications', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:27,734 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-08-13 00:48:30,417 - app.services.twogis_service - INFO - 🚀 TwoGISService инициализирован с API ключом: ********8294
+2025-08-13 00:48:30,418 - app.services.twogis_service - INFO - ℹ️ Секретный ключ не настроен (необязательно)
+2025-08-13 00:48:31,204 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-08-13 00:48:31,204 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:48:31,353 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-08-13 00:48:31,354 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:48:31,503 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-08-13 00:48:31,503 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:48:31,656 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 00:48:31,668 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:31,669 - sqlalchemy.engine.Engine - INFO - [generated in 0.00184s] {'table_name': 'drivers', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:31,821 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:31,822 - sqlalchemy.engine.Engine - INFO - [cached since 0.1547s ago] {'table_name': 'cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:31,901 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:31,902 - sqlalchemy.engine.Engine - INFO - [cached since 0.2348s ago] {'table_name': 'orders', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:31,975 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:31,976 - sqlalchemy.engine.Engine - INFO - [cached since 0.3091s ago] {'table_name': 'messages', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:32,051 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:32,052 - sqlalchemy.engine.Engine - INFO - [cached since 0.3852s ago] {'table_name': 'balance_transactions', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:32,127 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:32,127 - sqlalchemy.engine.Engine - INFO - [cached since 0.4607s ago] {'table_name': 'driver_users', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:32,203 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:32,204 - sqlalchemy.engine.Engine - INFO - [cached since 0.5368s ago] {'table_name': 'driver_cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:32,288 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:32,289 - sqlalchemy.engine.Engine - INFO - [cached since 0.622s ago] {'table_name': 'driver_documents', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:32,366 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:48:32,369 - sqlalchemy.engine.Engine - INFO - [cached since 0.7023s ago] {'table_name': 'driver_verifications', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:48:32,466 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-08-13 00:57:35,640 - app.services.twogis_service - INFO - 🚀 TwoGISService инициализирован с API ключом: НЕ НАСТРОЕН
+2025-08-13 00:57:35,640 - app.services.twogis_service - INFO - ℹ️ Секретный ключ не настроен (необязательно)
+2025-08-13 00:57:36,501 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-08-13 00:57:36,502 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:57:36,658 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-08-13 00:57:36,659 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:57:36,814 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-08-13 00:57:36,818 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-08-13 00:57:36,973 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 00:57:36,982 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:36,983 - sqlalchemy.engine.Engine - INFO - [generated in 0.00104s] {'table_name': 'drivers', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,138 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,138 - sqlalchemy.engine.Engine - INFO - [cached since 0.1568s ago] {'table_name': 'cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,217 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,217 - sqlalchemy.engine.Engine - INFO - [cached since 0.2356s ago] {'table_name': 'orders', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,298 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,298 - sqlalchemy.engine.Engine - INFO - [cached since 0.3168s ago] {'table_name': 'messages', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,380 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,381 - sqlalchemy.engine.Engine - INFO - [cached since 0.3991s ago] {'table_name': 'balance_transactions', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,459 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,461 - sqlalchemy.engine.Engine - INFO - [cached since 0.4788s ago] {'table_name': 'driver_users', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,540 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,540 - sqlalchemy.engine.Engine - INFO - [cached since 0.5587s ago] {'table_name': 'driver_cars', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,618 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,619 - sqlalchemy.engine.Engine - INFO - [cached since 0.6371s ago] {'table_name': 'driver_documents', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,696 - sqlalchemy.engine.Engine - INFO - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+2025-08-13 00:57:37,697 - sqlalchemy.engine.Engine - INFO - [cached since 0.715s ago] {'table_name': 'driver_verifications', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+2025-08-13 00:57:37,775 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-08-13 00:57:38,102 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-08-13 00:57:38,105 - sqlalchemy.engine.Engine - INFO - SELECT orders.id AS orders_id, orders.time AS orders_time, orders.origin AS orders_origin, orders.destination AS orders_destination, orders.driver_id AS orders_driver_id, orders.created_at AS orders_created_at, orders.status AS orders_status, orders.price AS orders_price, orders.notes AS orders_notes, orders.payment_method AS orders_payment_method 
+FROM orders 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-08-13 00:57:38,106 - sqlalchemy.engine.Engine - INFO - [generated in 0.00050s] {'param_1': 100, 'param_2': 0}
+2025-08-13 00:57:38,274 - sqlalchemy.engine.Engine - INFO - SELECT drivers.id AS drivers_id, drivers.unique_id AS drivers_unique_id, drivers.full_name AS drivers_full_name, drivers.birth_date AS drivers_birth_date, drivers.callsign AS drivers_callsign, drivers.city AS drivers_city, drivers.driver_license_number AS drivers_driver_license_number, drivers.driver_license_issue_date AS drivers_driver_license_issue_date, drivers.balance AS drivers_balance, drivers.tariff AS drivers_tariff, drivers.taxi_park AS drivers_taxi_park, drivers.phone AS drivers_phone, drivers.status AS drivers_status, drivers.activity AS drivers_activity, drivers.rating AS drivers_rating, drivers.is_mobile_registered AS drivers_is_mobile_registered, drivers.registration_date AS drivers_registration_date, drivers.address AS drivers_address 
+FROM drivers 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-08-13 00:57:38,280 - sqlalchemy.engine.Engine - INFO - [generated in 0.00579s] {'param_1': 100, 'param_2': 0}
+2025-08-13 00:57:38,447 - sqlalchemy.engine.Engine - INFO - ROLLBACK
