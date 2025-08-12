@@ -93,7 +93,7 @@ async def test_endpoint():
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Список исключенных путей, которые не требуют авторизации
-        excluded_paths = ['/disp/login', '/login', '/static', '/driver/', '/api/driver/']
+        excluded_paths = ['/disp/login', '/login', '/static', '/driver/', '/api/driver/', '/api/twogis/']
         
         # Проверяем, начинается ли путь с любого из исключенных путей
         is_excluded = any(request.url.path.startswith(path) for path in excluded_paths)

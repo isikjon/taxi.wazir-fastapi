@@ -261,30 +261,38 @@
 
                 // Обработчик клика по карте
                 map.on('click', function(e) {
-                    const coords = [e.lngLat[0], e.lngLat[1]]; // lng, lat
+                    // Получаем точные координаты клика
+                    const lngLat = e.lngLat;
+                    const coords = [lngLat[0], lngLat[1]]; // lng, lat
                     const pixelCoords = e.point; // пиксельные координаты клика
                     
                     console.log('📍 Клик по карте:', {
-                        geographical: coords,
+                        lngLat_object: lngLat,
+                        coords_array: coords,
                         pixel: pixelCoords,
                         selecting: selecting
                     });
                     
                     if (selecting !== 'end') {
-                        // Создаем маркер точно в месте клика
+                        // Создаем маркер точно в месте клика с точными координатами
                         const marker = new mapgl.Marker(map, {
-                            coordinates: coords,
-                            color: selecting === 'a' ? '#FF4444' : '#44FF44'
+                            coordinates: [coords[0], coords[1]], // lng, lat
+                            color: selecting === 'a' ? '#FF0000' : '#00FF00',
+                            anchor: 'center' // центрируем маркер точно по координатам
                         });
                         
                         markers.push(marker);
-                        console.log('🎯 Маркер создан на координатах:', coords);
+                        console.log('🎯 Маркер создан:', {
+                            coordinates: [coords[0], coords[1]], 
+                            color: selecting === 'a' ? 'красный' : 'зелёный',
+                            anchor: 'center'
+                        });
                     }
 
                     if (selecting === 'a') {
                         firstPoint = coords;
                         selecting = 'b';
-                        console.log('✅ Точка А установлена на:', coords);
+                        console.log('✅ Точка А установлена:', coords);
                         
                         // Получаем адрес по координатам
                         getAddressByCoordinates(coords[1], coords[0], 'origin');
@@ -292,7 +300,7 @@
                     } else if (selecting === 'b') {
                         secondPoint = coords;
                         selecting = 'end';
-                        console.log('✅ Точка Б установлена на:', coords);
+                        console.log('✅ Точка Б установлена:', coords);
                         
                         // Получаем адрес по координатам
                         getAddressByCoordinates(coords[1], coords[0], 'destination');
