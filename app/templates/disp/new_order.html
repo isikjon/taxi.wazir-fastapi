@@ -259,6 +259,25 @@
                     return;
                 }
 
+                // ОТЛАДКА МЫШИ - отслеживание в реальном времени
+                map.on('mousemove', function(e) {
+                    const mouseCoords = [e.lngLat[0], e.lngLat[1]];
+                    const pixelCoords = e.point;
+                    
+                    // Показываем координаты в консоли каждые 500мс
+                    if (!window.mouseDebugTimer) {
+                        window.mouseDebugTimer = setInterval(function() {
+                            console.log('🖱️ Мышь:', {
+                                geo: mouseCoords,
+                                pixel: pixelCoords,
+                                formatted: `${mouseCoords[1].toFixed(6)}, ${mouseCoords[0].toFixed(6)}`
+                            });
+                        }, 500);
+                    }
+                    window.lastMouseCoords = mouseCoords;
+                    window.lastPixelCoords = pixelCoords;
+                });
+
                 // Обработчик клика по карте
                 map.on('click', function(e) {
                     // Получаем точные координаты клика
@@ -266,11 +285,17 @@
                     const coords = [lngLat[0], lngLat[1]]; // lng, lat
                     const pixelCoords = e.point; // пиксельные координаты клика
                     
-                    console.log('📍 Клик по карте:', {
-                        lngLat_object: lngLat,
+                    console.log('📍 КЛИК ПО КАРТЕ - ПОЛНАЯ ДИАГНОСТИКА:', {
+                        event_lngLat: lngLat,
                         coords_array: coords,
-                        pixel: pixelCoords,
-                        selecting: selecting
+                        pixel_coords: pixelCoords,
+                        mouse_before_click: window.lastMouseCoords,
+                        pixel_before_click: window.lastPixelCoords,
+                        selecting: selecting,
+                        difference: window.lastMouseCoords ? [
+                            (coords[0] - window.lastMouseCoords[0]) * 100000,
+                            (coords[1] - window.lastMouseCoords[1]) * 100000
+                        ] : 'нет данных'
                     });
                     
                     if (selecting !== 'end') {
@@ -281,7 +306,21 @@
                         });
                         
                         markers.push(marker);
-                        console.log('🎯 Маркер создан ТОЧНО в координатах клика:', coords);
+                        console.log('🎯 МАРКЕР СОЗДАН:', {
+                            input_coords: coords,
+                            marker_position: coords,
+                            pixel_click: pixelCoords,
+                            should_be_same: 'ДА'
+                        });
+                        
+                        // Проверяем где реально создался маркер
+                        setTimeout(function() {
+                            console.log('🔍 ПРОВЕРКА ПОЗИЦИИ МАРКЕРА:', {
+                                original_coords: coords,
+                                marker_object: marker,
+                                difference_check: 'смотри на карте визуально'
+                            });
+                        }, 100);
                     }
 
                     if (selecting === 'a') {
