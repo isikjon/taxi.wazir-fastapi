@@ -98,7 +98,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     order_number = Column(String(20), nullable=False, unique=True)  # Номер заказа
-    time = Column(String(5), nullable=False)  # чч:мм
+    time = Column(String(8), nullable=False)  # чч:мм:сс
     origin = Column(Text, nullable=False)  # Откуда
     destination = Column(Text, nullable=False)  # Куда
     driver_id = Column(Integer, ForeignKey("drivers.id"))

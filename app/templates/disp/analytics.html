@@ -159,6 +159,111 @@
             </table>
         </div>
     </div>
+
+    <!-- Новые блоки аналитики -->
+    <div class="analytics-charts">
+        <div class="main__table">
+            <table>
+                <tbody>
+                    <!-- 1. Пополнения баланса и График -->
+                    <tr>
+                        <td>
+                            <div class="chart-block">
+                                <div class="donut-container">
+                                    <div class="donut-chart donut-balance">
+                                        <div class="donut-center-text" id="centerBalanceTotal">{{ balance_stats.last_30_days|default('0') }}</div>
+                                        <div class="donut-center-currency">сом</div>
+                                    </div>
+                                </div>
+                                <div class="chart-legend">
+                                    <div class="chart-legend__total">
+                                        💰 Пополнения: 
+                                        <select id="balancePeriodSelect" class="period-select-inline">
+                                            <option value="7">За 7 дней</option>
+                                            <option value="30" selected>За 30 дней</option>
+                                            <option value="365">За 1 год</option>
+                                            <option value="all">За все время</option>
+                                        </select>
+                                    </div>
+                                    <div class="chart-legend__item">
+                                        <div class="legend-color legend-color--purple"></div>
+                                        <div>Количество</div>
+                                        <div id="balanceCount">{{ balance_stats.count_30_days|default('0') }}</div>
+                                    </div>
+                                    <div class="chart-legend__item">
+                                        <div class="legend-color legend-color--orange"></div>
+                                        <div>Макс. пополнение</div>
+                                        <div id="balanceMax">{{ balance_stats.max_amount|default('0') }} сом</div>
+                                    </div>
+                                    <div class="chart-legend__item">
+                                        <div class="legend-color legend-color--red"></div>
+                                        <div>Средняя сумма</div>
+                                        <div id="balanceAvg">{{ balance_stats.avg_amount|default('0') }} сом</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="chart-block chart-block--wide">
+                                <div class="chart-container-new">
+                                    <h4>📈 График активности пополнений</h4>
+                                    <canvas id="balanceChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- 2. Заказы и График -->
+                    <tr>
+                        <td>
+                            <div class="chart-block">
+                                <div class="donut-container">
+                                    <div class="donut-chart donut-orders">
+                                        <div class="donut-center-text" id="centerOrdersEarnings">{{ orders_stats.earnings_30_days|default('0') }}</div>
+                                        <div class="donut-center-currency">сом</div>
+                                    </div>
+                                </div>
+                                <div class="chart-legend">
+                                    <div class="chart-legend__total">
+                                        🚗 Заказы: 
+                                        <select id="ordersPeriodSelect" class="period-select-inline">
+                                            <option value="7">За 7 дней</option>
+                                            <option value="30" selected>За 30 дней</option>
+                                            <option value="365">За 1 год</option>
+                                            <option value="all">За все время</option>
+                                        </select>
+                                    </div>
+                                    <div class="chart-legend__item">
+                                        <div class="legend-color legend-color--yellow"></div>
+                                        <div>Количество</div>
+                                        <div id="ordersCount">{{ orders_stats.count_30_days|default('0') }}</div>
+                                    </div>
+                                    <div class="chart-legend__item">
+                                        <div class="legend-color legend-color--green"></div>
+                                        <div>Средний чек</div>
+                                        <div id="avgOrder">{{ orders_stats.avg_order|default('0') }} сом</div>
+                                    </div>
+                                    <div class="chart-legend__item">
+                                        <div class="legend-color legend-color--blue"></div>
+                                        <div>Самый дорогой</div>
+                                        <div>{{ orders_stats.max_order|default('0') }} сом</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="chart-block chart-block--wide">
+                                <div class="chart-container-new">
+                                    <h4>📊 График доходов от заказов</h4>
+                                    <canvas id="ordersChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -204,10 +309,421 @@
             if (donut2) {
                 donut2.style.background = `conic-gradient(#2A9D8F 0% 100%, transparent 100% 100%)`;
             }
+
+            // Настройка градиента для диаграммы пополнений баланса
+            const donutBalance = document.querySelector('.donut-balance');
+            if (donutBalance) {
+                donutBalance.style.background = `conic-gradient(#9B59B6 0% 75%, transparent 75% 100%)`;
+            }
+            
+            // Настройка градиента для диаграммы заказов
+            const donutOrders = document.querySelector('.donut-orders');
+            if (donutOrders) {
+                donutOrders.style.background = `conic-gradient(#E74C3C 0% 85%, transparent 85% 100%)`;
+            }
         }
         
         // Вызываем функцию настройки диаграмм
         setupDonutCharts();
+
+        // Инициализация новых графиков
+        initializeCharts();
+
+        // Переключение периодов для заказов
+        $('#ordersPeriodSelect').on('change', function() {
+            const period = $(this).val();
+            updateOrdersStats(period);
+            updateOrdersChart(period);
+        });
+
+        // Переключение периодов для пополнений
+        $('#balancePeriodSelect').on('change', function() {
+            const period = $(this).val();
+            updateBalanceStats(period);
+            updateBalanceChart(period);
+        });
     });
+
+    // Глобальные переменные для графиков
+    let balanceChart = null;
+    let ordersChart = null;
+
+    // Функция для инициализации графиков
+    function initializeCharts() {
+        // Подключаем Chart.js если не подключен
+        if (typeof Chart === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = function() {
+                createBalanceChart();
+                createOrdersChart();
+            };
+            document.head.appendChild(script);
+        } else {
+            createBalanceChart();
+            createOrdersChart();
+        }
+    }
+
+    // График пополнений баланса
+    function createBalanceChart() {
+        const ctx = document.getElementById('balanceChart');
+        if (!ctx) return;
+
+        balanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Пополнения (сом)',
+                    data: [],
+                    borderColor: '#9B59B6',
+                    backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#9B59B6',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff', font: { size: 13 } }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#fff', font: { size: 12 } },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#fff', font: { size: 12 } },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    }
+                }
+            }
+        });
+        
+        // Загружаем данные для 30 дней по умолчанию
+        updateBalanceChart('30');
+    }
+
+    // График заказов
+    function createOrdersChart() {
+        const ctx = document.getElementById('ordersChart');
+        if (!ctx) return;
+
+        ordersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Доход (сом)',
+                    data: [],
+                    backgroundColor: [
+                        '#E74C3C',
+                        '#E67E22', 
+                        '#F1C40F',
+                        '#2A9D8F',
+                        '#1E6BC7',
+                        '#9B59B6',
+                        '#E74C3C'
+                    ],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff', font: { size: 13 } }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#fff', font: { size: 12 } },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#fff', font: { size: 12 } },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    }
+                }
+            }
+        });
+        
+        // Загружаем данные для 30 дней по умолчанию
+        updateOrdersChart('30');
+    }
+
+    // Обновление статистики заказов через API
+    function updateOrdersStats(period) {
+        // Показываем загрузку
+        $('#ordersCount').text('...');
+        $('#avgOrder').text('...');
+        $('#centerOrdersEarnings').text('...');
+
+        // AJAX запрос к API
+        $.get(`/api/analytics/orders/${period}`)
+            .done(function(data) {
+                $('#ordersCount').text(data.count);
+                $('#avgOrder').text(data.avg + ' сом');
+                $('#centerOrdersEarnings').text(data.earnings);
+                
+                // Небольшая анимация обновления центральной диаграммы
+                $('.donut-center-text').addClass('updated');
+                setTimeout(() => $('.donut-center-text').removeClass('updated'), 500);
+            })
+            .fail(function() {
+                $('#ordersCount').text('Ошибка');
+                $('#avgOrder').text('Ошибка');
+                $('#centerOrdersEarnings').text('Ошибка');
+                console.error('Ошибка получения данных аналитики');
+            });
+    }
+
+    // Обновление статистики пополнений через API
+    function updateBalanceStats(period) {
+        $('#balanceCount').text('...');
+        $('#balanceMax').text('...');
+        $('#balanceAvg').text('...');
+        $('#centerBalanceTotal').text('...');
+
+        $.get(`/api/analytics/balance/${period}`)
+            .done(function(data) {
+                $('#balanceCount').text(data.count);
+                $('#balanceMax').text(data.max + ' сом');
+                $('#balanceAvg').text(data.avg + ' сом');
+                $('#centerBalanceTotal').text(data.total);
+                
+                $('.donut-center-text').addClass('updated');
+                setTimeout(() => $('.donut-center-text').removeClass('updated'), 500);
+            })
+            .fail(function() {
+                $('#balanceCount').text('Ошибка');
+                $('#balanceMax').text('Ошибка');
+                $('#balanceAvg').text('Ошибка');
+                $('#centerBalanceTotal').text('Ошибка');
+            });
+    }
+
+    // Обновление графика пополнений
+    function updateBalanceChart(period) {
+        $.get(`/api/analytics/balance-chart/${period}`)
+            .done(function(data) {
+                balanceChart.data.labels = data.labels;
+                balanceChart.data.datasets[0].data = data.data;
+                balanceChart.update();
+            })
+            .fail(function() {
+                console.error('Ошибка получения данных графика пополнений');
+            });
+    }
+
+    // Обновление графика заказов
+    function updateOrdersChart(period) {
+        $.get(`/api/analytics/orders-chart/${period}`)
+            .done(function(data) {
+                ordersChart.data.labels = data.labels;
+                ordersChart.data.datasets[0].data = data.data;
+                ordersChart.update();
+            })
+            .fail(function() {
+                console.error('Ошибка получения данных графика заказов');
+            });
+    }
 </script>
+
+<style>
+/* Стили для новых аналитических диаграмм */
+
+/* Новые цвета для легенды */
+.legend-color--purple {
+    background: #9B59B6;
+}
+
+.legend-color--orange {
+    background: #E67E22;
+}
+
+.legend-color--red {
+    background: #E74C3C;
+}
+
+.legend-color--yellow {
+    background: #F1C40F;
+}
+
+/* Дополнительная диаграмма пополнений */
+.donut-balance {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+.donut-balance::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: #47484c;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.donut-balance .donut-center-text,
+.donut-balance .donut-center-currency {
+    position: relative;
+    z-index: 2;
+}
+
+/* Дополнительная диаграмма заказов */
+.donut-orders {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+.donut-orders::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: #47484c;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.donut-orders .donut-center-text,
+.donut-orders .donut-center-currency {
+    position: relative;
+    z-index: 2;
+}
+
+/* Валюта под центральным числом */
+.donut-center-currency {
+    color: #aaa;
+    font-size: 13px;
+    font-weight: 400;
+    margin-top: -5px;
+}
+
+/* Анимация обновления центрального текста */
+.donut-center-text.updated {
+    color: #2A9D8F;
+    transform: scale(1.1);
+    transition: all 0.3s ease;
+}
+
+/* Инлайн селект в легенде */
+.period-select-inline {
+    background: #47484c;
+    color: #fff;
+    border: 1px solid #6c757d;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    outline: none;
+    margin-left: 8px;
+    font-weight: 400;
+}
+
+.period-select-inline:focus {
+    border-color: #E74C3C;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.25);
+}
+
+/* Широкий блок для графиков */
+.chart-block--wide {
+    width: 92%;
+}
+
+/* Контейнер для новых графиков */
+.chart-container-new {
+    background: rgba(71, 72, 76, 0.6);
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 280px;
+    position: relative;
+}
+
+.chart-container-new h4 {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+    margin: 0 0 15px 0;
+    text-align: center;
+}
+
+.chart-container-new canvas {
+    max-height: 220px !important;
+}
+
+/* Адаптивность для новых диаграмм */
+@media (max-width: 1200px) {
+    .chart-container-new {
+        min-height: 250px;
+    }
+    
+    .chart-container-new canvas {
+        max-height: 200px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .donut-balance, .donut-orders {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .donut-balance::before, .donut-orders::before {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .chart-container-new {
+        min-height: 200px;
+        padding: 15px;
+    }
+    
+    .chart-container-new h4 {
+        font-size: 15px;
+        font-weight: 400;
+    }
+    
+    .chart-container-new canvas {
+        max-height: 150px !important;
+    }
+}
+</style>
 {% endblock %}
