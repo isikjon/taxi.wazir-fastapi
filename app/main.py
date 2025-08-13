@@ -150,23 +150,23 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 @app.get("/driver/", response_class=HTMLResponse)
 async def driver_main(request: Request):
-    return templates.TemplateResponse("driver/main.html", {"request": request})
+    return RedirectResponse(url="/driver/profile", status_code=302)
 
 @app.get("/driver/online", response_class=HTMLResponse)
-async def driver_online(request: Request, driver_id: Optional[int] = None):
+async def driver_online(request: Request, driver_id: Optional[int] = Query(None)):
     """Страница 'На линии' для водителя"""
     if not driver_id:
         # Пытаемся получить driver_id из cookies или сессии
         token = request.cookies.get("token")
         if token:
             try:
-                payload = jose.jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+                payload = jose.jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
                 driver_id = payload.get("driver_id")
             except:
                 pass
     
     if not driver_id:
-        return RedirectResponse(url="/driver/", status_code=302)
+        return RedirectResponse(url="/driver/profile", status_code=302)
     
     return templates.TemplateResponse("driver/online.html", {
         "request": request,
@@ -1892,12 +1892,6 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
     user = crud.update_driver_user(db, user.id, user_update)
     
     return {"success": True, "message": "Профиль обновлен успешно"}
-
-# Маршруты для интерфейса водителя (должны быть выше маршрута /)
-@app.get("/driver/", response_class=HTMLResponse)
-async def driver_main(request: Request):
-    """Главная страница для водителей - перенаправление на авторизацию"""
-    return RedirectResponse(url="/driver/auth/step1")
 
 @app.get("/driver/auth/step1", response_class=HTMLResponse)
 async def driver_auth_step1(request: Request):

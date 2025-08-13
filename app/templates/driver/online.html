@@ -4,129 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>На линии - WAZIR</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
-            color: white;
+        /* Дополнительные стили для карты */
+        .online-map {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin: 15px 0;
+            position: relative;
             overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1000;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .driver-status {
-            background: #27ae60;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .driver-status.offline {
-            background: #e74c3c;
-        }
-
-        .earnings {
-            font-size: 18px;
-            font-weight: bold;
-            color: #f1c40f;
-        }
-
-        .map-container {
-            position: relative;
-            height: calc(100vh - 80px);
-            width: 100%;
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
-        }
-
-        .navigation-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.9);
-            border-radius: 15px;
+        .online-status {
+            text-align: center;
             padding: 20px;
-            z-index: 100;
-            display: none;
-        }
-
-        .navigation-panel.active {
-            display: block;
-        }
-
-        .trip-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .distance-time {
-            color: #27ae60;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .next-instruction {
-            background: #2c3e50;
-            padding: 15px;
+            margin: 15px 0;
             border-radius: 10px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
         }
 
-        .instruction-icon {
-            width: 40px;
-            height: 40px;
-            background: #3498db;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            vertical-align: middle;
-        }
-
-        .instruction-text {
-            font-size: 16px;
-            display: inline-block;
-            vertical-align: middle;
+        .online-status.offline {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
 
         .order-notification {
-            position: absolute;
+            position: fixed;
             top: 20px;
             left: 20px;
             right: 20px;
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            border-radius: 15px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border-radius: 10px;
             padding: 20px;
-            z-index: 200;
+            z-index: 1000;
             transform: translateY(-100px);
             transition: transform 0.3s ease;
             display: none;
@@ -137,49 +49,29 @@
             display: block;
         }
 
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .order-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .order-price {
-            font-size: 20px;
-            font-weight: bold;
-            color: #f1c40f;
-        }
-
-        .order-details {
-            margin-bottom: 20px;
-        }
-
-        .route-info {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            flex: 1;
+        .navigation-panel {
+            background: #2c3e50;
+            color: white;
+            border-radius: 10px;
             padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .navigation-panel.active {
+            display: block;
+        }
+
+        .btn-online {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
             border: none;
             border-radius: 10px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .btn-accept {
@@ -187,140 +79,114 @@
             color: white;
         }
 
-        .btn-accept:hover {
-            background: #219a52;
-        }
-
         .btn-decline {
             background: #e74c3c;
             color: white;
         }
 
-        .btn-decline:hover {
-            background: #c0392b;
-        }
-
-        .control-buttons {
-            position: absolute;
-            bottom: 30px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            gap: 15px;
-            z-index: 100;
-        }
-
-        .control-btn {
-            flex: 1;
-            padding: 15px;
+        .btn-primary {
             background: #3498db;
             color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
+        }
+
+        .earnings-display {
+            text-align: center;
+            font-size: 24px;
             font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s ease;
+            color: #f1c40f;
+            margin: 15px 0;
         }
 
-        .control-btn:hover {
-            background: #2980b9;
-        }
-
-        .control-btn.danger {
-            background: #e74c3c;
-        }
-
-        .control-btn.danger:hover {
-            background: #c0392b;
-        }
-
-        .control-btn.success {
-            background: #27ae60;
-        }
-
-        .control-btn.success:hover {
-            background: #219a52;
-        }
-
-        .status-indicator {
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            z-index: 100;
-        }
-
-        .loader {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .status-text {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+            margin: 10px 0;
         }
     </style>
 </head>
-<body>
-    <div class="header">
-        <div class="header-left">
-            <div class="driver-status" id="statusIndicator">🟢 На линии</div>
-            <div class="earnings" id="earningsDisplay">0 сом</div>
-        </div>
-        <div class="header-right">
-            <button class="btn btn-decline" onclick="goOffline()">Завершить смену</button>
-        </div>
-    </div>
+<body data-driver-id="{{ driver_id }}">
+    <main>
+        <section class="profile">
+            <div class="container">
+                <!-- Заголовок -->
+                <div class="profile__header">
+                    <div class="profile__back">
+                        <a href="/driver/profile">
+                            <img src="{{ url_for('static', path='/driver/assets/img/ico/back.svg') }}" alt="back">
+                        </a>
+                    </div>
+                    <h1 class="title">На линии</h1>
+                    <div class="profile__settings">
+                        <button onclick="goOffline()">
+                            <img src="{{ url_for('static', path='/driver/assets/img/ico/close.svg') }}" alt="close">
+                        </button>
+                    </div>
+                </div>
 
-    <div class="map-container">
-        <div id="map"></div>
-        
-        <div class="order-notification" id="orderNotification">
-            <div class="order-header">
-                <div class="order-title">Новый заказ</div>
-                <div class="order-price" id="orderPrice">120 сом</div>
-            </div>
-            <div class="order-details">
-                <div class="route-info">
-                    <div><strong>Откуда:</strong> <span id="orderOrigin">Медицинский факультет ОшГУ</span></div>
-                    <div><strong>Куда:</strong> <span id="orderDestination">Ош Базар</span></div>
-                    <div><strong>Расстояние:</strong> <span id="orderDistance">5.2 км</span></div>
-                    <div><strong>Время:</strong> <span id="orderTime">~12 мин</span></div>
+                <!-- Статус водителя -->
+                <div class="online-status" id="driverStatus">
+                    <h2>🟢 Вы на линии</h2>
+                    <p>Ищем заказы для вас...</p>
+                </div>
+
+                <!-- Заработок -->
+                <div class="earnings-display" id="earningsDisplay">
+                    0 сом
+                </div>
+
+                <!-- Карта -->
+                <div class="online-map" id="mapContainer">
+                    <div id="map" style="width: 100%; height: 100%;"></div>
+                </div>
+
+                <!-- Статус поиска -->
+                <div class="status-text" id="statusText">
+                    🔍 Поиск заказов...
+                </div>
+
+                <!-- Панель навигации (скрыта по умолчанию) -->
+                <div class="navigation-panel" id="navigationPanel">
+                    <h3>Навигация</h3>
+                    <div id="routeInfo">
+                        <p><strong>Расстояние:</strong> <span id="tripDistance">-</span></p>
+                        <p><strong>Время:</strong> <span id="tripDuration">-</span></p>
+                    </div>
+                    <div id="instruction" style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">
+                        <span id="instructionText">Ожидание маршрута...</span>
+                    </div>
+                    <button class="btn-online btn-decline" onclick="cancelTrip()">Отменить поездку</button>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="profile__actions" id="controlButtons">
+                    <button class="btn-online btn-primary" onclick="startTrip()" id="startTripBtn" style="display:none;">
+                        Начать поездку
+                    </button>
+                    <button class="btn-online btn-accept" onclick="completeTrip()" id="completeTripBtn" style="display:none;">
+                        Завершить поездку
+                    </button>
+                    <button class="btn-online btn-decline" onclick="goOffline()">
+                        Завершить смену
+                    </button>
                 </div>
             </div>
-            <div class="order-actions">
-                <button class="btn btn-accept" onclick="acceptOrder()">Принять</button>
-                <button class="btn btn-decline" onclick="declineOrder()">Отклонить</button>
-            </div>
-        </div>
+        </section>
+    </main>
 
-        <div class="navigation-panel" id="navigationPanel">
-            <div class="trip-info">
-                <div class="distance-time" id="tripInfo">5.2 км • 12 мин</div>
-                <button class="btn btn-decline" onclick="cancelTrip()">Отменить</button>
-            </div>
-            <div class="next-instruction">
-                <div class="instruction-icon">→</div>
-                <div class="instruction-text" id="instructionText">Поверните направо через 500 м</div>
-            </div>
+    <!-- Уведомление о новом заказе -->
+    <div class="order-notification" id="orderNotification">
+        <h3>🚗 Новый заказ</h3>
+        <div style="margin: 15px 0;">
+            <p><strong>Откуда:</strong> <span id="orderOrigin">-</span></p>
+            <p><strong>Куда:</strong> <span id="orderDestination">-</span></p>
+            <p><strong>Стоимость:</strong> <span id="orderPrice">-</span></p>
+            <p><strong>Расстояние:</strong> <span id="orderDistance">-</span></p>
         </div>
-
-        <div class="status-indicator" id="statusDisplay">
-            <div>🔍 Поиск заказов...</div>
-        </div>
-
-        <div class="control-buttons" id="controlButtons">
-            <button class="control-btn" onclick="startTrip()" id="startTripBtn" style="display:none;">Начать поездку</button>
-            <button class="control-btn success" onclick="completeTrip()" id="completeTripBtn" style="display:none;">Завершить поездку</button>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-online btn-accept" onclick="acceptOrder()" style="flex: 1;">Принять</button>
+            <button class="btn-online btn-decline" onclick="declineOrder()" style="flex: 1;">Отклонить</button>
         </div>
     </div>
 
@@ -333,11 +199,27 @@
         let isOnline = true;
         let currentLocation = null;
 
-        // Инициализация карты
-        function initMap() {
-            console.log('🗺️ Инициализация карты водителя...');
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Страница "На линии" загружена');
+            console.log('👤 ID водителя:', driverId);
             
-            // Центр Ош
+            // Ожидаем загрузки Google Maps
+            waitForGoogleMaps();
+        });
+
+        function waitForGoogleMaps() {
+            if (window.google && window.google.maps) {
+                initMap();
+            } else {
+                console.log('⏳ Ожидание Google Maps API...');
+                setTimeout(waitForGoogleMaps, 500);
+            }
+        }
+
+        function initMap() {
+            console.log('🗺️ Инициализация карты...');
+            
             const oshCenter = { lat: 40.5138, lng: 72.8019 };
             
             map = new google.maps.Map(document.getElementById('map'), {
@@ -346,45 +228,24 @@
                 gestureHandling: 'greedy',
                 mapTypeControl: false,
                 streetViewControl: false,
-                fullscreenControl: false,
-                styles: [
-                    {
-                        "featureType": "all",
-                        "elementType": "geometry.fill",
-                        "stylers": [{"color": "#1a1a1a"}]
-                    },
-                    {
-                        "featureType": "road",
-                        "elementType": "geometry",
-                        "stylers": [{"color": "#2c3e50"}]
-                    },
-                    {
-                        "featureType": "water",
-                        "elementType": "geometry",
-                        "stylers": [{"color": "#3498db"}]
-                    }
-                ]
+                fullscreenControl: false
             });
 
             directionsService = new google.maps.DirectionsService();
             directionsRenderer = new google.maps.DirectionsRenderer({
                 suppressMarkers: false,
                 polylineOptions: {
-                    strokeColor: '#27ae60',
-                    strokeWeight: 6,
+                    strokeColor: '#3498db',
+                    strokeWeight: 5,
                     strokeOpacity: 0.8
                 }
             });
             directionsRenderer.setMap(map);
 
-            // Получаем текущую геолокацию
             getCurrentLocation();
-            
-            // Начинаем поиск заказов
             startOrderPolling();
         }
 
-        // Получение текущей геолокации
         function getCurrentLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -396,7 +257,6 @@
                         
                         map.setCenter(currentLocation);
                         
-                        // Добавляем маркер текущего местоположения
                         new google.maps.Marker({
                             position: currentLocation,
                             map: map,
@@ -411,18 +271,16 @@
                             title: 'Ваше местоположение'
                         });
                         
-                        console.log('📍 Геолокация получена:', currentLocation);
+                        console.log('📍 Геолокация получена');
                     },
                     (error) => {
-                        console.warn('⚠️ Ошибка получения геолокации:', error);
-                        // Используем центр Ош как fallback
+                        console.warn('⚠️ Ошибка геолокации:', error);
                         currentLocation = { lat: 40.5138, lng: 72.8019 };
                     }
                 );
             }
         }
 
-        // Поиск новых заказов каждые 5 секунд
         function startOrderPolling() {
             if (!isOnline) return;
             
@@ -430,40 +288,34 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.orders.length > 0) {
-                        console.log('📱 Получен новый заказ:', data.orders[0]);
+                        console.log('📱 Новый заказ:', data.orders[0]);
                         showOrderNotification(data.orders[0]);
                     } else {
-                        console.log('🔍 Новых заказов нет');
-                        updateStatusDisplay('🔍 Поиск заказов...');
+                        updateStatus('🔍 Поиск заказов...');
                     }
                 })
                 .catch(error => {
-                    console.error('❌ Ошибка получения заказов:', error);
+                    console.error('❌ Ошибка:', error);
                 });
             
-            // Повторяем каждые 5 секунд
             setTimeout(startOrderPolling, 5000);
         }
 
-        // Показ уведомления о новом заказе
         function showOrderNotification(order) {
             currentOrder = order;
             
-            document.getElementById('orderPrice').textContent = order.price ? `${order.price} сом` : 'Договорная';
             document.getElementById('orderOrigin').textContent = order.origin;
             document.getElementById('orderDestination').textContent = order.destination;
+            document.getElementById('orderPrice').textContent = order.price ? `${order.price} сом` : 'Договорная';
             
-            // Рассчитываем расстояние и время
-            calculateRoute(order.origin, order.destination, (distance, duration) => {
+            calculateRoute(order.origin, order.destination, (distance) => {
                 document.getElementById('orderDistance').textContent = distance;
-                document.getElementById('orderTime').textContent = duration;
             });
             
             document.getElementById('orderNotification').classList.add('show');
-            updateStatusDisplay('📱 Новый заказ!');
+            updateStatus('📱 Новый заказ!');
         }
 
-        // Принятие заказа
         function acceptOrder() {
             if (!currentOrder) return;
             
@@ -473,37 +325,31 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('✅ Заказ принят:', data.order);
+                    console.log('✅ Заказ принят');
                     document.getElementById('orderNotification').classList.remove('show');
                     showNavigation(currentOrder);
-                    updateStatusDisplay('🚗 Едем к клиенту');
+                    updateStatus('🚗 Едем к клиенту');
                 } else {
-                    alert('Ошибка принятия заказа: ' + data.error);
+                    alert('Ошибка: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('❌ Ошибка принятия заказа:', error);
-                alert('Ошибка соединения');
+                console.error('❌ Ошибка:', error);
             });
         }
 
-        // Отклонение заказа
         function declineOrder() {
             document.getElementById('orderNotification').classList.remove('show');
             currentOrder = null;
-            updateStatusDisplay('🔍 Поиск заказов...');
+            updateStatus('🔍 Поиск заказов...');
         }
 
-        // Показ навигации
         function showNavigation(order) {
             document.getElementById('navigationPanel').classList.add('active');
             document.getElementById('startTripBtn').style.display = 'block';
-            
-            // Строим маршрут к клиенту
             buildRoute(currentLocation, order.origin);
         }
 
-        // Построение маршрута
         function buildRoute(from, to) {
             const origin = typeof from === 'string' ? from + ', Кыргызстан' : from;
             const destination = typeof to === 'string' ? to + ', Кыргызстан' : to;
@@ -519,22 +365,21 @@
                     const route = response.routes[0];
                     const leg = route.legs[0];
                     
-                    document.getElementById('tripInfo').textContent = 
-                        `${leg.distance.text} • ${leg.duration.text}`;
+                    document.getElementById('tripDistance').textContent = leg.distance.text;
+                    document.getElementById('tripDuration').textContent = leg.duration.text;
                     
-                    // Показываем первую инструкцию
                     if (leg.steps.length > 0) {
-                        updateInstruction(leg.steps[0]);
+                        const instruction = leg.steps[0].instructions.replace(/<[^>]*>/g, '');
+                        document.getElementById('instructionText').textContent = instruction;
                     }
                     
                     console.log('✅ Маршрут построен');
                 } else {
-                    console.error('❌ Ошибка построения маршрута:', status);
+                    console.error('❌ Ошибка маршрута:', status);
                 }
             });
         }
 
-        // Расчет маршрута для отображения в уведомлении
         function calculateRoute(origin, destination, callback) {
             const service = new google.maps.DirectionsService();
             service.route({
@@ -545,20 +390,13 @@
                 if (status === google.maps.DirectionsStatus.OK) {
                     const route = response.routes[0];
                     const leg = route.legs[0];
-                    callback(leg.distance.text, leg.duration.text);
+                    callback(leg.distance.text);
                 } else {
-                    callback('~5 км', '~12 мин');
+                    callback('~5 км');
                 }
             });
         }
 
-        // Обновление инструкции навигации
-        function updateInstruction(step) {
-            const instruction = step.instructions.replace(/<[^>]*>/g, '');
-            document.getElementById('instructionText').textContent = instruction;
-        }
-
-        // Начало поездки
         function startTrip() {
             if (!currentOrder) return;
             
@@ -571,62 +409,47 @@
                     console.log('🚗 Поездка начата');
                     document.getElementById('startTripBtn').style.display = 'none';
                     document.getElementById('completeTripBtn').style.display = 'block';
-                    updateStatusDisplay('🛣️ В поездке');
-                    
-                    // Строим маршрут к пункту назначения
+                    updateStatus('🛣️ В поездке');
                     buildRoute(currentOrder.origin, currentOrder.destination);
                 } else {
-                    alert('Ошибка начала поездки: ' + data.error);
+                    alert('Ошибка: ' + data.error);
                 }
             });
         }
 
-        // Завершение поездки
         function completeTrip() {
             document.getElementById('navigationPanel').classList.remove('active');
             document.getElementById('completeTripBtn').style.display = 'none';
             currentOrder = null;
-            updateStatusDisplay('🔍 Поиск заказов...');
-            
-            // Очищаем маршрут
+            updateStatus('🔍 Поиск заказов...');
             directionsRenderer.setDirections({routes: []});
         }
 
-        // Отмена поездки
         function cancelTrip() {
             document.getElementById('navigationPanel').classList.remove('active');
             document.getElementById('startTripBtn').style.display = 'none';
             document.getElementById('completeTripBtn').style.display = 'none';
             currentOrder = null;
-            updateStatusDisplay('🔍 Поиск заказов...');
-            
-            // Очищаем маршрут
+            updateStatus('🔍 Поиск заказов...');
             directionsRenderer.setDirections({routes: []});
         }
 
-        // Обновление статуса
-        function updateStatusDisplay(status) {
-            document.getElementById('statusDisplay').innerHTML = `<div>${status}</div>`;
+        function updateStatus(status) {
+            document.getElementById('statusText').innerHTML = status;
         }
 
-        // Завершение смены
         function goOffline() {
             isOnline = false;
-            document.getElementById('statusIndicator').textContent = '🔴 Не на линии';
-            document.getElementById('statusIndicator').classList.add('offline');
-            updateStatusDisplay('🛑 Смена завершена');
+            document.getElementById('driverStatus').innerHTML = '<h2>🔴 Не на линии</h2><p>Смена завершена</p>';
+            document.getElementById('driverStatus').classList.add('offline');
+            updateStatus('🛑 Смена завершена');
             
-            // Возвращаемся на главную страницу водителя
-            window.location.href = '/driver/';
+            setTimeout(() => {
+                window.location.href = '/driver/profile';
+            }, 2000);
         }
-
-        // Инициализация при загрузке страницы
-        window.onload = function() {
-            console.log('🚀 Страница водителя загружена');
-            console.log('👤 ID водителя:', driverId);
-        };
     </script>
     
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key|default('') }}&libraries=places&loading=async&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key|default('') }}&libraries=places&loading=async"></script>
 </body>
 </html> 

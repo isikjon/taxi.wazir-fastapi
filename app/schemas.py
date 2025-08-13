@@ -32,7 +32,7 @@ class Car(CarBase):
     driver_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Driver schemas
 class DriverBase(BaseModel):
@@ -66,7 +66,7 @@ class Driver(DriverBase):
     cars: List[Car] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Order schemas
 class OrderBase(BaseModel):
@@ -90,7 +90,7 @@ class Order(OrderBase):
     driver: Optional[Driver] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Message schemas
 class MessageBase(BaseModel):
@@ -107,7 +107,7 @@ class Message(MessageBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # DriverUser schemas
 class DriverUserBase(BaseModel):
@@ -135,4 +135,4 @@ class DriverUser(DriverUserBase):
     driver_id: Optional[int] = None
 
     class Config:
-        orm_mode = True 
+        from_attributes = True 
