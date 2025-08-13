@@ -75,7 +75,7 @@ class OrderBase(BaseModel):
     origin: str
     destination: str
     driver_id: int
-    status: Optional[str] = "Выполняется"
+    status: Optional[str] = "Ожидает водителя"
     price: Optional[float] = None
     tariff: Optional[str] = None
     notes: Optional[str] = None

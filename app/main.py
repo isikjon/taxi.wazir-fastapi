@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone, date
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field, validator, ValidationError
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 from sqlalchemy.exc import IntegrityError
 import jose.jwt
 import secrets
@@ -150,7 +150,29 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 @app.get("/driver/", response_class=HTMLResponse)
 async def driver_main(request: Request):
-    return RedirectResponse(url="/driver/auth/step1")
+    return templates.TemplateResponse("driver/main.html", {"request": request})
+
+@app.get("/driver/online", response_class=HTMLResponse)
+async def driver_online(request: Request, driver_id: Optional[int] = None):
+    """Страница 'На линии' для водителя"""
+    if not driver_id:
+        # Пытаемся получить driver_id из cookies или сессии
+        token = request.cookies.get("token")
+        if token:
+            try:
+                payload = jose.jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+                driver_id = payload.get("driver_id")
+            except:
+                pass
+    
+    if not driver_id:
+        return RedirectResponse(url="/driver/", status_code=302)
+    
+    return templates.TemplateResponse("driver/online.html", {
+        "request": request,
+        "driver_id": driver_id,
+        "google_api_key": settings.GOOGLE_MAPS_API
+    })
 
 # Маршруты для диспетчерской панели
 @app.get("/", response_class=HTMLResponse)
@@ -4934,7 +4956,7 @@ async def create_order_from_form(
             origin=origin,
             destination=destination,
             driver_id=driver_id,
-            status="Выполняется",
+            status="Ожидает водителя",
             price=order_price,
             tariff=tariff,
             notes=notes,
@@ -5061,6 +5083,152 @@ async def get_orders_for_map(
                 "error": str(e),
                 "orders": []
             }
+        )
+
+@app.get("/api/driver/{driver_id}/new-orders", response_class=JSONResponse)
+async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db)):
+    """Получение новых заказов для водителя"""
+    try:
+        # Получаем заказы со статусом "Ожидает водителя" или назначенные этому водителю
+        new_orders = db.query(models.Order).filter(
+            or_(
+                models.Order.status == "Ожидает водителя",
+                and_(
+                    models.Order.driver_id == driver_id,
+                    models.Order.status == "Назначен"
+                )
+            )
+        ).order_by(models.Order.created_at.desc()).limit(10).all()
+        
+        orders_data = []
+        for order in new_orders:
+            orders_data.append({
+                "id": order.id,
+                "order_number": order.order_number or str(order.id),
+                "origin": order.origin,
+                "destination": order.destination,
+                "status": order.status,
+                "price": str(order.price) if order.price else None,
+                "tariff": order.tariff,
+                "time": order.time,
+                "created_at": order.created_at.strftime('%H:%M'),
+                "notes": order.notes,
+                "payment_method": order.payment_method
+            })
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "orders": orders_data,
+                "count": len(orders_data)
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения новых заказов для водителя {driver_id}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "orders": []
+            }
+        )
+
+@app.post("/api/driver/{driver_id}/accept-order/{order_id}", response_class=JSONResponse)
+async def accept_order(driver_id: int, order_id: int, db: Session = Depends(get_db)):
+    """Водитель принимает заказ"""
+    try:
+        # Проверяем существование водителя
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        if not driver:
+            raise HTTPException(status_code=404, detail="Водитель не найден")
+        
+        # Получаем заказ
+        order = db.query(models.Order).filter(models.Order.id == order_id).first()
+        if not order:
+            raise HTTPException(status_code=404, detail="Заказ не найден")
+        
+        # Проверяем, что заказ можно принять
+        if order.status not in ["Ожидает водителя", "Назначен"]:
+            raise HTTPException(status_code=400, detail="Заказ уже принят или завершен")
+        
+        # Назначаем заказ водителю
+        order.driver_id = driver_id
+        order.status = "Принят"
+        
+        db.commit()
+        db.refresh(order)
+        
+        logger.info(f"✅ Водитель {driver_id} принял заказ {order_id}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Заказ успешно принят",
+                "order": {
+                    "id": order.id,
+                    "order_number": order.order_number or str(order.id),
+                    "origin": order.origin,
+                    "destination": order.destination,
+                    "status": order.status,
+                    "price": str(order.price) if order.price else None
+                }
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Ошибка принятия заказа {order_id} водителем {driver_id}: {e}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e)
+            }
+        )
+
+@app.post("/api/driver/{driver_id}/start-trip/{order_id}", response_class=JSONResponse)
+async def start_trip(driver_id: int, order_id: int, db: Session = Depends(get_db)):
+    """Водитель начинает поездку"""
+    try:
+        order = db.query(models.Order).filter(
+            models.Order.id == order_id,
+            models.Order.driver_id == driver_id
+        ).first()
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="Заказ не найден")
+        
+        if order.status != "Принят":
+            raise HTTPException(status_code=400, detail="Заказ не может быть начат")
+        
+        order.status = "Выполняется"
+        db.commit()
+        
+        logger.info(f"✅ Водитель {driver_id} начал поездку по заказу {order_id}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Поездка начата",
+                "order_status": order.status
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Ошибка начала поездки {order_id}: {e}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
         )
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@
             
             .profile__date-selector span {
                 font-weight: bold;
-            }
+            } 
             
             .profile__days {
                 display: flex;
@@ -372,6 +372,12 @@
                     </div>
 
                     <div class="profile__actions">
+                        <a href="/driver/online" style="text-decoration: none;">
+                            <div class="profile__action-item" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; border-radius: 10px; margin-bottom: 20px; padding: 20px; text-align: center;">
+                                <p style="font-size: 18px; font-weight: bold; margin: 0;">🚗 На линию</p>
+                                <small style="opacity: 0.9;">Начать поиск заказов</small>
+                            </div>
+                        </a>
                         <a href="{{ url_for('driver_balance_page') }}">
                             <div class="profile__action-item">
                                 <p>Баланс</p>
