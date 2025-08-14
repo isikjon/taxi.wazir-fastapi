@@ -346,6 +346,12 @@
                                         поездок не было</p>
                                 </div>
                             </div>
+                            
+                            <!-- Отображение заказов за выбранный день -->
+                            <div id="daily-orders" style="margin-top: 15px; display: none;">
+                                <h4 style="margin: 10px 0; font-size: 14px; color: #666;">📋 Заказы за день</h4>
+                                <div id="orders-list"></div>
+                            </div>
                             <div class="profile__order-wrapper">
                                 <div class="profile__order-item">
                                     <div class="profile__order-info-item">
@@ -373,10 +379,9 @@
 
                     <div class="profile__actions">
                         <a href="/driver/online?driver_id={{ driver_id }}" style="text-decoration: none;">
-                            <div class="profile__action-item" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; border-radius: 10px; margin-bottom: 20px; padding: 20px; text-align: center;">
-                                <p style="font-size: 18px; font-weight: bold; margin: 0;">🚗 На линию</p>
-                                <small style="opacity: 0.9;">Начать поиск заказов</small>
-                            </div>
+                            <button class="main__btn main__btn-active" style="margin-bottom: 20px; font-weight: 400;">
+                                На линию
+                            </button>
                         </a>
                         <a href="{{ url_for('driver_balance_page') }}">
                             <div class="profile__action-item">
@@ -747,19 +752,163 @@
                 
                 // Функция обновления данных для выбранной даты
                 function updateDataForDate(date) {
-                    // Обновляем статистику и доп. информацию на выбранную дату
-                    document.getElementById('orders-count').textContent = "0 заказов";
-                    document.getElementById('no-trips-message').textContent = "За этот период поездок не было";
+                    console.log("Обновляем данные для даты:", date.toDateString());
                     
-                    document.getElementById('payment-card').textContent = "0 сом";
-                    document.getElementById('payment-cash').textContent = "0 сом";
-                    document.getElementById('payment-service').textContent = "0 сом (0%)";
-                    document.getElementById('payment-park').textContent = "0 сом (0%)";
+                    // Сбрасываем отображение перед загрузкой
+                    document.getElementById('orders-count').textContent = "Загрузка...";
+                    document.getElementById('no-trips-message').textContent = "Загружаем данные...";
                     
-                    console.log("Данные обновлены для даты:", date.toDateString());
+                    // Загружаем заказы за выбранную дату
+                    loadOrdersForDate(date);
                     
                     // Также обновляем баланс
                     getBalanceFromAdminPanel();
+                }
+                
+                // Функция загрузки заказов за конкретную дату
+                function loadOrdersForDate(date) {
+                    const driverId = window.driverId || document.body.dataset.driverId;
+                    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD формат
+                    
+                    fetch(`/api/driver/${driverId}/stats?date=${dateStr}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success || data.orders) {
+                                const orders = data.orders || [];
+                                const totalOrders = orders.length;
+                                const totalEarnings = orders.reduce((sum, order) => sum + (parseFloat(order.price) || 0), 0);
+                                
+                                // Подсчитываем по статусам
+                                const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'Завершен').length;
+                                const cancelledOrders = orders.filter(o => o.status === 'cancelled' || o.status === 'Отменен').length;
+                                const activeOrders = orders.filter(o => o.status === 'active' || o.status === 'Выполняется').length;
+                                
+                                // Обновляем отображение
+                                document.getElementById('orders-count').textContent = `${totalOrders} заказов`;
+                                document.getElementById('balance-value').textContent = `${totalEarnings.toFixed(0)} сом`;
+                                
+                                if (totalOrders > 0) {
+                                    document.getElementById('no-trips-message').textContent = 
+                                        `✅ Выполнено: ${completedOrders} | ❌ Отменено: ${cancelledOrders} | ⏳ Активных: ${activeOrders}`;
+                                    
+                                    // Показываем список заказов
+                                    displayOrdersList(orders);
+                                } else {
+                                    document.getElementById('no-trips-message').textContent = "За этот период поездок не было";
+                                    document.getElementById('daily-orders').style.display = 'none';
+                                }
+                                
+                                // Обновляем детализацию оплат (пока заглушки)
+                                document.getElementById('payment-card').textContent = "0 сом";
+                                document.getElementById('payment-cash').textContent = `${totalEarnings.toFixed(0)} сом`;
+                                document.getElementById('payment-service').textContent = "0 сом (0%)";
+                                document.getElementById('payment-park').textContent = "0 сом (0%)";
+                            } else {
+                                // Нет данных
+                                document.getElementById('orders-count').textContent = "0 заказов";
+                                document.getElementById('no-trips-message').textContent = "За этот период поездок не было";
+                                document.getElementById('daily-orders').style.display = 'none';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка загрузки заказов:', error);
+                            document.getElementById('orders-count').textContent = "0 заказов";
+                            document.getElementById('no-trips-message').textContent = "Ошибка загрузки данных";
+                            document.getElementById('daily-orders').style.display = 'none';
+                        });
+                }
+                
+                // Функция отображения списка заказов
+                function displayOrdersList(orders) {
+                    const dailyOrdersContainer = document.getElementById('daily-orders');
+                    const ordersListContainer = document.getElementById('orders-list');
+                    
+                    if (orders.length === 0) {
+                        dailyOrdersContainer.style.display = 'none';
+                        return;
+                    }
+                    
+                    let ordersHtml = '';
+                    orders.forEach((order, index) => {
+                        const statusIcon = getStatusIcon(order.status);
+                        const statusText = getStatusText(order.status);
+                        
+                        ordersHtml += `
+                            <div style="background: #f9f9f9; border-radius: 8px; padding: 12px; margin-bottom: 8px; border-left: 3px solid ${getStatusColor(order.status)};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="font-weight: 500; font-size: 14px;">${statusIcon} Заказ #${order.order_number || order.id}</div>
+                                    <div style="font-size: 12px; color: #666;">${order.time || '—'}</div>
+                                </div>
+                                <div style="font-size: 13px; color: #444; margin-bottom: 5px;">
+                                    📍 ${truncateText(order.origin || 'Не указано', 30)}
+                                </div>
+                                <div style="font-size: 13px; color: #444; margin-bottom: 8px;">
+                                    🏁 ${truncateText(order.destination || 'Не указано', 30)}
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-size: 12px; color: #666;">${statusText}</div>
+                                    <div style="font-weight: bold; color: #2ecc71;">${(order.price || 0)} сом</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    ordersListContainer.innerHTML = ordersHtml;
+                    dailyOrdersContainer.style.display = 'block';
+                }
+                
+                // Вспомогательные функции для статусов
+                function getStatusIcon(status) {
+                    switch(status) {
+                        case 'completed':
+                        case 'Завершен':
+                            return '✅';
+                        case 'cancelled':
+                        case 'Отменен':
+                            return '❌';
+                        case 'active':
+                        case 'Выполняется':
+                            return '⏳';
+                        default:
+                            return '📋';
+                    }
+                }
+                
+                function getStatusText(status) {
+                    switch(status) {
+                        case 'completed':
+                        case 'Завершен':
+                            return 'Выполнен';
+                        case 'cancelled':
+                        case 'Отменен':
+                            return 'Отменен';
+                        case 'active':
+                        case 'Выполняется':
+                            return 'Выполняется';
+                        default:
+                            return status || 'Неизвестно';
+                    }
+                }
+                
+                function getStatusColor(status) {
+                    switch(status) {
+                        case 'completed':
+                        case 'Завершен':
+                            return '#2ecc71';
+                        case 'cancelled':
+                        case 'Отменен':
+                            return '#e74c3c';
+                        case 'active':
+                        case 'Выполняется':
+                            return '#f39c12';
+                        default:
+                            return '#95a5a6';
+                    }
+                }
+                
+                function truncateText(text, maxLength) {
+                    if (!text) return '';
+                    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
                 }
             });
         </script>

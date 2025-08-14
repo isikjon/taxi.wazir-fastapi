@@ -5249,6 +5249,73 @@ async def get_orders_for_map(
             }
         )
 
+@app.post("/api/orders/{order_id}/cancel", response_class=JSONResponse)
+async def cancel_order(
+    order_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    reason: Optional[str] = None
+):
+    """Отмена заказа диспетчером"""
+    try:
+        logger.info(f"🚫 Отмена заказа ID: {order_id}")
+        
+        # Получаем заказ из БД
+        order = db.query(models.Order).filter(models.Order.id == order_id).first()
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "error": "Заказ не найден"
+                }
+            )
+        
+        # Проверяем, можно ли отменить заказ
+        if order.status == "Отменен":
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": "Заказ уже отменен"
+                }
+            )
+        
+        # Обновляем статус заказа
+        order.status = "Отменен"
+        
+        # Если указана причина, добавляем её в примечания
+        if reason:
+            current_notes = order.notes or ""
+            order.notes = f"{current_notes}\n[ОТМЕНЕН] {reason}".strip()
+        
+        # Сохраняем изменения
+        db.commit()
+        db.refresh(order)
+        
+        logger.info(f"✅ Заказ #{order.order_number} (ID: {order_id}) успешно отменен")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"Заказ #{order.order_number} отменен",
+                "order_id": order.id,
+                "new_status": order.status
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка отмены заказа {order_id}: {e}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка отмены заказа: {str(e)}"
+            }
+        )
+
 @app.get("/api/driver/{driver_id}/new-orders", response_class=JSONResponse)
 async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db)):
     """Получение новых заказов для водителя"""

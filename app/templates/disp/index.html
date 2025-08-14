@@ -53,6 +53,17 @@
         color: #6c757d;
     }
     
+    /* Стили для кнопок отмены */
+    .cancel-order-btn:hover {
+        background: #c82333 !important;
+        transform: scale(1.05);
+        transition: all 0.2s ease;
+    }
+    
+    .cancel-order-btn:active {
+        transform: scale(0.95);
+    }
+    
     .empty-state img {
         width: 48px;
         height: 48px;
@@ -216,6 +227,7 @@
                 <th>Стоимость</th>
                 <th>Тариф</th>
                 <th>Статус</th>
+                <th>Действия</th>
             </tr>
         </thead>
         <tbody id="orders-table-body">
@@ -236,11 +248,24 @@
                         {{ order.status|default('Выполняется') }}
                     </span>
                 </td>
+                <td class="actions-cell" style="text-align: center;">
+                    {% if order.status != 'Отменен' %}
+                        <button class="cancel-order-btn" 
+                                data-order-id="{{ order.id }}" 
+                                data-order-number="{{ order.order_number|default(order.id) }}"
+                                style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer;"
+                                title="Отменить заказ">
+                            ✕ Отменить
+                        </button>
+                    {% else %}
+                        <span style="color: #6c757d; font-size: 12px;">Отменен</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
             {% else %}
             <tr>
-                <td colspan="10" class="no-data">
+                <td colspan="11" class="no-data">
                     <div class="empty-state">
                         <img
                             src="{{ url_for('static', path='/assets/img/ico/car.png') }}"
@@ -593,6 +618,167 @@
         let datePickerVisible = false;
         let selectedStartDate = $('#start-date').val() ? new Date($('#start-date').val()) : null;
         let selectedEndDate = $('#end-date').val() ? new Date($('#end-date').val()) : null;
+        
+        // Функция отмены заказа
+        function cancelOrder(orderId, orderNumber) {
+            console.log(`🎯 cancelOrder вызвана с параметрами:`, { orderId, orderNumber });
+            
+            if (!confirm(`Вы уверены, что хотите отменить заказ #${orderNumber}?`)) {
+                console.log(`❌ Пользователь отменил подтверждение`);
+                return;
+            }
+            
+            console.log(`🚫 Начинаем отмену заказа #${orderNumber} (ID: ${orderId})`);
+            
+            const requestData = { reason: 'Отменен диспетчером' };
+            console.log(`📤 Отправляем запрос на:`, `/api/orders/${orderId}/cancel`);
+            console.log(`📤 Данные запроса:`, requestData);
+            
+            fetch(`/api/orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                console.log(`📥 Получен ответ со статусом:`, response.status);
+                console.log(`📥 Response headers:`, [...response.headers.entries()]);
+                
+                if (!response.ok) {
+                    console.error(`❌ HTTP статус не OK: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                console.log(`📊 Данные ответа:`, data);
+                
+                if (data.success) {
+                    console.log(`✅ Заказ #${orderNumber} успешно отменен`);
+                    
+                    // Обновляем статус в таблице
+                    const row = document.querySelector(`tr[data-id="${orderId}"]`);
+                    console.log(`🔍 Найдена строка заказа:`, row);
+                    
+                    if (row) {
+                        const statusCell = row.querySelector('.status-cell .status-badge');
+                        const actionsCell = row.querySelector('.actions-cell');
+                        
+                        console.log(`🔍 Найдена ячейка статуса:`, statusCell);
+                        console.log(`🔍 Найдена ячейка действий:`, actionsCell);
+                        
+                        // Обновляем статус
+                        if (statusCell) {
+                            statusCell.textContent = 'Отменен';
+                            statusCell.className = 'status-badge status-отменен';
+                            console.log(`✅ Статус обновлен`);
+                        }
+                        
+                        // Убираем кнопку отмены
+                        if (actionsCell) {
+                            actionsCell.innerHTML = '<span style="color: #6c757d; font-size: 12px;">Отменен</span>';
+                            console.log(`✅ Кнопка заменена на текст`);
+                        }
+                    } else {
+                        console.error(`❌ Не найдена строка с data-id="${orderId}"`);
+                    }
+                    
+                    // Показываем уведомление
+                    showNotification(`Заказ #${orderNumber} отменен`, 'success');
+                } else {
+                    console.error(`❌ Ошибка от сервера:`, data.error);
+                    showNotification(`Ошибка отмены заказа: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка при отмене заказа:', error);
+                console.error('❌ Полная информация об ошибке:', error.stack);
+                showNotification('Ошибка соединения с сервером', 'error');
+            });
+        }
+        
+        // Функция показа уведомлений
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 4px;
+                color: white;
+                font-weight: 500;
+                z-index: 9999;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
+            switch(type) {
+                case 'success':
+                    notification.style.backgroundColor = '#28a745';
+                    break;
+                case 'error':
+                    notification.style.backgroundColor = '#dc3545';
+                    break;
+                default:
+                    notification.style.backgroundColor = '#17a2b8';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Автоматически удаляем через 3 секунды
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+        
+        // Добавляем обработчики событий для кнопок отмены
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log(`🚀 DOMContentLoaded - инициализируем обработчики`);
+            
+            // Проверяем сколько кнопок отмены есть на странице
+            const cancelButtons = document.querySelectorAll('.cancel-order-btn');
+            console.log(`🔍 Найдено кнопок отмены:`, cancelButtons.length);
+            cancelButtons.forEach((btn, index) => {
+                console.log(`🔍 Кнопка ${index + 1}:`, {
+                    orderId: btn.getAttribute('data-order-id'),
+                    orderNumber: btn.getAttribute('data-order-number'),
+                    element: btn
+                });
+            });
+            
+            document.addEventListener('click', function(e) {
+                console.log(`🖱️ Клик по элементу:`, e.target);
+                console.log(`🖱️ Классы элемента:`, e.target.classList);
+                console.log(`🖱️ Есть ли класс cancel-order-btn:`, e.target.classList.contains('cancel-order-btn'));
+                
+                if (e.target.classList.contains('cancel-order-btn')) {
+                    console.log(`✅ Клик по кнопке отмены!`);
+                    
+                    const orderId = e.target.getAttribute('data-order-id');
+                    const orderNumber = e.target.getAttribute('data-order-number');
+                    
+                    console.log(`📋 Данные кнопки:`, { orderId, orderNumber });
+                    
+                    if (!orderId || !orderNumber) {
+                        console.error(`❌ Отсутствуют данные кнопки:`, { orderId, orderNumber });
+                        showNotification('Ошибка: отсутствуют данные заказа', 'error');
+                        return;
+                    }
+                    
+                    cancelOrder(orderId, orderNumber);
+                } else {
+                    console.log(`ℹ️ Клик НЕ по кнопке отмены`);
+                }
+            });
+            
+            console.log(`✅ Обработчики событий добавлены`);
+        });
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         

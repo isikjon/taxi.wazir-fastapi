@@ -7,6 +7,9 @@
         <link rel="stylesheet"
             href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
         <style>
+            body,html {
+                zoom: .98;
+            }
             .activity-page {
                 padding-bottom: 50px;
             }
@@ -44,8 +47,12 @@
                 text-align: center;
                 padding: 12px;
                 font-weight: 500;
+                font-size: 13px;
                 cursor: pointer;
                 transition: all 0.2s;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
             
             .period-tab.active {
@@ -270,8 +277,9 @@
                         {% if not orders or orders|length == 0 %}
                         <div class="orders-empty">
                             <img
-                                src="{{ url_for('static', path='/driver/assets/img/ico/car.svg') }}"
-                                alt="Нет заказов">
+                                src="https://wazir.kg/static/A.png"
+                                alt="Нет заказов"
+                                style="width: 60px; height: 60px; object-fit: contain; opacity: 0.5;">
                             <p>Вы не выполняли заказы в течение недели</p>
                         </div>
                         {% else %}
@@ -294,8 +302,9 @@
                                     <div class="route-point">
                                         <div class="route-icon">
                                             <img
-                                                src="{{ url_for('static', path='/driver/assets/img/ico/pin-start.svg') }}"
-                                                alt="От">
+                                                src="https://wazir.kg/static/A.png"
+                                                alt="От"
+                                                style="width: 16px; height: 16px; object-fit: contain;">
                                         </div>
                                         <div class="route-address">{{
                                             order.origin }}</div>
@@ -303,8 +312,9 @@
                                     <div class="route-point">
                                         <div class="route-icon">
                                             <img
-                                                src="{{ url_for('static', path='/driver/assets/img/ico/pin-end.svg') }}"
-                                                alt="До">
+                                                src="https://wazir.kg/static/B.png"
+                                                alt="До"
+                                                style="width: 16px; height: 16px; object-fit: contain;">
                                         </div>
                                         <div class="route-address">{{
                                             order.destination }}</div>
@@ -419,7 +429,7 @@
                                 console.error('Ошибка загрузки заказов:', data.message);
                                 ordersContainer.innerHTML = `
                                     <div class="orders-empty">
-                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/error.svg') }}" alt="Ошибка">
+                                        <img src="https://wazir.kg/static/B.png" alt="Ошибка" style="width: 60px; height: 60px; object-fit: contain; opacity: 0.5;">
                                         <p>Не удалось загрузить заказы. Попробуйте позже.</p>
                                     </div>
                                 `;
@@ -440,7 +450,7 @@
                                 
                                 ordersContainer.innerHTML = `
                                     <div class="orders-empty">
-                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/car.svg') }}" alt="Нет заказов">
+                                        <img src="https://wazir.kg/static/A.png" alt="Нет заказов" style="width: 60px; height: 60px; object-fit: contain; opacity: 0.5;">
                                         <p>${emptyMessage}</p>
                                     </div>
                                 `;
@@ -488,13 +498,13 @@
                                             <div class="order-route">
                                                 <div class="route-point">
                                                     <div class="route-icon">
-                                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/pin-start.svg') }}" alt="От">
+                                                        <img src="https://wazir.kg/static/A.png" alt="От" style="width: 16px; height: 16px; object-fit: contain;">
                                                     </div>
                                                     <div class="route-address">${order.origin}</div>
                                                 </div>
                                                 <div class="route-point">
                                                     <div class="route-icon">
-                                                        <img src="{{ url_for('static', path='/driver/assets/img/ico/pin-end.svg') }}" alt="До">
+                                                        <img src="https://wazir.kg/static/B.png" alt="До" style="width: 16px; height: 16px; object-fit: contain;">
                                                     </div>
                                                     <div class="route-address">${order.destination}</div>
                                                 </div>
@@ -535,7 +545,7 @@
                             ordersContainer.style.display = 'block';
                             ordersContainer.innerHTML = `
                                 <div class="orders-empty">
-                                    <img src="{{ url_for('static', path='/driver/assets/img/ico/error.svg') }}" alt="Ошибка">
+                                    <img src="https://wazir.kg/static/B.png" alt="Ошибка" style="width: 60px; height: 60px; object-fit: contain; opacity: 0.5;">
                                     <p>Не удалось загрузить заказы. Попробуйте позже.</p>
                                 </div>
                             `;
