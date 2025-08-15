@@ -174,6 +174,14 @@ async def driver_online(request: Request, driver_id: Optional[int] = Query(None)
         "google_api_key": settings.GOOGLE_MAPS_API
     })
 
+@app.get("/driver/test-order", response_class=HTMLResponse)
+async def driver_test_order(request: Request):
+    """Страница тестового заказа для обучения водителей"""
+    return templates.TemplateResponse("driver/test_order.html", {
+        "request": request,
+        "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API
+    })
+
 # Маршруты для диспетчерской панели
 @app.get("/", response_class=HTMLResponse)
 @app.get("/disp", response_class=HTMLResponse)
@@ -2563,15 +2571,20 @@ async def get_driver_profile(driver_id: str, db: Session = Depends(get_db)):
             activity = driver.activity
         
         # Формируем ответ
-        return {
-            "id": driver.id,
-            "full_name": driver.full_name,
-            "phone": driver.phone,
-            "car": car_data,
-            "park": park_name,
-            "rating": rating,
-            "activity": activity
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "id": driver.id,
+                "full_name": driver.full_name,
+                "phone": driver.phone,
+                "car": car_data,
+                "park": park_name,
+                "rating": rating,
+                "activity": activity,
+                "balance": getattr(driver, 'balance', 0) or 0
+            }
+        )
     except Exception as e:
         print(f"Ошибка при получении профиля водителя: {str(e)}")
         return JSONResponse(
@@ -2612,44 +2625,53 @@ async def get_driver_stats(driver_id: str, date: str = None, db: Session = Depen
         day_start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
         
-        # В реальности здесь должен быть запрос к БД для получения заказов водителя за указанную дату
-        # Пример: orders = crud.get_driver_orders(db, driver_id, day_start, day_end)
+        # Получаем реальные заказы водителя за указанную дату
+        orders = db.query(models.Order).filter(
+            models.Order.driver_id == driver_id,
+            models.Order.created_at >= day_start,
+            models.Order.created_at < day_end
+        ).all()
         
-        # Для демонстрации создаем фиктивные данные
-        # В реальном приложении эти данные должны быть получены из БД
+        # Подсчитываем статистику
+        total_orders = len(orders)
+        completed_orders = len([o for o in orders if o.status == "Завершен"])
+        active_orders = len([o for o in orders if o.status in ["Выполняется", "Принят"]])
+        cancelled_orders = len([o for o in orders if o.status in ["Отменен", "Отклонен водителем"]])
+        total_earnings = sum(o.price for o in orders if o.status == "Завершен" and o.price)
         
-        # Проверяем, является ли выбранная дата сегодняшним днем
-        is_today = target_date.date() == datetime.now().date()
+        logger.info(f"📊 Статистика водителя {driver_id} за {date}: {total_orders} заказов, {total_earnings} сом")
         
-        # Создаем тестовые данные в зависимости от даты
-        if is_today:
-            # Для текущего дня показываем нулевой баланс
-            orders_count = 0
-            balance = 0.0
-            cash = 0
-            card = 0
-            service = 0
-            service_percent = 0
-        else:
-            # Для прошлых дней генерируем случайные данные на основе дня месяца
-            day_of_month = target_date.day
-            orders_count = day_of_month % 10  # От 0 до 9 заказов
-            balance = day_of_month * 100.0  # Баланс пропорционален дню месяца
-            cash = int(balance * 0.7)  # 70% наличными
-            card = int(balance * 0.3)  # 30% по карте
-            service = int(balance * 0.15)  # 15% сервисный сбор
-            service_percent = 15
+        # Формируем детализацию заказов
+        formatted_orders = []
+        for order in orders:
+            formatted_orders.append({
+                "id": order.id,
+                "order_number": order.order_number,
+                "time": order.time or order.created_at.strftime("%H:%M") if order.created_at else "—",
+                "origin": order.origin,
+                "destination": order.destination,
+                "status": order.status,
+                "price": order.price or 0
+            })
         
-        # Формируем ответ
-        return {
-            "date": date,
-            "orders_count": orders_count,
-            "balance": balance,
-            "cash": cash,
-            "card": card,
-            "service": service,
-            "service_percent": service_percent
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "data": {
+                    "driver_id": driver_id,
+                    "date": date,
+                    "stats": {
+                        "total_orders": total_orders,
+                        "completed_orders": completed_orders,
+                        "active_orders": active_orders,
+                        "cancelled_orders": cancelled_orders,
+                        "total_earnings": total_earnings
+                    },
+                    "orders": formatted_orders
+                }
+            }
+        )
     except Exception as e:
         print(f"Ошибка при получении статистики водителя: {str(e)}")
         return JSONResponse(
@@ -5316,48 +5338,207 @@ async def cancel_order(
             }
         )
 
-@app.get("/api/driver/{driver_id}/new-orders", response_class=JSONResponse)
-async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db)):
-    """Получение новых заказов для водителя"""
+@app.post("/api/driver/{driver_id}/decline-order/{order_id}", response_class=JSONResponse)
+async def decline_order_by_driver(
+    driver_id: int,
+    order_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Отклонение заказа водителем"""
     try:
-        # Получаем заказы со статусом "Ожидает водителя" или назначенные этому водителю
-        new_orders = db.query(models.Order).filter(
-            or_(
-                models.Order.status == "Ожидает водителя",
-                and_(
-                    models.Order.driver_id == driver_id,
-                    models.Order.status == "Назначен"
-                )
-            )
-        ).order_by(models.Order.created_at.desc()).limit(10).all()
+        logger.info(f"🚫 Водитель {driver_id} отклоняет заказ {order_id}")
         
-        orders_data = []
-        for order in new_orders:
-            orders_data.append({
-                "id": order.id,
-                "order_number": order.order_number or str(order.id),
-                "origin": order.origin,
-                "destination": order.destination,
-                "status": order.status,
-                "price": str(order.price) if order.price else None,
-                "tariff": order.tariff,
-                "time": order.time,
-                "created_at": order.created_at.strftime('%H:%M'),
-                "notes": order.notes,
-                "payment_method": order.payment_method
-            })
+        # Получаем заказ из БД
+        order = db.query(models.Order).filter(
+            models.Order.id == order_id,
+            models.Order.driver_id == driver_id
+        ).first()
+        
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "error": "Заказ не найден или не назначен этому водителю"
+                }
+            )
+        
+        # Проверяем, можно ли отклонить заказ
+        if order.status in ["Завершен", "Отменен"]:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": f"Нельзя отклонить заказ со статусом '{order.status}'"
+                }
+            )
+        
+        # Обновляем статус заказа
+        order.status = "Отклонен водителем"
+        
+        # Добавляем причину в примечания
+        current_notes = order.notes or ""
+        order.notes = f"{current_notes}\n[ОТКЛОНЕН ВОДИТЕЛЕМ] {datetime.now().strftime('%d.%m.%Y %H:%M')}".strip()
+        
+        # Уменьшаем активность водителя на 10 баллов
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        if driver:
+            current_activity = getattr(driver, 'activity', 50) or 50
+            new_activity = max(0, current_activity - 10)
+            driver.activity = new_activity
+            logger.info(f"📉 Активность водителя {driver_id}: {current_activity} -> {new_activity}")
+        
+        # Сохраняем изменения
+        db.commit()
+        db.refresh(order)
+        
+        logger.info(f"✅ Заказ #{order.order_number} отклонен водителем {driver_id}")
         
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
-                "orders": orders_data,
-                "count": len(orders_data)
+                "message": f"Заказ #{order.order_number} отклонен",
+                "order_id": order.id,
+                "new_status": order.status,
+                "new_activity": getattr(driver, 'activity', 0) if driver else 0
             }
         )
         
     except Exception as e:
-        logger.error(f"❌ Ошибка получения новых заказов для водителя {driver_id}: {e}")
+        logger.error(f"❌ Ошибка отклонения заказа {order_id} водителем {driver_id}: {e}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка отклонения заказа: {str(e)}"
+            }
+        )
+
+@app.post("/api/driver/{driver_id}/accept-order/{order_id}", response_class=JSONResponse)
+async def accept_order_by_driver(
+    driver_id: int,
+    order_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Принятие заказа водителем"""
+    try:
+        logger.info(f"✅ Водитель {driver_id} принимает заказ {order_id}")
+        
+        # Получаем заказ из БД
+        order = db.query(models.Order).filter(
+            models.Order.id == order_id,
+            models.Order.driver_id == driver_id
+        ).first()
+        
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "error": "Заказ не найден или не назначен этому водителю"
+                }
+            )
+        
+        # Проверяем, можно ли принять заказ
+        if order.status in ["Завершен", "Отменен", "Отклонен водителем"]:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": f"Нельзя принять заказ со статусом '{order.status}'"
+                }
+            )
+        
+        # Обновляем статус заказа
+        order.status = "Выполняется"
+        
+        # Добавляем информацию в примечания
+        current_notes = order.notes or ""
+        order.notes = f"{current_notes}\n[ПРИНЯТ ВОДИТЕЛЕМ] {datetime.now().strftime('%d.%m.%Y %H:%M')}".strip()
+        
+        # Увеличиваем активность водителя на 4 балла
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        if driver:
+            current_activity = getattr(driver, 'activity', 50) or 50
+            new_activity = min(100, current_activity + 4)
+            driver.activity = new_activity
+            logger.info(f"📈 Активность водителя {driver_id}: {current_activity} -> {new_activity}")
+        
+        # Сохраняем изменения
+        db.commit()
+        db.refresh(order)
+        
+        logger.info(f"✅ Заказ #{order.order_number} принят водителем {driver_id}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"Заказ #{order.order_number} принят",
+                "order_id": order.id,
+                "new_status": order.status,
+                "new_activity": getattr(driver, 'activity', 0) if driver else 0
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка принятия заказа {order_id} водителем {driver_id}: {e}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка принятия заказа: {str(e)}"
+            }
+        )
+
+@app.get("/api/driver/{driver_id}/new-orders", response_class=JSONResponse)
+async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db)):
+    """Получение новых заказов для водителя"""
+    try:
+        # Получаем заказы назначенные этому водителю
+        new_orders = db.query(models.Order).filter(
+            models.Order.driver_id == driver_id,
+            models.Order.status.in_(["Ожидает водителя", "Назначен"])
+        ).order_by(models.Order.created_at.desc()).limit(1).all()
+        
+        # Альтернативный поиск заказов без назначенного водителя
+        if not new_orders:
+            new_orders = db.query(models.Order).filter(
+                models.Order.status == "Ожидает водителя",
+                models.Order.driver_id.is_(None)
+            ).order_by(models.Order.created_at.desc()).limit(1).all()
+        
+        logger.info(f"📋 Найдено заказов для водителя {driver_id}: {len(new_orders)}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "orders": [
+                    {
+                        "id": order.id,
+                        "order_number": order.order_number,
+                        "origin": order.origin,
+                        "destination": order.destination,
+                        "status": order.status,
+                        "price": order.price,
+                        "tariff": order.tariff,
+                        "notes": order.notes,
+                        "time": order.time,
+                        "created_at": order.created_at.isoformat() if order.created_at else None
+                    }
+                    for order in new_orders
+                ]
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения заказов для водителя {driver_id}: {e}")
         return JSONResponse(
             status_code=500,
             content={
@@ -5367,61 +5548,7 @@ async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db
             }
         )
 
-@app.post("/api/driver/{driver_id}/accept-order/{order_id}", response_class=JSONResponse)
-async def accept_order(driver_id: int, order_id: int, db: Session = Depends(get_db)):
-    """Водитель принимает заказ"""
-    try:
-        # Проверяем существование водителя
-        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
-        if not driver:
-            raise HTTPException(status_code=404, detail="Водитель не найден")
-        
-        # Получаем заказ
-        order = db.query(models.Order).filter(models.Order.id == order_id).first()
-        if not order:
-            raise HTTPException(status_code=404, detail="Заказ не найден")
-        
-        # Проверяем, что заказ можно принять
-        if order.status not in ["Ожидает водителя", "Назначен"]:
-            raise HTTPException(status_code=400, detail="Заказ уже принят или завершен")
-        
-        # Назначаем заказ водителю
-        order.driver_id = driver_id
-        order.status = "Принят"
-        
-        db.commit()
-        db.refresh(order)
-        
-        logger.info(f"✅ Водитель {driver_id} принял заказ {order_id}")
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "success": True,
-                "message": "Заказ успешно принят",
-                "order": {
-                    "id": order.id,
-                    "order_number": order.order_number or str(order.id),
-                    "origin": order.origin,
-                    "destination": order.destination,
-                    "status": order.status,
-                    "price": str(order.price) if order.price else None
-                }
-            }
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Ошибка принятия заказа {order_id} водителем {driver_id}: {e}")
-        db.rollback()
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "error": str(e)
-            }
-        )
+
 
 @app.post("/api/driver/{driver_id}/start-trip/{order_id}", response_class=JSONResponse)
 async def start_trip(driver_id: int, order_id: int, db: Session = Depends(get_db)):
@@ -5460,6 +5587,150 @@ async def start_trip(driver_id: int, order_id: int, db: Session = Depends(get_db
         return JSONResponse(
             status_code=500,
             content={"success": False, "error": str(e)}
+        )
+
+@app.get("/api/driver/{driver_id}/active-trip", response_class=JSONResponse)
+async def get_active_trip(driver_id: int, db: Session = Depends(get_db)):
+    """Получение активной поездки водителя для восстановления состояния"""
+    try:
+        # Ищем активный заказ водителя
+        active_order = db.query(models.Order).filter(
+            models.Order.driver_id == driver_id,
+            models.Order.status.in_(["Принят", "Выполняется"])
+        ).first()
+        
+        if not active_order:
+            return JSONResponse(
+                status_code=200,
+                content={"success": True, "trip": None}
+            )
+        
+        logger.info(f"🔄 Найдена активная поездка для водителя {driver_id}: заказ #{active_order.order_number}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "trip": {
+                    "id": active_order.id,
+                    "order_number": active_order.order_number,
+                    "status": active_order.status,
+                    "price": active_order.price,
+                    "origin": active_order.origin,
+                    "destination": active_order.destination,
+                    "pickup_lat": None,  # TODO: добавить координаты в модель
+                    "pickup_lng": None,
+                    "destination_lat": None,
+                    "destination_lng": None
+                }
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения активной поездки {driver_id}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+@app.post("/api/driver/{driver_id}/complete-trip/{order_id}", response_class=JSONResponse)
+async def complete_trip(
+    driver_id: int, 
+    order_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Завершение поездки с расчетом оплаты по проценту выполнения"""
+    try:
+        body = await request.json()
+        completion_percentage = body.get('completion_percentage', 100)
+        rating = body.get('rating', 5)
+        
+        # Получаем заказ
+        order = db.query(models.Order).filter(
+            models.Order.id == order_id,
+            models.Order.driver_id == driver_id
+        ).first()
+        
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "error": "Заказ не найден или не назначен этому водителю"
+                }
+            )
+        
+        if order.status not in ["Выполняется", "Принят"]:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": f"Нельзя завершить заказ со статусом '{order.status}'"
+                }
+            )
+        
+        # Рассчитываем итоговую стоимость
+        original_price = order.price or 433
+        final_price = round(original_price * (completion_percentage / 100))
+        
+        # Обновляем заказ
+        order.status = "Завершен"
+        order.price = final_price
+        order.notes = (order.notes or "") + f"\n[ЗАВЕРШЕН] {completion_percentage}% маршрута. Оценка: {rating}⭐"
+        
+        # Обновляем активность водителя
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        activity_gain = 0
+        new_activity = 50
+        new_balance = 0
+        
+        if driver:
+            activity_gain = round(completion_percentage / 25)  # 1 балл за каждые 25%
+            current_activity = getattr(driver, 'activity', 50) or 50
+            new_activity = min(100, current_activity + activity_gain)
+            driver.activity = new_activity
+            
+            # Обновляем баланс водителя
+            current_balance = getattr(driver, 'balance', 0) or 0
+            new_balance = current_balance + final_price
+            driver.balance = new_balance
+            
+            logger.info(f"💰 Водитель {driver_id}: +{final_price} СОМ, активность {current_activity} -> {new_activity}")
+        
+        # Сохраняем изменения
+        db.commit()
+        db.refresh(order)
+        
+        logger.info(f"🏁 Поездка завершена: заказ #{order.order_number}, {completion_percentage}%, {final_price} СОМ")
+        logger.info(f"💰 Водитель {driver_id}: активность {new_activity}, баланс {new_balance}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"Поездка завершена ({completion_percentage}%)",
+                "order_id": order.id,
+                "completion_percentage": completion_percentage,
+                "original_price": original_price,
+                "final_price": final_price,
+                "activity_gain": activity_gain if driver else 0,
+                "new_activity": new_activity if driver else 0,
+                "new_balance": new_balance if driver else 0
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка завершения поездки {order_id}: {e}")
+        import traceback
+        logger.error(f"❌ Полная ошибка: {traceback.format_exc()}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка завершения поездки: {str(e)}"
+            }
         )
 
 if __name__ == "__main__":

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовый заказ - Wazir Taxi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            font-weight: 400;
+        }
+
+        /* Контейнер карты */
+        #map {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Статус бар сверху */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Блок нового заказа */
+        .order-popup {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            display: none;
+            z-index: 1001;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .order-popup.show {
+            display: block;
+        }
+
+        .order-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .order-subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .order-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .order-location {
+            margin-bottom: 15px;
+        }
+
+        .location-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .location-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .location-text {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-accept {
+            background: #666;
+            color: white;
+            border-color: #666;
+        }
+
+        .btn-accept:hover {
+            background: #555;
+        }
+
+        /* Прогресс бар сверху */
+        #topProgressBar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        #topProgressBar .progress-fill {
+            background: #666;
+            height: 6px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #topProgressBar .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Навигационная панель внизу */
+        .navigation-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            z-index: 1000;
+            display: none;
+            padding: 20px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+
+        .navigation-panel.show {
+            display: block;
+        }
+
+        .navigation-instruction {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .instruction-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            color: #666;
+        }
+
+        .instruction-text {
+            flex: 1;
+        }
+
+        .instruction-main {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .instruction-sub {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn-complete {
+            width: 100%;
+            padding: 15px;
+            background: #666;
+            color: white;
+            border: 1px solid #666;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-complete:hover {
+            background: #555;
+        }
+
+        /* Блок результата поездки */
+        .trip-result {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ddd;
+            padding: 30px;
+            z-index: 1002;
+            display: none;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .trip-result.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .btn-done {
+            width: 100%;
+            padding: 15px;
+            background: #666;
+            color: white;
+            border: 1px solid #666;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .btn-done:hover {
+            background: #555;
+        }
+
+        /* Подсказки */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1003;
+            margin-bottom: 5px;
+        }
+
+        /* Инструкции */
+        .instructions {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            max-width: 250px;
+            z-index: 1000;
+        }
+
+        .instructions h4 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .instructions li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #666;
+        }
+
+        .gm-bundled-control {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Статус бар -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span id="statusText">Тестовый режим</span>
+        </div>
+        <div class="status-right">
+            <span id="balanceText">0 сом</span>
+        </div>
+    </div>
+
+    <!-- Инструкции -->
+    <div class="instructions">
+        <h4>Инструкция по тестированию</h4>
+        <ul>
+            <li>Подождите загрузки карты</li>
+            <li>Появится тестовый заказ</li>
+            <li>Нажмите "Принять"</li>
+            <li>Начнется навигация к клиенту</li>
+            <li>После прибытия к клиенту начнется поездка</li>
+            <li>Используйте "Завершить" для окончания</li>
+        </ul>
+    </div>
+
+    <!-- Прогресс бар сверху -->
+    <div id="topProgressBar">
+        <div class="progress-fill" id="progressFill"></div>
+        <div class="progress-info">
+            <span id="tripDistance">0км</span>
+            <span id="tripDuration">0мин</span>
+            <span id="tripTime">0мин</span>
+        </div>
+    </div>
+
+    <!-- Карта -->
+    <div id="map"></div>
+
+    <!-- Блок нового заказа -->
+    <div class="order-popup" id="orderPopup">
+        <div class="order-header">
+            <div class="order-title">Новый заказ</div>
+            <div class="order-subtitle">Тестовый заказ для обучения</div>
+        </div>
+        
+        <div class="order-info">
+            <div class="info-row">
+                <span class="info-label">Расстояние до клиента</span>
+                <span class="info-value" id="orderDistance">1.2км</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Время до клиента</span>
+                <span class="info-value" id="orderDuration">3мин</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Активность</span>
+                <span class="info-value">+4</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Стоимость поездки</span>
+                <span class="info-value">250 СОМ</span>
+            </div>
+        </div>
+
+        <div class="order-location">
+            <div class="location-item">
+                <div class="location-label">Откуда</div>
+                <div class="location-text">Тестовая точка А (в 1км от вас)</div>
+            </div>
+            <div class="location-item">
+                <div class="location-label">Куда</div>
+                <div class="location-text">Тестовая точка Б (еще 2км)</div>
+            </div>
+            <div class="location-item">
+                <div class="location-label">Комментарий</div>
+                <div class="location-text">Тестовая поездка для обучения</div>
+            </div>
+        </div>
+
+        <div class="order-actions">
+            <button class="btn" onclick="declineTestOrder()">Пропустить</button>
+            <button class="btn btn-accept" onclick="acceptTestOrder()">Принять</button>
+        </div>
+    </div>
+
+    <!-- Навигационная панель -->
+    <div class="navigation-panel" id="navigationPanel">
+        <div class="navigation-instruction" id="navigationInstruction">
+            <div class="instruction-icon">→</div>
+            <div class="instruction-text">
+                <div class="instruction-main" id="instructionMain">Загрузка навигации...</div>
+                <div class="instruction-sub" id="instructionSub">Ожидание</div>
+            </div>
+        </div>
+        
+        <button class="btn-complete" id="btnComplete" onclick="completeTestTrip()">Завершить</button>
+    </div>
+
+    <!-- Результат поездки -->
+    <div class="trip-result" id="tripResult">
+        <div class="result-title">Поездка завершена</div>
+        
+        <div class="result-item">
+            <div class="result-label">Доход</div>
+            <div class="result-value" id="resultIncome">250 СОМ</div>
+        </div>
+        
+        <div class="result-item">
+            <div class="result-label">Активность</div>
+            <div class="result-value" id="resultActivity">+4<br>54/100</div>
+        </div>
+
+        <button class="btn-done" onclick="finishTest()">Готово</button>
+    </div>
+
+    <!-- Скрипт карты -->
+    <script async defer 
+            src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=geometry,places&callback=waitForGoogleMaps">
+    </script>
+
+    <script>
+        // Глобальные переменные
+        let map;
+        let currentLocation = { lat: 42.8746, lng: 74.5698 }; // Бишкек
+        let testOrder = null;
+        let directionsService;
+        let directionsRenderer;
+        let driverMarker;
+        let tripState = 'waiting'; // waiting, to_pickup, in_trip, completed
+        let routeProgress = 0;
+        let totalTripDistance = 0;
+        let completedDistance = 0;
+        let watchPositionId = null;
+
+        // Ждем загрузки Google Maps
+        function waitForGoogleMaps() {
+            if (window.google && window.google.maps && window.google.maps.Map) {
+                console.log('Google Maps загружен');
+                initMap();
+            } else {
+                console.log('Ожидание Google Maps...');
+                setTimeout(waitForGoogleMaps, 100);
+            }
+        }
+
+        // Инициализация карты
+        function initMap() {
+            console.log('Инициализация карты...');
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: currentLocation,
+                disableDefaultUI: true,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+
+            // Инициализируем сервисы маршрутов
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: false,
+                polylineOptions: {
+                    strokeColor: '#666',
+                    strokeWeight: 4
+                }
+            });
+            directionsRenderer.setMap(map);
+
+            // Получаем текущее местоположение
+            requestLocationPermission();
+
+            // Создаем тестовый заказ через 2 секунды
+            setTimeout(createTestOrder, 2000);
+        }
+
+        // Запрос геолокации
+        function requestLocationPermission() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        console.log('Геолокация получена:', currentLocation);
+                        
+                        // Центрируем карту
+                        map.setCenter(currentLocation);
+                        
+                        // Создаем маркер водителя
+                        createDriverMarker();
+                    },
+                    (error) => {
+                        console.warn('Ошибка геолокации:', error);
+                        alert('Для корректной работы тестового режима требуется доступ к геолокации. Будет использовано местоположение по умолчанию.');
+                        createDriverMarker();
+                    }
+                );
+            }
+        }
+
+        // Создание маркера водителя
+        function createDriverMarker() {
+            const carIcon = {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 6,
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: '#ffffff'
+            };
+
+            driverMarker = new google.maps.Marker({
+                position: currentLocation,
+                map: map,
+                icon: carIcon,
+                title: 'Ваше местоположение'
+            });
+        }
+
+        // Создание тестового заказа
+        function createTestOrder() {
+            console.log('Создание тестового заказа...');
+            
+            // Создаем точку в 1км от водителя
+            const pickupPoint = getPointAtDistance(currentLocation, 1000, 45); // 1км на северо-восток
+            const destinationPoint = getPointAtDistance(pickupPoint, 2000, 90); // еще 2км на восток
+
+            testOrder = {
+                id: 'test_001',
+                orderNumber: 'TEST001',
+                price: 250,
+                pickupLat: pickupPoint.lat,
+                pickupLng: pickupPoint.lng,
+                destinationLat: destinationPoint.lat,
+                destinationLng: destinationPoint.lng,
+                origin: 'Тестовая точка А',
+                destination: 'Тестовая точка Б'
+            };
+
+            // Показываем заказ
+            showTestOrder();
+        }
+
+        // Вычисление точки на расстоянии
+        function getPointAtDistance(center, distanceMeters, bearing) {
+            const R = 6371000; // Радиус Земли в метрах
+            const lat1 = center.lat * Math.PI / 180;
+            const lng1 = center.lng * Math.PI / 180;
+            const bearingRad = bearing * Math.PI / 180;
+            
+            const lat2 = Math.asin(
+                Math.sin(lat1) * Math.cos(distanceMeters / R) +
+                Math.cos(lat1) * Math.sin(distanceMeters / R) * Math.cos(bearingRad)
+            );
+            
+            const lng2 = lng1 + Math.atan2(
+                Math.sin(bearingRad) * Math.sin(distanceMeters / R) * Math.cos(lat1),
+                Math.cos(distanceMeters / R) - Math.sin(lat1) * Math.sin(lat2)
+            );
+            
+            return {
+                lat: lat2 * 180 / Math.PI,
+                lng: lng2 * 180 / Math.PI
+            };
+        }
+
+        // Показ тестового заказа
+        function showTestOrder() {
+            const distanceToPickup = calculateDistance(
+                currentLocation.lat, currentLocation.lng,
+                testOrder.pickupLat, testOrder.pickupLng
+            );
+            
+            const durationToPickup = Math.ceil(distanceToPickup * 3); // 3 минуты на км
+
+            document.getElementById('orderDistance').textContent = `${distanceToPickup.toFixed(1)}км`;
+            document.getElementById('orderDuration').textContent = `${durationToPickup}мин`;
+            
+            document.getElementById('orderPopup').classList.add('show');
+            console.log('Тестовый заказ показан');
+        }
+
+        // Принятие тестового заказа
+        function acceptTestOrder() {
+            console.log('Принятие тестового заказа');
+            
+            document.getElementById('orderPopup').classList.remove('show');
+            tripState = 'to_pickup';
+            
+            // Показываем навигацию
+            document.getElementById('navigationPanel').classList.add('show');
+            document.getElementById('topProgressBar').style.display = 'block';
+            
+            // Строим маршрут к клиенту
+            buildRoute(currentLocation, { lat: testOrder.pickupLat, lng: testOrder.pickupLng });
+            
+            // Имитируем движение к клиенту
+            startSimulatedMovement();
+        }
+
+        // Отклонение тестового заказа
+        function declineTestOrder() {
+            console.log('Отклонение тестового заказа');
+            document.getElementById('orderPopup').classList.remove('show');
+            alert('Тестовый заказ отклонен. Страница будет перезагружена через 2 секунды для нового теста.');
+            setTimeout(() => location.reload(), 2000);
+        }
+
+        // Построение маршрута
+        function buildRoute(origin, destination) {
+            const request = {
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.METRIC
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    
+                    const route = result.routes[0];
+                    const leg = route.legs[0];
+                    
+                    totalTripDistance = leg.distance.value;
+                    
+                    // Обновляем инструкции
+                    updateNavigationInstructions(leg);
+                    
+                    console.log('Маршрут построен:', leg.distance.text, leg.duration.text);
+                } else {
+                    console.error('Ошибка построения маршрута:', status);
+                }
+            });
+        }
+
+        // Обновление инструкций навигации
+        function updateNavigationInstructions(leg) {
+            const distance = leg.distance.text;
+            const duration = leg.duration.text;
+            
+            document.getElementById('instructionMain').textContent = `Движение к ${tripState === 'to_pickup' ? 'клиенту' : 'месту назначения'}`;
+            document.getElementById('instructionSub').textContent = `${distance} • ${duration}`;
+            
+            document.getElementById('tripDistance').textContent = distance;
+            document.getElementById('tripDuration').textContent = duration;
+            document.getElementById('tripTime').textContent = duration;
+        }
+
+        // Имитация движения
+        function startSimulatedMovement() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 2; // 2% каждые 200мс
+                
+                // Обновляем прогресс бар
+                document.getElementById('progressFill').style.width = progress + '%';
+                
+                // Обновляем позицию водителя (имитация)
+                if (driverMarker && progress < 100) {
+                    const currentTarget = tripState === 'to_pickup' 
+                        ? { lat: testOrder.pickupLat, lng: testOrder.pickupLng }
+                        : { lat: testOrder.destinationLat, lng: testOrder.destinationLng };
+                    
+                    const newPosition = interpolatePosition(currentLocation, currentTarget, progress / 100);
+                    driverMarker.setPosition(newPosition);
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    if (tripState === 'to_pickup') {
+                        // Прибыли к клиенту
+                        arrivedAtPickup();
+                    } else {
+                        // Завершили поездку
+                        completeTestTrip();
+                    }
+                }
+            }, 200);
+        }
+
+        // Прибытие к клиенту
+        function arrivedAtPickup() {
+            console.log('Прибытие к клиенту');
+            tripState = 'in_trip';
+            routeProgress = 0;
+            
+            alert('Вы прибыли к клиенту! Начинаем поездку к месту назначения.');
+            
+            // Обновляем позицию водителя
+            currentLocation = { lat: testOrder.pickupLat, lng: testOrder.pickupLng };
+            
+            // Строим маршрут к месту назначения
+            buildRoute(currentLocation, { lat: testOrder.destinationLat, lng: testOrder.destinationLng });
+            
+            // Продолжаем движение
+            setTimeout(startSimulatedMovement, 1000);
+        }
+
+        // Завершение тестовой поездки
+        function completeTestTrip() {
+            console.log('Завершение тестовой поездки');
+            
+            tripState = 'completed';
+            
+            // Скрываем навигацию
+            document.getElementById('navigationPanel').classList.remove('show');
+            document.getElementById('topProgressBar').style.display = 'none';
+            
+            // Показываем результат
+            setTimeout(() => {
+                document.getElementById('tripResult').classList.add('show');
+            }, 500);
+        }
+
+        // Завершение теста
+        function finishTest() {
+            console.log('Завершение теста');
+            document.getElementById('tripResult').classList.remove('show');
+            alert('Тест завершен! Теперь вы знаете как работает система заказов.');
+            window.location.href = '/driver/profile';
+        }
+
+        // Интерполяция позиции
+        function interpolatePosition(start, end, factor) {
+            return {
+                lat: start.lat + (end.lat - start.lat) * factor,
+                lng: start.lng + (end.lng - start.lng) * factor
+            };
+        }
+
+        // Вычисление расстояния (формула Haversine)
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Радиус Земли в километрах
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Страница тестового заказа загружена');
+        });
+    </script>
+</body>
+</html>

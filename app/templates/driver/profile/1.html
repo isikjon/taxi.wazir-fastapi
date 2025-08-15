@@ -7,6 +7,9 @@
         <link rel="stylesheet"
             href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
         <style>
+            .main__btn-active {
+                border-radius: 0px !important;
+            }
             .profile__date-selector {
                 display: flex;
                 align-items: center;
@@ -493,12 +496,14 @@
                                     alt="next">
                             </div>
                         </a>
-                        <div class="profile__action-item inactive-item">
-                            <p>Выполнить тестовый заказ</p>
-                            <img
-                                src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
-                                alt="next">
-                        </div>
+                        <a href="/driver/test-order" style="text-decoration: none;">
+                            <div class="profile__action-item">
+                                <p>Выполнить тестовый заказ</p>
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/ico/next.svg') }}"
+                                    alt="next">
+                            </div>
+                        </a>
                         <a href="{{ url_for('driver_logout') }}">
                             <div class="profile__action-item">
                                 <p>Выход из Wazir</p>
@@ -773,23 +778,30 @@
                     fetch(`/api/driver/${driverId}/stats?date=${dateStr}`)
                         .then(response => response.json())
                         .then(data => {
-                            if (data.success || data.orders) {
-                                const orders = data.orders || [];
-                                const totalOrders = orders.length;
-                                const totalEarnings = orders.reduce((sum, order) => sum + (parseFloat(order.price) || 0), 0);
+                            console.log('📊 Получены данные календаря:', data);
+                            
+                            if (data && data.success && data.data) {
+                                const orders = data.data.orders || [];
+                                const stats = data.data.stats || {};
                                 
-                                // Подсчитываем по статусам
-                                const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'Завершен').length;
-                                const cancelledOrders = orders.filter(o => o.status === 'cancelled' || o.status === 'Отменен').length;
-                                const activeOrders = orders.filter(o => o.status === 'active' || o.status === 'Выполняется').length;
+                                const totalOrders = stats.total_orders || 0;
+                                const totalEarnings = stats.total_earnings || 0;
+                                const completedOrders = stats.completed_orders || 0;
+                                const cancelledOrders = stats.cancelled_orders || 0;
+                                const activeOrders = stats.active_orders || 0;
                                 
                                 // Обновляем отображение
                                 document.getElementById('orders-count').textContent = `${totalOrders} заказов`;
-                                document.getElementById('balance-value').textContent = `${totalEarnings.toFixed(0)} сом`;
+                                
+                                // Обновляем сумму в статистике (в поле баланса)
+                                const balanceElement = document.getElementById('balance-value');
+                                if (balanceElement) {
+                                    balanceElement.textContent = `${totalEarnings} сом`;
+                                }
                                 
                                 if (totalOrders > 0) {
                                     document.getElementById('no-trips-message').textContent = 
-                                        `✅ Выполнено: ${completedOrders} | ❌ Отменено: ${cancelledOrders} | ⏳ Активных: ${activeOrders}`;
+                                        `Выполнено: ${completedOrders} | Отменено: ${cancelledOrders} | Активных: ${activeOrders}`;
                                     
                                     // Показываем список заказов
                                     displayOrdersList(orders);
@@ -798,16 +810,24 @@
                                     document.getElementById('daily-orders').style.display = 'none';
                                 }
                                 
-                                // Обновляем детализацию оплат (пока заглушки)
+                                // Обновляем детализацию оплат
                                 document.getElementById('payment-card').textContent = "0 сом";
-                                document.getElementById('payment-cash').textContent = `${totalEarnings.toFixed(0)} сом`;
+                                document.getElementById('payment-cash').textContent = `${totalEarnings} сом`;
                                 document.getElementById('payment-service').textContent = "0 сом (0%)";
                                 document.getElementById('payment-park').textContent = "0 сом (0%)";
+                                
+                                console.log(`✅ Календарь обновлен: ${totalOrders} заказов, ${totalEarnings} сом`);
                             } else {
                                 // Нет данных
-                                document.getElementById('orders-count').textContent = "0 заказов";
-                                document.getElementById('no-trips-message').textContent = "За этот период поездок не было";
+                    document.getElementById('orders-count').textContent = "0 заказов";
+                    document.getElementById('no-trips-message').textContent = "За этот период поездок не было";
                                 document.getElementById('daily-orders').style.display = 'none';
+                    
+                                // Сбрасываем детализацию
+                    document.getElementById('payment-card').textContent = "0 сом";
+                    document.getElementById('payment-cash').textContent = "0 сом";
+                    document.getElementById('payment-service').textContent = "0 сом (0%)";
+                    document.getElementById('payment-park').textContent = "0 сом (0%)";
                             }
                         })
                         .catch(error => {
@@ -834,20 +854,20 @@
                         const statusText = getStatusText(order.status);
                         
                         ordersHtml += `
-                            <div style="background: #f9f9f9; border-radius: 8px; padding: 12px; margin-bottom: 8px; border-left: 3px solid ${getStatusColor(order.status)};">
+                            <div style="background: #f9f9f9; border-radius: 0; padding: 12px; margin-bottom: 8px; border-left: 3px solid ${getStatusColor(order.status)};">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <div style="font-weight: 500; font-size: 14px;">${statusIcon} Заказ #${order.order_number || order.id}</div>
+                                    <div style="font-weight: 500; font-size: 14px;">Заказ #${order.order_number || order.id}</div>
                                     <div style="font-size: 12px; color: #666;">${order.time || '—'}</div>
                                 </div>
                                 <div style="font-size: 13px; color: #444; margin-bottom: 5px;">
-                                    📍 ${truncateText(order.origin || 'Не указано', 30)}
+                                    Откуда: ${truncateText(order.origin || 'Не указано', 30)}
                                 </div>
                                 <div style="font-size: 13px; color: #444; margin-bottom: 8px;">
-                                    🏁 ${truncateText(order.destination || 'Не указано', 30)}
+                                    Куда: ${truncateText(order.destination || 'Не указано', 30)}
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div style="font-size: 12px; color: #666;">${statusText}</div>
-                                    <div style="font-weight: bold; color: #2ecc71;">${(order.price || 0)} сом</div>
+                                    <div style="font-weight: bold; color: #666;">${(order.price || 0)} сом</div>
                                 </div>
                             </div>
                         `;
@@ -859,19 +879,7 @@
                 
                 // Вспомогательные функции для статусов
                 function getStatusIcon(status) {
-                    switch(status) {
-                        case 'completed':
-                        case 'Завершен':
-                            return '✅';
-                        case 'cancelled':
-                        case 'Отменен':
-                            return '❌';
-                        case 'active':
-                        case 'Выполняется':
-                            return '⏳';
-                        default:
-                            return '📋';
-                    }
+                    return '';
                 }
                 
                 function getStatusText(status) {
@@ -894,15 +902,15 @@
                     switch(status) {
                         case 'completed':
                         case 'Завершен':
-                            return '#2ecc71';
+                            return '#666';
                         case 'cancelled':
                         case 'Отменен':
-                            return '#e74c3c';
+                            return '#999';
                         case 'active':
                         case 'Выполняется':
-                            return '#f39c12';
+                            return '#888';
                         default:
-                            return '#95a5a6';
+                            return '#aaa';
                     }
                 }
                 
