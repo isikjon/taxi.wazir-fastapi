@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Регистрация пользователь Wazir.kg</title>
+        <link rel="stylesheet"
+            href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+        <style>
+                .iti {
+                    width: 100% !important;
+                } 
+                body {
+                    padding: 100px 0;
+                }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="brand">
+                <div class="container">
+                    <div class="brand__content">
+                        <div class="logo">
+                            <a href="{{ url_for('user_auth_step1') }}">
+                                <img
+                                    src="{{ url_for('static', path='/driver/assets/img/logo.png') }}"
+                                    alt="logo">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main>
+            <section class="register">
+                <div class="container">
+                    <div class="register__content">
+                        <div class="register__intro">
+                            <h1 class="title">
+                                Регистрация по номеру телефона
+                            </h1>
+                        </div>
+                        <div class="register__tabs">
+                            <div class="tabs">
+                                <button class="active" style="width: 50%;">Пользователь</button>
+                                <button style="width: 50%;"><a href="/driver/auth/1"></a>Водитель</button>
+                            </div>
+                        </div>
+                        <div class="register__form">
+                            <form id="phoneForm" style="width: 100%;">
+                                <input type="tel" id="phone" class="phone"
+                                    name="phone" required
+                                    style="padding-right: 60px; width: 100%;">
+                                <button type="submit"
+                                    class="main__btn">Продолжить</button>
+                            </form>
+                            <div class="register__block">
+                                <a href="#">
+                                    Нажимая кнопку вы соглашаетесь с условиями
+                                    <span> Пользовательского соглашения</span>
+                                    и
+                                    <span> Политики
+                                        конфенденциальносит</span>
+                                </a>
+                            </div>
+                            <div class="register__block register__block-footer">
+                                <p>Центр обработки, тех. поддержка, авторске
+                                    права</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                const phoneInput = document.querySelector("#phone");
+                const iti = window.intlTelInput(phoneInput, {
+                    initialCountry: "kg",
+                    onlyCountries: ["kg"],
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                });
+
+                $('#phone').mask('000-000-00-00', {
+                    placeholder: "XXX-XXX-XX-XX"
+                });
+
+                $('#phone').on('input', function() {
+                    const phoneValue = $(this).val().replace(/[^0-9]/g, '');
+                    if (phoneValue.length === 10) {
+                        $('.main__btn').addClass('main__btn-active');
+                    } else {
+                        $('.main__btn').removeClass('main__btn-active');
+                    }
+                });
+
+                $('#phoneForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const phoneNumber = iti.getNumber();
+                    
+                    localStorage.setItem('user_phone', phoneNumber);
+                    console.log('Телефон сохранен в localStorage:', phoneNumber);
+                    
+                    $.ajax({
+                        url: '/api/user/login',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ phone: phoneNumber }),
+                        success: function(response) {
+                            window.location.href = "{{ url_for('user_auth_step2') }}?phone=" + encodeURIComponent(phoneNumber);
+                        },
+                        error: function(xhr) {
+                            // Обработка ошибок
+                            alert('Произошла ошибка при отправке кода. Пожалуйста, попробуйте снова.');
+                        }
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

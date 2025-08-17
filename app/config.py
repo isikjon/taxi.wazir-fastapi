@@ -20,7 +20,7 @@ class Settings:
     TWOGIS_SEARCH_URL = "https://catalog.api.2gis.com/3.0/items/search"
     
     # Google Maps API Configuration
-    GOOGLE_MAPS_API = os.getenv("GOOGLE_MAPS_API")
+    GOOGLE_MAPS_API = os.getenv("GOOGLE_MAPS_API", "AIzaSyCgctqtqKOus6A6cDJaOBqsyo4-3r3zuQA")
     
     # Default coordinates for Kyrgyzstan (Osh city center)
     DEFAULT_LAT = 40.5138

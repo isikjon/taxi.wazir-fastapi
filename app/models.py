@@ -166,6 +166,7 @@ class TokenResponse(BaseModel):
     user_id: int
     has_driver: bool = False
     driver_id: Optional[int] = None
+    has_profile: bool = False
 
 
 class DriverCar(Base):

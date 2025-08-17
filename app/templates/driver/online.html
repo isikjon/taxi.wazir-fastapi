@@ -492,8 +492,11 @@
 
     <script>
         let map;
+        let driverMarker;
         let currentOrder = null;
         let driverId = parseInt('{{ driver_id|default(1) }}') || 1;
+        let mapInitialized = false; // Флаг для предотвращения повторной инициализации
+        let geolocationInProgress = false; // Флаг для предотвращения множественных вызовов геолокации
         let isOnline = true;
         let currentLocation = null;
         let driverActivity = 49; // Текущая активность водителя
@@ -504,7 +507,6 @@
         // Переменные для навигации
         let directionsService;
         let directionsRenderer;
-        let driverMarker;
         let watchPositionId;
         let tripState = 'waiting'; // waiting, to_pickup, in_trip, completed
         let currentTrip = null;
@@ -523,8 +525,8 @@
             // Загружаем данные водителя
             loadDriverData();
             
-            // Ожидаем загрузки Google Maps
-            waitForGoogleMaps();
+            // Ожидаем загрузки Google Maps (ручная проверка как fallback)
+            waitForGoogleMapsManual();
         });
 
         function requestLocationPermission() {
@@ -541,27 +543,44 @@
                 return;
             }
 
-            getCurrentLocation();
+            console.log('✅ Разрешение на геолокацию получено, ожидаем инициализации карты');
         }
 
-        function waitForGoogleMaps() {
+        // Глобальная функция для callback Google Maps API
+        window.waitForGoogleMaps = function() {
+            console.log('🗺️ Google Maps API загружен через callback');
             if (window.google && window.google.maps && window.google.maps.Map) {
                 console.log('✅ Google Maps API готов');
                 initMap();
             } else {
+                console.log('⏳ Google Maps API еще не готов, повторная проверка...');
+                setTimeout(window.waitForGoogleMaps, 500);
+            }
+        }
+        
+        function waitForGoogleMapsManual() {
+            if (window.google && window.google.maps && window.google.maps.Map) {
+                console.log('✅ Google Maps API готов (ручная проверка)');
+                initMap();
+            } else {
                 console.log('⏳ Ожидание Google Maps API...');
-                setTimeout(waitForGoogleMaps, 500);
+                setTimeout(waitForGoogleMapsManual, 500);
             }
         }
 
         function initMap() {
+            if (mapInitialized) {
+                console.log('⚠️ Карта уже инициализирована, пропускаем');
+                return;
+            }
+            
             console.log('🗺️ Инициализация карты...');
             
             const oshCenter = { lat: 40.5138, lng: 72.8019 };
             
             map = new google.maps.Map(document.getElementById('map'), {
                 center: oshCenter,
-                zoom: 15,
+                zoom: 22, // Максимальное приближение
                 gestureHandling: 'greedy',
                 mapTypeControl: false,
                 streetViewControl: false,
@@ -579,44 +598,145 @@
                 preserveViewport: false
             });
             directionsRenderer.setMap(map);
-
-            getCurrentLocation();
+            
+            console.log('✅ Карта инициализирована, запускаем геолокацию');
+            
+            mapInitialized = true; // Помечаем карту как инициализированную
+            
+            // Теперь, когда карта готова, получаем геолокацию
+            getDriverLocationWithRetry(3);
+            
+            // Дополнительная проверка через 3 секунды для убеждения, что маркер остается
+            setTimeout(() => {
+                if (currentLocation && map && driverMarker) {
+                    console.log('🔄 Дополнительная проверка маркера через 3 секунды');
+                    updateDriverLocationOnMap();
+                }
+            }, 3000);
+            
             startOrderPolling();
         }
 
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        currentLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        
-                        map.setCenter(currentLocation);
-                        
-                        // Добавляем маркер водителя (простой кружок)
-                        new google.maps.Marker({
-                            position: currentLocation,
-                            map: map,
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 6,
-                                fillColor: '#606060',
-                                fillOpacity: 1,
-                                strokeColor: '#fff',
-                                strokeWeight: 2
-                            }
-                        });
-                        
-                        console.log('📍 Геолокация получена');
-                    },
-                    (error) => {
-                        console.warn('⚠️ Ошибка геолокации:', error);
-                        currentLocation = { lat: 40.5138, lng: 72.8019 };
-                    }
-                );
+        // Агрессивное получение геолокации для водителя
+        function getDriverLocationWithRetry(attemptsLeft = 3, highAccuracy = true) {
+            if (geolocationInProgress && attemptsLeft === 3) {
+                console.log('⚠️ Геолокация уже выполняется, пропускаем первичный вызов');
+                return;
             }
+            
+            if (attemptsLeft === 3) {
+                geolocationInProgress = true;
+            }
+            
+            console.log(`🎯 Водитель: попытка получения геолокации ${4 - attemptsLeft + 1}/3, точность: ${highAccuracy ? 'высокая' : 'низкая'}`);
+            
+            const options = {
+                enableHighAccuracy: highAccuracy,
+                timeout: highAccuracy ? 15000 : 25000,
+                maximumAge: 30000
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    console.log('✅ Геолокация водителя получена:', position.coords);
+                    currentLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Проверяем, что карта инициализирована
+                    if (!map) {
+                        console.log('⚠️ Карта еще не готова, ожидаем...');
+                        setTimeout(() => {
+                            if (map) {
+                                updateDriverLocationOnMap();
+                            }
+                            geolocationInProgress = false; // Сбрасываем флаг в любом случае
+                        }, 1000);
+                        return;
+                    }
+                    
+                    updateDriverLocationOnMap();
+                    geolocationInProgress = false; // Сбрасываем флаг после успешного получения
+                },
+                (error) => {
+                    console.log(`❌ Ошибка геолокации водителя (попытка ${4 - attemptsLeft + 1}):`, error);
+                    
+                    if (attemptsLeft > 1) {
+                        setTimeout(() => {
+                            if (attemptsLeft === 2 && highAccuracy) {
+                                getDriverLocationWithRetry(attemptsLeft - 1, false);
+                            } else {
+                                getDriverLocationWithRetry(attemptsLeft - 1, highAccuracy);
+                            }
+                        }, 2000);
+                    } else {
+                        console.log('💀 Все попытки получения геолокации водителя исчерпаны');
+                        geolocationInProgress = false; // Сбрасываем флаг после исчерпания попыток
+                        alert('❌ Не удалось получить ваше местоположение!\n\nВключите GPS и разрешите доступ к геолокации для корректной работы.');
+                    }
+                },
+                options
+            );
+        }
+
+        function updateDriverLocationOnMap() {
+            if (!currentLocation || !map || !mapInitialized) {
+                console.log('⚠️ Нет данных для обновления местоположения');
+                return;
+            }
+            
+            console.log('📍 Обновляем местоположение водителя на карте', currentLocation);
+            
+            // Центрируем карту и устанавливаем максимальное приближение
+            map.setCenter(currentLocation);
+            map.setZoom(22);
+            
+            // Создаем или обновляем маркер водителя
+            if (driverMarker) {
+                console.log('📍 Обновляем позицию существующего маркера');
+                driverMarker.setPosition(currentLocation);
+                driverMarker.setMap(map); // Убеждаемся, что маркер привязан к карте
+            } else {
+                console.log('📍 Создаем новый маркер водителя');
+                driverMarker = new google.maps.Marker({
+                    position: currentLocation,
+                    map: map,
+                    icon: {
+                        url: 'https://wazir.kg/static/navigator/map.png',
+                        scaledSize: new google.maps.Size(50, 50),
+                        anchor: new google.maps.Point(25, 25),
+                        optimized: false
+                    },
+                    zIndex: 1000,
+                    title: 'Ваше местоположение (водитель)',
+                    clickable: true
+                });
+                console.log('✅ Маркер водителя создан');
+            }
+            
+            // Проверяем, что маркер действительно на карте
+            if (driverMarker && driverMarker.getMap() !== map) {
+                console.log('⚠️ Маркер не привязан к карте, исправляем');
+                driverMarker.setMap(map);
+            }
+            
+            // Дополнительная проверка видимости маркера
+            if (driverMarker) {
+                console.log('✅ Маркер присутствует на карте:', {
+                    position: driverMarker.getPosition().toJSON(),
+                    visible: driverMarker.getVisible(),
+                    map: driverMarker.getMap() === map ? 'привязан' : 'не привязан'
+                });
+            }
+            
+            console.log('✅ Местоположение водителя успешно обновлено на карте');
+        }
+
+        function getCurrentLocation() {
+            // Эта функция заменена на getDriverLocationWithRetry для лучшей надежности
+            console.log('⚠️ getCurrentLocation заменена на getDriverLocationWithRetry');
+            getDriverLocationWithRetry(3);
         }
 
         function loadDriverData() {
@@ -689,7 +809,7 @@
             
             document.getElementById('statusText').textContent = `Активность ${driverActivity}`;
             
-            // Реальный поллинг заказов
+            // Поллинг новых заказов
             fetch(`/api/driver/${driverId}/new-orders`)
                 .then(response => response.json())
                 .then(data => {
@@ -702,7 +822,7 @@
                         if (availableOrders.length > 0) {
                             console.log('📱 Новый заказ:', availableOrders[0]);
                             showNewOrder(availableOrders[0]);
-                    } else {
+                        } else {
                             console.log('ℹ️ Все доступные заказы уже обработаны');
                         }
                     } else {
@@ -712,8 +832,64 @@
                 .catch(error => {
                     console.error('❌ Ошибка:', error);
                 });
+
+            // Проверяем статусы активных заказов (отмены клиентом)
+            if (currentOrder) {
+                checkOrderStatus(currentOrder.id);
+            }
             
             setTimeout(startOrderPolling, 5000);
+        }
+
+        // Проверка статуса заказа (для уведомлений об отмене)
+        function checkOrderStatus(orderId) {
+            fetch(`/api/orders/${orderId}/status`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const order = data.order;
+                        
+                        // Проверяем, был ли заказ отменен клиентом
+                        if (order.status === "Отменен заказчиком" && currentOrder && currentOrder.id === orderId) {
+                            console.log('🚫 Заказ отменен клиентом:', orderId);
+                            showOrderCancelledNotification(orderId);
+                            
+                            // Сбрасываем текущий заказ
+                            currentOrder = null;
+                            
+                            // Закрываем все открытые модалы
+                            closeAllOrderModals();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('⚠️ Ошибка проверки статуса заказа:', error);
+                });
+        }
+
+        // Показать уведомление об отмене заказа
+        function showOrderCancelledNotification(orderId) {
+            alert(`⚠️ Заказ ${orderId} был отменен клиентом!`);
+            
+            // В будущем можно заменить на красивое уведомление
+            console.log(`📢 Уведомление: Заказ ${orderId} отменен заказчиком`);
+        }
+
+        // Закрыть все модальные окна заказов
+        function closeAllOrderModals() {
+            // Закрываем модалы новых заказов
+            const orderModal = document.getElementById('newOrderModal');
+            if (orderModal) {
+                orderModal.style.display = 'none';
+            }
+            
+            // Закрываем другие возможные модалы
+            const tripModal = document.getElementById('tripModal');
+            if (tripModal) {
+                tripModal.style.display = 'none';
+            }
+            
+            console.log('🔄 Все модальные окна заказов закрыты');
         }
 
         function showNewOrder(order) {
@@ -1261,7 +1437,6 @@
         }
     </script>
     
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key|default('') }}&libraries=places&callback=waitForGoogleMaps"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key|default('') }}&libraries=places&loading=async&callback=waitForGoogleMaps"></script>
 </body>
-</html> 
-</html> 
+</html>

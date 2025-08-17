@@ -95,7 +95,7 @@ async def test_endpoint():
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Список исключенных путей, которые не требуют авторизации
-        excluded_paths = ['/disp/login', '/login', '/static', '/driver/', '/api/driver/', '/api/twogis/']
+        excluded_paths = ['/disp/login', '/login', '/static', '/driver/', '/api/driver/', '/api/twogis/', '/user/', '/api/user/']
         
         # Проверяем, начинается ли путь с любого из исключенных путей
         is_excluded = any(request.url.path.startswith(path) for path in excluded_paths)
@@ -135,6 +135,11 @@ class UpdateProfileRequest(BaseModel):
     last_name: str
     phone: Optional[str] = None
     user_id: Optional[int] = None
+
+# Модель запроса для отмены заказа
+class CancelOrderRequest(BaseModel):
+    cancelled_by: str  # "client" или "driver"
+    reason: Optional[str] = None
 
 # Функция для создания JWT токена
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -182,10 +187,52 @@ async def driver_test_order(request: Request):
         "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API
     })
 
+# Роуты для клиентской части
+@app.get("/user/auth/1", response_class=HTMLResponse)
+async def user_auth_step1(request: Request):
+    """Страница ввода номера телефона для пользователя"""
+    return templates.TemplateResponse("user/auth/1.html", {"request": request})
+
+@app.get("/user/auth/step1", response_class=HTMLResponse)
+async def user_auth_step1_alt(request: Request):
+    """Альтернативный роут для совместимости"""
+    return templates.TemplateResponse("user/auth/1.html", {"request": request})
+
+@app.get("/user/auth/2", response_class=HTMLResponse)
+async def user_auth_step2(request: Request, phone: Optional[str] = None):
+    """Страница ввода кода из СМС для пользователя"""
+    return templates.TemplateResponse("user/auth/2.html", {"request": request, "phone": phone})
+
+@app.get("/user/auth/step2", response_class=HTMLResponse)
+async def user_auth_step2_alt(request: Request, phone: Optional[str] = None):
+    """Альтернативный роут для совместимости"""
+    return templates.TemplateResponse("user/auth/2.html", {"request": request, "phone": phone})
+
+@app.get("/user/auth/3", response_class=HTMLResponse)
+async def user_auth_step3(request: Request):
+    """Страница ввода имени и фамилии для пользователя"""
+    return templates.TemplateResponse("user/auth/3.html", {"request": request})
+
+@app.get("/user/auth/step3", response_class=HTMLResponse)
+async def user_auth_step3_alt(request: Request):
+    """Альтернативный роут для совместимости"""
+    return templates.TemplateResponse("user/auth/3.html", {"request": request})
+
+@app.get("/user/profile", response_class=HTMLResponse)
+async def user_profile(request: Request):
+    """Главная страница пользователя с картой"""
+    return templates.TemplateResponse("user/main.html", {
+        "request": request,
+        "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API
+    })
+
 # Маршруты для диспетчерской панели
 @app.get("/", response_class=HTMLResponse)
-@app.get("/disp", response_class=HTMLResponse)
+async def root_redirect(request: Request):
+    """Перенаправление с корня на клиентскую часть"""
+    return RedirectResponse(url="/user/auth/1", status_code=303)
 
+@app.get("/disp", response_class=HTMLResponse)
 async def disp_home(
     request: Request,
     db: Session = Depends(get_db),
@@ -2037,7 +2084,8 @@ async def verify_code(request: VerifyCodeRequest, response: Response = None, db:
         "token_type": "bearer",
         "user_id": user.id,
         "has_driver": has_driver,
-        "driver_id": driver_id if has_driver else None
+        "driver_id": driver_id if has_driver else None,
+        "has_profile": True  # Для драйверов всегда True, так как они проходят полную регистрацию
     }
     print(f"Отправляем ответ: {response_data}")
     return response_data
@@ -2070,6 +2118,132 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
     user = crud.update_driver_user(db, user.id, user_update)
     
     return {"success": True, "message": "Профиль обновлен успешно"}
+
+# API роуты для клиентской части
+@app.post("/api/user/login", response_model=dict)
+async def user_login(request: DriverLoginRequest, db: Session = Depends(get_db)):
+    """Отправка кода подтверждения на телефон пользователя"""
+    # Форматируем номер телефона - удаляем все кроме цифр
+    phone = ''.join(filter(str.isdigit, request.phone))
+    
+    # Проверяем, существует ли уже пользователь с таким номером
+    user = crud.get_driver_user_by_phone(db, phone)
+    
+    # Если пользователя нет, создаем его
+    if not user:
+        user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=phone))
+    
+    # В реальном приложении здесь была бы отправка SMS
+    # Для тестирования используем фиксированный код 1111
+    verification_code = "1111"
+    
+    return {"success": True, "message": "Код подтверждения отправлен"}
+
+@app.post("/api/user/verify-code", response_model=TokenResponse)
+async def user_verify_code(request: VerifyCodeRequest, response: Response = None, db: Session = Depends(get_db)):
+    """
+    Проверка кода подтверждения и выдача JWT токена для пользователя.
+    
+    Возвращает:
+    - access_token: JWT токен для аутентификации
+    - token_type: Тип токена (bearer)
+    - user_id: ID пользователя
+    - has_profile: Флаг, указывающий, заполнил ли пользователь профиль
+    """
+    # Форматируем номер телефона - удаляем все кроме цифр
+    raw_phone = request.phone
+    phone = ''.join(filter(str.isdigit, request.phone))
+    print(f"Верификация кода пользователя для телефона: {phone} (исходный: {raw_phone})")
+    
+    # Получаем пользователя по номеру телефона
+    user = crud.get_driver_user_by_phone(db, phone)
+    if not user:
+        print(f"Пользователь с телефоном {phone} не найден")
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    print(f"Найден пользователь: id={user.id}, first_name={user.first_name}")
+    
+    # В тестовом режиме проверяем только на фиксированный код 1111
+    if request.code != "1111":
+        print(f"Неверный код: {request.code}, ожидается 1111")
+        raise HTTPException(status_code=400, detail="Неверный код подтверждения")
+    
+    # Отмечаем пользователя как верифицированного
+    user_update = schemas.DriverUserUpdate(is_verified=True)
+    user = crud.update_driver_user(db, user.id, user_update)
+    
+    # Обновляем время последнего входа
+    crud.update_last_login(db, user.id)
+    
+    # Проверяем, заполнен ли профиль пользователя (имя и фамилия)
+    has_profile = user.first_name is not None and user.last_name is not None
+    print(f"Проверка наличия профиля: has_profile={has_profile}")
+    
+    # Создаем JWT токен
+    access_token = create_access_token(
+        data={"sub": str(user.id), "type": "user"},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    
+    # Возвращаем токен и информацию о пользователе
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=user.id,
+        has_driver=False,  # Для клиентов всегда False
+        driver_id=None,
+        has_profile=has_profile
+    )
+
+@app.post("/api/user/update-profile", response_model=dict)
+async def user_update_profile(request: dict, db: Session = Depends(get_db)):
+    """Обновление профиля пользователя (имя и фамилия)"""
+    user_id = request.get("user_id")
+    first_name = request.get("first_name")
+    last_name = request.get("last_name")
+    
+    if not user_id or not first_name or not last_name:
+        raise HTTPException(status_code=400, detail="Все поля обязательны")
+    
+    # Получаем пользователя
+    user = crud.get_driver_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    # Обновляем профиль
+    user_update = schemas.DriverUserUpdate(
+        first_name=first_name,
+        last_name=last_name
+    )
+    user = crud.update_driver_user(db, user.id, user_update)
+    
+    return {"success": True, "message": "Профиль пользователя обновлен успешно"}
+
+@app.get("/api/user/{user_id}/frequent-addresses", response_model=dict)
+async def get_user_frequent_addresses(user_id: int, db: Session = Depends(get_db)):
+    """Получение частых адресов пользователя"""
+    try:
+        # Получаем завершенные заказы пользователя (если у нас есть таблица заказов для клиентов)
+        # Пока вернем заглушку, так как у нас нет отдельной таблицы заказов для клиентов
+        
+        # В будущем здесь будет запрос к базе данных:
+        # orders = db.query(UserOrder).filter(
+        #     UserOrder.user_id == user_id,
+        #     UserOrder.status == "Завершен"
+        # ).limit(10).all()
+        
+        # Пока возвращаем пустой список для новых пользователей
+        return {
+            "success": True,
+            "addresses": []
+        }
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения частых адресов для пользователя {user_id}: {e}")
+        return {
+            "success": False,
+            "addresses": [],
+            "error": str(e)
+        }
 
 @app.get("/driver/auth/step1", response_class=HTMLResponse)
 async def driver_auth_step1(request: Request):
@@ -2660,7 +2834,7 @@ async def get_driver_stats(driver_id: str, date: str = None, db: Session = Depen
                 "success": True,
                 "data": {
                     "driver_id": driver_id,
-                    "date": date,
+            "date": date,
                     "stats": {
                         "total_orders": total_orders,
                         "completed_orders": completed_orders,
@@ -5521,11 +5695,11 @@ async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db
                 "success": True,
                 "orders": [
                     {
-                        "id": order.id,
+                    "id": order.id,
                         "order_number": order.order_number,
-                        "origin": order.origin,
-                        "destination": order.destination,
-                        "status": order.status,
+                    "origin": order.origin,
+                    "destination": order.destination,
+                    "status": order.status,
                         "price": order.price,
                         "tariff": order.tariff,
                         "notes": order.notes,
@@ -5731,6 +5905,293 @@ async def complete_trip(
                 "success": False,
                 "error": f"Ошибка завершения поездки: {str(e)}"
             }
+        )
+
+@app.get("/api/available-tariffs", response_class=JSONResponse)
+async def get_available_tariffs(db: Session = Depends(get_db)):
+    """Получение доступных тарифов на основе активных водителей"""
+    try:
+        # Получаем активных водителей
+        active_drivers = db.query(models.Driver).filter(
+            models.Driver.status == "accepted"
+        ).all()
+        
+        # Подсчитываем количество водителей по тарифам
+        tariff_counts = {}
+        tariff_availability = {}
+        
+        for driver in active_drivers:
+            tariff = driver.tariff
+            if tariff:  # Проверяем что тариф не None
+                tariff_counts[tariff] = tariff_counts.get(tariff, 0) + 1
+        
+        # Маппинг тарифов (из БД в frontend)
+        tariff_mapping = {
+            'Бюджетный': 'economy',
+            'Эконом': 'economy', 
+            'Стандартный': 'comfort',
+            'Комфорт': 'comfort',
+            'Комфорт+': 'comfort-plus',
+            'Бизнес': 'business',
+            'Люкс': 'business'
+        }
+        
+        # Все возможные frontend тарифы
+        all_frontend_tariffs = ['economy', 'comfort', 'comfort-plus', 'business']
+        
+        # Инициализируем все frontend тарифы как недоступные
+        for frontend_tariff in all_frontend_tariffs:
+            tariff_availability[frontend_tariff] = {
+                'available': False,
+                'drivers_count': 0,
+                'estimated_time': 20  # Время ожидания если нет водителей
+            }
+        
+        # Обновляем доступность на основе реальных данных
+        for db_tariff, frontend_tariff in tariff_mapping.items():
+            count = tariff_counts.get(db_tariff, 0)
+            if count > 0:
+                # Если тариф уже был инициализирован, добавляем водителей
+                if frontend_tariff in tariff_availability:
+                    tariff_availability[frontend_tariff]['drivers_count'] += count
+                    tariff_availability[frontend_tariff]['available'] = True
+                    tariff_availability[frontend_tariff]['estimated_time'] = min(5 + count, 10)  # Меньше времени при большем количестве водителей
+                else:
+                    tariff_availability[frontend_tariff] = {
+                        'available': True,
+                        'drivers_count': count,
+                        'estimated_time': 5 + min(count, 5)
+                    }
+        
+        logger.info(f"📊 Доступные тарифы: {tariff_availability}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "tariffs": tariff_availability,
+                "total_drivers": len(active_drivers)
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения доступных тарифов: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка получения тарифов: {str(e)}"
+            }
+        )
+
+@app.post("/api/user-orders/", response_class=JSONResponse)
+async def create_user_order(request: Request, db: Session = Depends(get_db)):
+    """Создание заказа от пользователя мобильного приложения"""
+    try:
+        data = await request.json()
+        
+        # Валидация данных
+        required_fields = ['origin', 'destination', 'tariff', 'payment_method']
+        for field in required_fields:
+            if not data.get(field):
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": f"Поле {field} обязательно"}
+                )
+        
+        # Генерируем номер заказа
+        import datetime
+        import random
+        order_number = f"WZ{datetime.datetime.now().strftime('%Y%m%d')}{random.randint(1000, 9999)}"
+        
+        # Ищем доступного водителя по тарифу
+        tariff_mapping = {
+            'economy': ['Эконом', 'Бюджетный'],
+            'comfort': ['Комфорт', 'Стандартный'],
+            'comfort-plus': ['Комфорт+'],
+            'business': ['Бизнес', 'Люкс']
+        }
+        
+        target_tariffs = tariff_mapping.get(data['tariff'], [])
+        available_driver = None
+        
+        for tariff_name in target_tariffs:
+            driver = db.query(models.Driver).filter(
+                models.Driver.status == "accepted",
+                models.Driver.tariff == tariff_name
+            ).first()
+            if driver:
+                available_driver = driver
+                break
+        
+        if not available_driver:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False, 
+                    "error": "Нет доступных водителей для выбранного тарифа"
+                }
+            )
+        
+        # Создаём заказ
+        order_data = schemas.OrderCreate(
+            order_number=order_number,
+            time=datetime.datetime.now().strftime("%H:%M"),
+            origin=data['origin'],
+            destination=data['destination'],
+            driver_id=available_driver.id,
+            status="Ожидает водителя",
+            price=data.get('price', 0),
+            tariff=data['tariff'],
+            notes=data.get('comment', ''),
+            payment_method=data['payment_method']
+        )
+        
+        new_order = crud.create_order(db=db, order=order_data)
+        
+        logger.info(f"📱 Заказ {order_number} создан пользователем для водителя {available_driver.full_name}")
+        
+        # Получаем информацию о машине
+        car_info = {}
+        if available_driver.car:
+            car_info = {
+                "brand": available_driver.car.brand,
+                "model": available_driver.car.model,
+                "color": getattr(available_driver.car, 'color', 'белый'),
+                "number": available_driver.car.number
+            }
+        else:
+            car_info = {
+                "brand": "LADA",
+                "model": "Vesta", 
+                "color": "синий",
+                "number": "7940МР-1"
+            }
+
+        return JSONResponse(
+            status_code=201,
+            content={
+                "success": True,
+                "message": "Заказ успешно создан",
+                "order_id": new_order.id,
+                "order_number": new_order.order_number,
+                "driver": {
+                    "full_name": available_driver.full_name,
+                    "name": available_driver.full_name,  # Для обратной совместимости
+                    "phone": available_driver.phone,
+                    "car_brand": car_info["brand"],
+                    "car_model": car_info["model"],
+                    "car_color": car_info["color"],
+                    "car_number": car_info["number"],
+                    "car_info": f"{car_info['color']} {car_info['brand']} {car_info['model']}",  # Для обратной совместимости
+                    "tariff": available_driver.tariff,
+                    "rating": getattr(available_driver, 'rating', 5.0)
+                },
+                "estimated_time": 6  # Время подачи в минутах
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка создания заказа пользователем: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка создания заказа: {str(e)}"
+            }
+        )
+
+@app.post("/api/orders/{order_id}/cancel", response_class=JSONResponse)
+async def cancel_order(order_id: int, request: CancelOrderRequest, db: Session = Depends(get_db)):
+    """Отмена заказа клиентом или водителем"""
+    try:
+        # Находим заказ
+        order = db.query(models.Order).filter(models.Order.id == order_id).first()
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Заказ не найден"}
+            )
+        
+        # Проверяем статус заказа
+        if order.status not in ["Ожидает водителя", "Выполняется", "Принят"]:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Заказ нельзя отменить"}
+            )
+        
+        # Определяем статус в зависимости от того, кто отменяет
+        if request.cancelled_by == "client":
+            order.status = "Отменен заказчиком"
+            logger.info(f"❌ Заказ {order.order_number} отменен заказчиком")
+        elif request.cancelled_by == "driver":
+            order.status = "Отклонен водителем"
+            logger.info(f"❌ Заказ {order.order_number} отклонен водителем")
+        else:
+            order.status = "Отменен"
+            logger.info(f"❌ Заказ {order.order_number} отменен")
+        
+        # Сохраняем причину отмены если она указана
+        if request.reason:
+            # В реальной системе нужно добавить поле cancel_reason в модель Order
+            logger.info(f"📝 Причина отмены: {request.reason}")
+        
+        db.commit()
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Заказ успешно отменен",
+                "cancelled_by": request.cancelled_by,
+                "new_status": order.status
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка отмены заказа: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка отмены заказа: {str(e)}"
+            }
+        )
+
+@app.get("/api/orders/{order_id}/status", response_class=JSONResponse)
+async def get_order_status(order_id: int, db: Session = Depends(get_db)):
+    """Получение статуса заказа"""
+    try:
+        # Находим заказ
+        order = db.query(models.Order).filter(models.Order.id == order_id).first()
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Заказ не найден"}
+            )
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "order": {
+                    "id": order.id,
+                    "order_number": order.order_number,
+                    "status": order.status,
+                    "origin": order.origin,
+                    "destination": order.destination,
+                    "driver_id": order.driver_id,
+                    "price": order.price,
+                    "created_at": order.created_at.isoformat() if order.created_at else None
+                }
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения статуса заказа: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
         )
 
 if __name__ == "__main__":

@@ -1,0 +1,3901 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wazir - Такси</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <style>
+        /* Простой лоадер для тарифов */
+        .tariffs-loader {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+        }
+
+        .simple-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #606060;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #333;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .address-display {
+            flex: 1;
+            margin: 0 15px;
+            color: #333;
+            font-weight: 400;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            background-color: #f5f5f5;
+            color: #333;
+            font-size: 16px;
+            border-radius: 0;
+            outline: none;
+        }
+
+        .search-box::placeholder {
+            color: #999;
+        }
+
+        .location-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .popup-content {
+            background-color: #ffffff;
+            padding: 30px 25px;
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+            border-radius: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .popup-content h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        .popup-content p {
+            margin: 0 0 20px 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .popup-btn {
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 100px;
+            border-radius: 0;
+            font-weight: 400;
+        }
+
+        .popup-btn-primary {
+            background-color: #606060;
+            color: white;
+        }
+
+        .popup-btn-primary:hover {
+            background-color: #555;
+        }
+
+        .popup-btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .popup-btn-secondary:hover {
+            background-color: #e8e8e8;
+        }
+
+        .location-marker {
+            position: absolute;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .loading-indicator {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1500;
+            color: #333;
+            font-size: 14px;
+            display: none;
+        }
+
+        .frequent-addresses {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .frequent-addresses h4 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .address-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .address-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .address-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            border-radius: 0;
+            color: #666;
+        }
+
+        .address-info {
+            flex: 1;
+        }
+
+        .address-name {
+            color: #333;
+            font-size: 14px;
+            margin: 0 0 2px 0;
+        }
+
+        .address-details {
+            color: #999;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .user-location-indicator {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 10px 15px;
+            border-radius: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1500;
+            color: #333;
+            font-size: 13px;
+            display: none;
+            max-width: 280px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .no-addresses-message {
+            padding: 30px 0px;
+            text-align: left;
+        }
+
+        .no-addresses-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .no-addresses-icon {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        .no-addresses-text {
+            color: #666;
+        }
+
+        .no-addresses-title {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .no-addresses-subtitle {
+            font-size: 14px;
+            color: #999;
+            line-height: 1.4;
+        }
+
+        .location-button-container {
+            position: fixed;
+            bottom: 220px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .location-btn {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            border-radius: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+            transition: background-color 0.2s;
+        }
+
+        .location-btn:hover {
+            background-color: #f9f9f9;
+        }
+
+        .location-btn:active {
+            background-color: #f0f0f0;
+        }
+
+        .location-btn-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #606060;
+        }
+
+        .location-btn-text {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .location-btn:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .location-btn:disabled .location-btn-icon {
+            color: #999;
+        }
+
+        .location-btn.active {
+            background-color: #f0f8ff;
+            border-color: #4285F4;
+        }
+
+        .location-btn.active .location-btn-text {
+            color: #1a73e8;
+        }
+
+        .location-btn.active .location-btn-icon {
+            color: #1a73e8;
+        }
+
+        .destination-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .destination-popup-content {
+            background-color: #ffffff;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .destination-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .destination-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        .close-popup-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 0;
+        }
+
+        .close-popup-btn:hover {
+            color: #333;
+        }
+
+        .route-points {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .route-point {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .route-point:last-child {
+            margin-bottom: 0;
+        }
+
+        .route-point-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .route-point-icon.point-a {
+            color: white;
+        }
+
+        .route-point-icon.point-b {
+            color: white;
+        }
+
+        .route-point-info {
+            flex: 1;
+        }
+
+        .route-point-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .route-point-address {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .destination-search-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            color: #333;
+            background: transparent;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        .destination-search-input::placeholder {
+            color: #999;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-result-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-icon {
+            width: 20px;
+            height: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            border-radius: 0;
+        }
+
+        .result-icon::before {
+            content: "•";
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-name {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .result-address {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .destination-options {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .map-selection-link {
+            color: #606060;
+            font-size: 14px;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .map-selection-link:hover {
+            color: #333;
+        }
+
+        .map-selection-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-selection-info {
+            background-color: #ffffff;
+            padding: 30px;
+            text-align: center;
+            border-radius: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 300px;
+            width: 90%;
+        }
+
+        .selection-text {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .selection-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .selection-btn {
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 100px;
+            border-radius: 0;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        .selection-btn-confirm {
+            background-color: #606060;
+            color: white;
+        }
+
+        .selection-btn-confirm:hover {
+            background-color: #555;
+        }
+
+        .selection-btn-cancel {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .selection-btn-cancel:hover {
+            background-color: #e8e8e8;
+        }
+
+        .map-selection-active {
+            cursor: crosshair !important;
+        }
+
+        /* Страница оформления заказа */
+        .booking-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffffff;
+            z-index: 3000;
+            overflow-y: auto;
+        }
+
+        .booking-content {
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .booking-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #333;
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        .booking-header h3 {
+            margin: 0;
+            flex: 1;
+            text-align: center;
+            color: #333;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        .booking-spacer {
+            width: 30px;
+        }
+
+        .route-info {
+            margin-bottom: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .route-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .route-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .route-icon {
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .route-point-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .route-address {
+            color: #333;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        /* Выбор машины с навигацией */
+        .car-selection-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .nav-arrow {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-arrow:hover {
+            opacity: 1;
+        }
+
+        .nav-arrow.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-arrow img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .car-selection {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* Стили для не-slick версии */
+        .car-selection:not(.slick-slider) {
+            max-width: 280px;
+        }
+
+        .car-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: block;
+        }
+
+        /* Стили для car-option внутри Slick слайдера */
+        .car-selection.slick-slider .car-option {
+            width: 100% !important;
+            display: block !important;
+        }
+
+        .car-card {
+            background-color: #ffffff;
+            border: 2px solid #e8e8e8;
+            padding: 16px 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+        }
+
+        .car-card:hover {
+            border-color: #d0d0d0;
+        }
+
+        .car-option.selected .car-card {
+            border-color: #00000063;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-width: 1px;
+        }
+
+        .car-card.disabled {
+            opacity: 0.5;
+            background-color: #f5f5f5;
+        }
+
+        .car-card.disabled:hover {
+            border-color: #e8e8e8;
+        }
+
+        .car-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50px;
+            margin-bottom: 12px;
+        }
+
+        .car-image {
+            object-fit: contain;
+        }
+
+        .car-card.disabled .car-image {
+            opacity: 0.4;
+        }
+
+        .car-info {
+            text-align: center;
+        }
+
+        .car-name {
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .car-card.disabled .car-name {
+            color: #999;
+        }
+
+        .car-price {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .car-card.disabled .car-price {
+            color: #999;
+        }
+
+        .car-time {
+            color: #888;
+            font-size: 12px;
+            background-color: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        .car-card.disabled .car-time {
+            background-color: #f8f8f8;
+            color: #bbb;
+        }
+
+        /* Swiper кастомные стили */
+        .car-selection.swiper {
+            max-width: 320px;
+            margin: 0 auto;
+            padding-bottom: 40px; /* Место для dots */
+            position: relative;
+        }
+
+        .car-selection .swiper-wrapper {
+            align-items: center;
+        }
+
+        .car-selection .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Ограничиваем ширину car-card в слайдере */
+        .car-selection .car-card {
+            max-width: 280px;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* Кастомные dots для Swiper */
+        .car-selection .swiper-pagination {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            height: auto;
+            text-align: center;
+        }
+
+        .car-selection .swiper-pagination-bullet {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #d0d0d0;
+            opacity: 1;
+            margin: 0 4px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .car-selection .swiper-pagination-bullet-active {
+            background-color: #000;
+            transform: scale(1.2);
+        }
+
+        .car-selection .swiper-pagination-bullet:hover {
+            background-color: #666;
+        }
+
+        /* Стили для недоступных тарифов */
+        .car-option.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .car-option.unavailable .car-card {
+            opacity: 0.5;
+            filter: grayscale(30%);
+            position: relative;
+        }
+
+        /* Анимация уведомлений */
+        .tariff-unavailable-notification {
+            animation: slideInFromTop 0.3s ease-out, slideOutToTop 0.3s ease-in 2.7s;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutToTop {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+        }
+
+        /* Стили для неактивной кнопки заказа */
+        .order-btn:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            background-color: #cccccc !important;
+            color: #666666 !important;
+        }
+
+        .order-btn:disabled:hover {
+            background-color: #cccccc !important;
+            transform: none !important;
+        }
+
+        /* Стили для overlay поиска машины (минималистичный дизайн) */
+        .search-car-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: none;
+        }
+
+        .search-car-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            min-height: 200px;
+            animation: slideUpFromBottom 0.3s ease-out;
+        }
+
+        .search-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .search-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        /* Простой лоадер */
+        .search-loader {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .search-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #606060;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .search-text {
+            color: #666;
+            font-size: 16px;
+        }
+
+        @keyframes slideUpFromBottom {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Кнопка отмены (только border) */
+        .cancel-order-btn {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 30px;
+        }
+
+        .cancel-order-btn:hover {
+            border-color: #999;
+            color: #333;
+        }
+
+        /* Стили для информации о водителе */
+        .driver-found-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: none;
+        }
+        
+        .driver-found-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 0;
+            animation: slideUpFromBottom 0.4s ease-out;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Превью маршрута */
+        .route-preview {
+            position: relative;
+            height: 200px;
+            background: linear-gradient(45deg, #e8f5e8, #f0f8f0);
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: 
+                radial-gradient(circle at 30% 40%, rgba(76, 175, 80, 0.1) 20%, transparent 20%),
+                radial-gradient(circle at 70% 70%, rgba(33, 150, 243, 0.1) 15%, transparent 15%);
+        }
+
+        .eta-badge {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Информация о машине */
+        .car-info {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .car-model {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .car-model span:first-child {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .car-number {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        /* Профиль водителя */
+        .driver-profile {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 15px;
+        }
+
+        .driver-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .driver-details {
+            flex: 1;
+        }
+
+        .driver-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .driver-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .star-icon {
+            color: #FFC107;
+            font-size: 16px;
+        }
+
+        /* Номер заказа */
+        .order-number-display {
+            text-align: center;
+            padding: 15px 20px;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* Кнопки действий */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .call-btn, .cancel-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .call-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .call-btn:hover {
+            background: #45a049;
+        }
+
+        .cancel-btn {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .cancel-btn:hover {
+            background: #ff5722;
+            color: white;
+            border-color: #ff5722;
+        }
+
+        .call-btn img, .cancel-btn img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Стили для "Такси прибыло" */
+        .taxi-arrived-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            display: none;
+        }
+
+        .taxi-arrived-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px;
+            text-align: center;
+            animation: slideUpFromBottom 0.4s ease-out;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .arrived-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .taxi-arrived-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .taxi-arrived-content p {
+            margin: 0 0 20px 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .arrived-car-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .arrived-car-model {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .arrived-driver-name {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .taxi-arrived-content .call-btn {
+            width: 100%;
+            margin: 0;
+            transform: translateY(-2px);
+        }
+
+        .booking-options {
+            margin-bottom: 20px;
+        }
+
+        .booking-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .booking-option:last-child {
+            border-bottom: none;
+        }
+
+        .option-label {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .option-value {
+            color: #666;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .option-arrow {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Переключатель iOS */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e0e0e0;
+            transition: 0.2s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.2s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #606060;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        .booking-footer {
+            margin-top: 30px;
+        }
+
+        .order-btn {
+            width: 100%;
+            background-color: #606060;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        .order-btn:hover {
+            background-color: #555;
+        }
+
+        .order-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Полноэкранные модальные окна */
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffffff;
+            z-index: 4000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            flex: 1;
+            text-align: center;
+            color: #333;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        .modal-spacer {
+            width: 30px;
+        }
+
+        .modal-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+        }
+
+        .modal-btn {
+            width: 100%;
+            background-color: #606060;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        .modal-btn:hover {
+            background-color: #555;
+        }
+
+        /* Поле ввода комментария */
+        .comment-input-container {
+            margin-top: 20px;
+        }
+
+        #commentTextarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 0;
+            resize: none;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 16px;
+            outline: none;
+            background-color: #f8f9fa;
+        }
+
+        #commentTextarea:focus {
+            border-color: #606060;
+            background-color: #fff;
+        }
+
+        /* Методы оплаты */
+        .payment-methods {
+            margin-top: 20px;
+        }
+
+        .payment-method {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .payment-method:last-child {
+            border-bottom: none;
+        }
+
+        .payment-method:hover {
+            background-color: #f9f9f9;
+        }
+
+        .method-label {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .method-check {
+            color: #999;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .method-check.selected {
+            color: #606060;
+        }
+    </style>
+</head>
+<body>
+    <!-- Простой лоадер тарифов -->
+    <div id="tariffsLoader" class="tariffs-loader">
+        <div class="simple-spinner"></div>
+    </div>
+
+    <!-- Заголовок с поиском -->
+    <div class="header">
+        <div class="header-top">
+            <button class="menu-btn">☰</button>
+            <div class="address-display" id="currentAddress">Ваш адрес</div>
+        </div>
+        <input type="text" class="search-box" placeholder="Куда едем?" id="searchInput" onclick="openDestinationPopup()" readonly>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div class="loading-indicator" id="loadingIndicator">
+        Определяем ваше местоположение...
+    </div>
+
+    <!-- Индикатор местоположения пользователя -->
+    <div class="user-location-indicator" id="userLocationIndicator">
+        Ваше местоположение
+    </div>
+
+    <!-- Карта на весь экран -->
+    <div id="map"></div>
+
+    <!-- Попап для запроса геолокации -->
+    <div class="location-popup" id="locationPopup">
+        <div class="popup-content">
+            <h3>Разрешить доступ к местоположению</h3>
+            <p>Для лучшего опыта использования приложения нам необходимо знать ваше текущее местоположение</p>
+            <div class="popup-buttons">
+                <button class="popup-btn popup-btn-primary" onclick="requestLocation()">Разрешить</button>
+                <button class="popup-btn popup-btn-secondary" onclick="useDefaultLocation()">Не сейчас</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка определения местоположения -->
+    <div class="location-button-container">
+        <button class="location-btn" id="locationBtn" onclick="findMyLocation()">
+            <div class="location-btn-icon">⊕</div>
+            <div class="location-btn-text">Определить моё местоположение</div>
+        </button>
+    </div>
+
+    <!-- Часто посещаемые адреса -->
+    <div class="frequent-addresses" id="frequentAddresses">
+        <h4>Часто посещаемые адреса</h4>
+        <div id="addressesList">
+            <!-- Адреса будут загружены динамически -->
+        </div>
+        <div id="noAddressesMessage" class="no-addresses-message" style="display: none;">
+            <div class="no-addresses-content">
+                <div class="no-addresses-text">
+                    <div class="no-addresses-title">Закажите свою первую поездку</div>
+                    <div class="no-addresses-subtitle">Здесь будут отображаться ваши часто посещаемые места</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Попап выбора точки назначения -->
+    <div class="destination-popup" id="destinationPopup" style="display: none;">
+        <div class="destination-popup-content">
+            <!-- Заголовок попапа -->
+            <div class="destination-header">
+                <h3>Маршрут</h3>
+                <button class="close-popup-btn" onclick="closeDestinationPopup()">✕</button>
+            </div>
+            
+            <!-- Точки маршрута -->
+            <div class="route-points">
+                <div class="route-point">
+                    <div class="route-point-icon point-a"><img src="https://wazir.kg/static/taxi/touch_A.svg" alt="A"></div>
+                    <div class="route-point-info">
+                        <div class="route-point-label">Откуда</div>
+                        <div class="route-point-address" id="pointAAddress">Ваше местоположение</div>
+                    </div>
+                </div>
+                <div class="route-point">
+                    <div class="route-point-icon point-b"><img src="https://wazir.kg/static/taxi/touch_B.svg" alt="B"></div>
+                    <div class="route-point-info">
+                        <div class="route-point-label">Куда</div>
+                        <input type="text" class="destination-search-input" id="destinationSearchInput" placeholder="Введите адрес или название места">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результаты поиска -->
+            <div class="search-results" id="searchResults" style="display: none;">
+                <!-- Результаты будут добавлены динамически -->
+            </div>
+
+            <!-- Альтернативные способы выбора -->
+            <div class="destination-options">
+                <div class="map-selection-link" onclick="enableMapSelection()">
+                    Указать точку на карте
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Индикатор выбора точки на карте -->
+    <div class="map-selection-overlay" id="mapSelectionOverlay" style="display: none;">
+        <div class="map-selection-info">
+            <div class="selection-text">Выберите точку назначения на карте</div>
+            <div class="selection-buttons">
+                <button class="selection-btn selection-btn-confirm" onclick="confirmMapSelection()">Подтвердить</button>
+                <button class="selection-btn selection-btn-cancel" onclick="cancelMapSelection()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Страница оформления заказа -->
+    <div class="booking-page" id="bookingPage" style="display: none;">
+        <div class="booking-content">
+            <!-- Заголовок -->
+            <div class="booking-header">
+                <button class="back-btn" onclick="hideBookingPage()">
+                    <img src="https://wazir.kg/static/taxi/left.svg" alt="left_icon">
+                </button>
+                <h3>Маршрут</h3>
+                <div class="booking-spacer"></div>
+            </div>
+            
+            <!-- Информация о маршруте -->
+            <div class="route-info">
+                <div class="route-item">
+                    <div class="route-icon">
+                        <img src="https://wazir.kg/static/taxi/touch_A.svg" alt="Точка А" class="route-point-icon">
+                    </div>
+                    <span class="route-address" id="bookingStartAddress">Ваше местоположение</span>
+                </div>
+                <div class="route-item">
+                    <div class="route-icon">
+                        <img src="https://wazir.kg/static/taxi/touch_B.svg" alt="Точка Б" class="route-point-icon">
+                    </div>
+                    <span class="route-address" id="bookingEndAddress">Пункт назначения</span>
+                </div>
+            </div>
+
+            <!-- Выбор типа машины с навигацией -->
+            <div class="car-selection-container">
+                <div class="car-selection swiper" id="carSlider">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide">
+                            <div class="car-option" data-type="economy" data-index="0">
+                        <div class="car-card">
+                            <div class="car-visual">
+                                <img src="https://wazir.kg/static/taxi/1.png" alt="Эконом" class="car-image">
+                            </div>
+                            <div class="car-info">
+                                <div class="car-name">Эконом</div>
+                                <div class="car-price" id="economyPrice">624 р</div>
+                                <div class="car-time" id="economyTime">8 мин</div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                        <div class="swiper-slide">
+                            <div class="car-option" data-type="comfort" data-index="1">
+                        <div class="car-card disabled">
+                            <div class="car-visual">
+                                <img src="https://wazir.kg/static/taxi/2.png" alt="Комфорт" class="car-image">
+                            </div>
+                            <div class="car-info">
+                                <div class="car-name">Комфорт</div>
+                                <div class="car-price" id="comfortPrice">400 р</div>
+                                <div class="car-time" id="comfortTime">5 мин</div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                        <div class="swiper-slide">
+                            <div class="car-option" data-type="comfort-plus" data-index="2">
+                        <div class="car-card">
+                            <div class="car-visual">
+                                <img src="https://wazir.kg/static/taxi/3.png" alt="Комфорт+" class="car-image">
+                            </div>
+                            <div class="car-info">
+                                <div class="car-name">Комфорт+</div>
+                                        <div class="car-price" id="comfortPlusPrice">Недоступно</div>
+                                <div class="car-time" id="comfortPlusTime">9 мин</div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                        <div class="swiper-slide">
+                            <div class="car-option" data-type="business" data-index="3">
+                        <div class="car-card">
+                            <div class="car-visual">
+                                <img src="https://wazir.kg/static/taxi/4.png" alt="Бизнес" class="car-image">
+                            </div>
+                            <div class="car-info">
+                                <div class="car-name">Бизнес</div>
+                                <div class="car-price" id="businessPrice">1248 р</div>
+                                <div class="car-time" id="businessTime">11 мин</div>
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+                    <!-- Pagination dots -->
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+
+            <!-- Опции заказа -->
+            <div class="booking-options">
+                <div class="booking-option" onclick="openCommentPopup()">
+                    <span class="option-label">Комментарий водителю</span>
+                    <span>
+                        <img src="https://wazir.kg/static/taxi/right.svg" alt="right_icon">
+                    </span>
+                </div>
+                <div class="booking-option" onclick="openPaymentPopup()">
+                    <span class="option-label">Способ оплаты</span>
+                    <span class="option-value" id="paymentMethod">Наличными</span>
+                    <span>
+                        <img src="https://wazir.kg/static/taxi/right.svg" alt="right_icon">
+                    </span>
+                </div>
+                <div class="booking-option">
+                    <span class="option-label">Кондиционер</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="acOption">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="booking-option">
+                    <span class="option-label">Детское кресло</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="childSeatOption">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Кнопка заказа -->
+            <div class="booking-footer">
+                <button class="order-btn" id="orderBtn" onclick="placeOrder()">Заказать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Полноэкранный экран комментария -->
+    <div class="fullscreen-modal" id="commentModal" style="display: none;">
+        <div class="modal-header">
+            <button class="back-btn" onclick="closeCommentModal()">
+                <img src="https://wazir.kg/static/taxi/left.svg" alt="left_icon">
+            </button>
+            <h3>Комментарий водителю</h3>
+            <div class="modal-spacer"></div>
+        </div>
+        <div class="modal-content">
+            <div class="comment-input-container">
+                <textarea id="commentTextarea" placeholder="Комментарий" maxlength="200"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn" onclick="saveComment()">Готово</button>
+        </div>
+    </div>
+
+    <!-- Полноэкранный экран способа оплаты -->
+    <div class="fullscreen-modal" id="paymentModal" style="display: none;">
+        <div class="modal-header">
+            <button class="back-btn" onclick="closePaymentModal()">
+                <img src="https://wazir.kg/static/taxi/left.svg" alt="left_icon">
+            </button>
+            <h3>Способ оплаты</h3>
+            <div class="modal-spacer"></div>
+        </div>
+        <div class="modal-content">
+            <div class="payment-methods">
+                <div class="payment-method" onclick="selectPaymentMethod('cash')">
+                    <span class="method-label">Наличными</span>
+                    <span class="method-check" id="cashCheck">○</span>
+                </div>
+                <div class="payment-method" onclick="selectPaymentMethod('card')">
+                    <span class="method-label">Переводом на карту</span>
+                    <span class="method-check" id="cardCheck">○</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn" onclick="savePaymentMethod()">Готово</button>
+        </div>
+    </div>
+
+    <!-- Overlay поиска машины -->
+    <div id="searchCarOverlay" class="search-car-overlay">
+        <div class="search-car-content">
+            <div class="search-header">
+                <h3>Поиск машины</h3>
+            </div>
+            
+            <div class="search-loader">
+                <div class="search-spinner"></div>
+                <div class="search-text">Ищем водителя...</div>
+            </div>
+            
+            <button class="cancel-order-btn" onclick="cancelOrderSearch()">
+                Отменить заказ
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay информации о водителе -->
+    <div id="driverFoundOverlay" class="driver-found-overlay">
+        <div class="driver-found-content">
+            <!-- Карта с маршрутом (превью) -->
+            <div class="route-preview">
+                <div class="eta-badge">
+                    <span class="eta-text">Через <span id="foundDriverEta">6</span> мин приедет</span>
+                </div>
+            </div>
+            
+            <!-- Информация о машине -->
+            <div class="car-info">
+                <div class="car-model">
+                    <span id="foundDriverCar">синий LADA (ВАЗ) Vesta</span>
+                    <span class="car-number" id="foundCarNumber">7940МР-1</span>
+                </div>
+            </div>
+            
+            <!-- Информация о водителе -->
+            <div class="driver-profile">
+                <div class="driver-avatar">
+                    <div class="avatar-circle"></div>
+                </div>
+                <div class="driver-details">
+                    <div class="driver-name" id="foundDriverName">Гулецкий Антон Анатольевич</div>
+                    <div class="driver-rating">
+                        <span class="star-icon">★</span>
+                        <span id="foundDriverRating">5.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Номер заказа -->
+            <div class="order-number-display">
+                Заказ №<span id="foundOrderNumber">-</span>
+            </div>
+            
+            <!-- Кнопки действий -->
+            <div class="action-buttons">
+                <button class="call-btn" onclick="callDriver()">
+                    <img src="https://wazir.kg/static/navigator/ic_call.png" alt="Позвонить">
+                    Позвонить
+                </button>
+                <button class="cancel-btn" onclick="cancelOrder()">
+                    <img src="https://wazir.kg/static/navigator/ic_close.png" alt="Отменить">
+                    Отменить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay "Такси прибыло" -->
+    <div id="taxiArrivedOverlay" class="taxi-arrived-overlay" style="display: none;">
+        <div class="taxi-arrived-content">
+            <div class="arrived-icon">🚗</div>
+            <h3>Ваше такси прибыло</h3>
+            <p>Водитель ожидает вас у подъезда</p>
+            
+            <!-- Информация о водителе и машине -->
+            <div class="arrived-car-info">
+                <div class="arrived-car-model" id="arrivedCarInfo">синий LADA (ВАЗ) Vesta 7940МР-1</div>
+                <div class="arrived-driver-name" id="arrivedDriverName">Гулецкий Антон Анатольевич</div>
+            </div>
+            
+            <button class="call-btn" onclick="callDriver()">
+                <img src="https://wazir.kg/static/navigator/ic_call.png" alt="Позвонить">
+                Позвонить водителю
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let userMarker;
+        let destinationMarker;
+        let userLocation = null;
+        let destinationLocation = null;
+        let geocoder;
+        let placesService;
+        let isMapSelectionMode = false;
+        let tempDestinationLocation = null;
+        let selectedCarType = 'economy';
+        let selectedPaymentMethod = 'cash';
+        let driverComment = '';
+        let carPrices = {};
+        let carAvailability = {};
+        let bookingOptions = {
+            ac: false,
+            childSeat: false
+        };
+
+        console.log('🚀 Загрузка главной страницы пользователя');
+
+
+
+        function showLocationPopup() {
+            console.log('🔔 Показываем попап для запроса геолокации');
+            document.getElementById('locationPopup').style.display = 'flex';
+        }
+
+        function hideLocationPopup() {
+            console.log('🔒 Скрываем попап геолокации');
+            document.getElementById('locationPopup').style.display = 'none';
+        }
+
+        function requestLocation() {
+            console.log('📍 Пользователь разрешил доступ к геолокации');
+            hideLocationPopup();
+            showLoadingIndicator();
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('✅ Геолокация получена:', position.coords);
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Сохраняем статус разрешения в localStorage
+                    localStorage.setItem('geolocation_granted', 'true');
+                    localStorage.setItem('geolocation_timestamp', Date.now().toString());
+                    
+                    setUserLocation(pos);
+                    hideLoadingIndicator();
+                    
+                    // Запускаем автономное отслеживание
+                    startLocationTracking();
+                },
+                function(error) {
+                    console.log('❌ Ошибка получения геолокации:', error);
+                    hideLoadingIndicator();
+                    
+                    // Сохраняем отказ в localStorage
+                    localStorage.setItem('geolocation_granted', 'false');
+                    localStorage.setItem('geolocation_timestamp', Date.now().toString());
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            alert('Доступ к геолокации запрещен. Используем местоположение по умолчанию.');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            alert('Информация о местоположении недоступна.');
+                            break;
+                        case error.TIMEOUT:
+                            alert('Превышено время ожидания запроса геолокации.');
+                            break;
+                        default:
+                            alert('Произошла неизвестная ошибка при получении местоположения.');
+                            break;
+                    }
+                    useDefaultLocation();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 минут
+                }
+            );
+        }
+
+        function useDefaultLocation() {
+            console.log('🏠 Используем местоположение по умолчанию (Ош)');
+            hideLocationPopup();
+            hideLoadingIndicator();
+            
+            // Сохраняем отказ от геолокации в localStorage
+            localStorage.setItem('geolocation_granted', 'false');
+            localStorage.setItem('geolocation_timestamp', Date.now().toString());
+            
+            const defaultLocation = { lat: 40.5138, lng: 72.8019 };
+            setUserLocation(defaultLocation);
+            
+            // Обновляем адрес
+            document.getElementById('currentAddress').textContent = 'Ош, Кыргызстан';
+            
+            // Обновляем кнопку, указывая, что местоположение не реальное
+            updateLocationButton(false);
+        }
+
+        // Глобальная переменная для отслеживания местоположения
+        let watchId = null;
+
+        // Умная проверка разрешений на геолокацию
+        async function checkGeolocationPermission() {
+            console.log('🔍 Проверяем статус разрешений на геолокацию');
+            
+            try {
+                // Проверяем сохраненное состояние в localStorage
+                const savedGranted = localStorage.getItem('geolocation_granted');
+                const savedTimestamp = localStorage.getItem('geolocation_timestamp');
+                
+                // Если прошло больше 24 часов, перепроверяем
+                const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                const timestampExpired = !savedTimestamp || parseInt(savedTimestamp) < oneDayAgo;
+                
+                // Проверяем Permissions API, если поддерживается
+                if ('permissions' in navigator) {
+                    const permission = await navigator.permissions.query({ name: 'geolocation' });
+                    console.log('🛡️ Статус разрешения:', permission.state);
+                    
+                    if (permission.state === 'granted') {
+                        console.log('✅ Разрешение уже дано, получаем геолокацию');
+                        getCurrentLocationSilently();
+                        return;
+                    } else if (permission.state === 'denied') {
+                        console.log('❌ Разрешение отклонено');
+                        localStorage.setItem('geolocation_granted', 'false');
+                        useDefaultLocation();
+                        return;
+                    }
+                }
+                
+                // Если localStorage говорит, что разрешение было дано и не истекло
+                if (savedGranted === 'true' && !timestampExpired) {
+                    console.log('✅ Используем сохраненное разрешение');
+                    getCurrentLocationSilently();
+                    return;
+                }
+                
+                // Если localStorage говорит об отказе и не истекло
+                if (savedGranted === 'false' && !timestampExpired) {
+                    console.log('❌ Используем сохраненный отказ');
+                    useDefaultLocation();
+                    return;
+                }
+                
+                // Если состояние неизвестно или истекло - показываем попап
+                console.log('❓ Статус неизвестен, показываем попап');
+                showLocationPopup();
+                
+            } catch (error) {
+                console.log('❌ Ошибка проверки разрешений:', error);
+                showLocationPopup();
+            }
+        }
+
+        // Тихое получение геолокации (без попапа)
+        function getCurrentLocationSilently() {
+            console.log('📍 Тихо получаем текущую геолокацию');
+            showLoadingIndicator();
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('✅ Геолокация получена тихо:', position.coords);
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    setUserLocation(pos);
+                    hideLoadingIndicator();
+                    
+                    // Запускаем автономное отслеживание
+                    startLocationTracking();
+                },
+                function(error) {
+                    console.log('❌ Ошибка тихого получения геолокации:', error);
+                    hideLoadingIndicator();
+                    
+                    if (error.code === error.PERMISSION_DENIED) {
+                        // Разрешение было отозвано
+                        localStorage.setItem('geolocation_granted', 'false');
+                        localStorage.setItem('geolocation_timestamp', Date.now().toString());
+                    }
+                    
+                    useDefaultLocation();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 минут
+                }
+            );
+        }
+
+        // Автономное отслеживание местоположения
+        function startLocationTracking() {
+            console.log('🔄 Запускаем автономное отслеживание местоположения');
+            
+            // Останавливаем предыдущее отслеживание, если оно было
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+            
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    // Обновление геолокации в фоне
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Обновляем местоположение пользователя на карте
+                    updateUserLocationSilently(pos);
+                },
+                function(error) {
+                    console.log('❌ Ошибка отслеживания местоположения:', error);
+                    
+                    if (error.code === error.PERMISSION_DENIED) {
+                        // Разрешение было отозвано
+                        localStorage.setItem('geolocation_granted', 'false');
+                        localStorage.setItem('geolocation_timestamp', Date.now().toString());
+                        stopLocationTracking();
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 30000,
+                    maximumAge: 60000 // 1 минута
+                }
+            );
+        }
+
+        // Остановка отслеживания местоположения
+        function stopLocationTracking() {
+            console.log('⏹️ Останавливаем отслеживание местоположения');
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+
+        // Тихое обновление местоположения пользователя (без центрирования карты)
+        function updateUserLocationSilently(position) {
+            if (!map) return;
+            
+            console.log('🔄 Тихое обновление местоположения пользователя');
+            
+            // Обновляем маркер пользователя с 3D моделью
+            if (userMarker) {
+                userMarker.setPosition(position);
+            } else {
+                userMarker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: 'Ваше местоположение',
+                    icon: {
+                        url: 'https://wazir.kg/static/navigator/map.png',
+                        scaledSize: new google.maps.Size(50, 50),
+                        anchor: new google.maps.Point(25, 25),
+                        optimized: false
+                    },
+                    zIndex: 1000
+                });
+            }
+            
+            // Обновляем глобальную переменную
+            userLocation = position;
+            
+            // Обновляем адрес в фоне
+            updateCurrentAddressSilently(position);
+        }
+
+        // Тихое обновление адреса (без отображения пользователю)
+        function updateCurrentAddressSilently(position) {
+            if (!geocoder) return;
+            
+            geocoder.geocode({ location: position }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    console.log('📍 Адрес обновлен в фоне:', address);
+                    
+                    // Обновляем только если элемент еще показывает дефолтное значение
+                    const currentAddressElement = document.getElementById('currentAddress');
+                    if (currentAddressElement && 
+                        (currentAddressElement.textContent === 'Ваше местоположение' || 
+                         currentAddressElement.textContent === 'Ош, Кыргызстан')) {
+                        currentAddressElement.textContent = address;
+                    }
+                }
+            });
+        }
+
+        // Агрессивное получение геолокации с повторными попытками
+        function getLocationWithRetry(attemptsLeft = 3, highAccuracy = true) {
+            console.log(`🎯 Попытка получения геолокации: ${4 - attemptsLeft + 1}/3, точность: ${highAccuracy ? 'высокая' : 'низкая'}`);
+            
+            const options = {
+                enableHighAccuracy: highAccuracy,
+                timeout: highAccuracy ? 15000 : 25000, // Увеличенный timeout
+                maximumAge: 60000 // Кэш на 1 минуту
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('✅ Геолокация успешно получена:', position.coords);
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    setUserLocation(pos);
+                    hideLoadingIndicator();
+                    startLocationTracking();
+                },
+                function(error) {
+                    console.log(`❌ Ошибка геолокации (попытка ${4 - attemptsLeft + 1}):`, error);
+                    
+                    if (attemptsLeft > 1) {
+                        // Есть еще попытки
+                        setTimeout(() => {
+                            if (attemptsLeft === 2 && highAccuracy) {
+                                // На второй попытке используем низкую точность
+                                getLocationWithRetry(attemptsLeft - 1, false);
+                            } else {
+                                getLocationWithRetry(attemptsLeft - 1, highAccuracy);
+                            }
+                        }, 2000);
+                    } else {
+                        // Все попытки исчерпаны
+                        console.log('💀 Все попытки получения геолокации исчерпаны, используем местоположение по умолчанию');
+                        useDefaultLocation();
+                    }
+                },
+                options
+            );
+        }
+
+        function setUserLocation(position) {
+            console.log('📍 Устанавливаем местоположение пользователя:', position);
+            userLocation = position;
+
+            // Центрируем карту на местоположении пользователя с МАКСИМАЛЬНЫМ приближением
+            map.setCenter(position);
+            map.setZoom(22); // Максимально возможный zoom
+
+            // Создаем или обновляем маркер пользователя с 3D моделью
+            if (userMarker) {
+                userMarker.setPosition(position);
+            } else {
+                userMarker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: 'Ваше местоположение',
+                    icon: {
+                        url: 'https://wazir.kg/static/navigator/map.png',
+                        scaledSize: new google.maps.Size(50, 50),
+                        anchor: new google.maps.Point(25, 25),
+                        optimized: false
+                    },
+                    zIndex: 1000
+                });
+            }
+
+            // Показываем индикатор местоположения
+            showUserLocationIndicator();
+
+            // Получаем адрес через геокодер
+            getAddressFromCoords(position);
+
+            // Обновляем кнопку определения местоположения
+            updateLocationButton(true);
+        }
+
+        // Обновление состояния кнопки определения местоположения
+        function updateLocationButton(hasLocation) {
+            const locationBtn = document.getElementById('locationBtn');
+            const btnText = locationBtn.querySelector('.location-btn-text');
+            const btnIcon = locationBtn.querySelector('.location-btn-icon');
+            
+            if (hasLocation) {
+                btnText.textContent = 'Обновить местоположение';
+                btnIcon.textContent = '↻';
+                locationBtn.classList.add('active');
+            } else {
+                btnText.textContent = 'Определить моё местоположение';
+                btnIcon.textContent = '⊕';
+                locationBtn.classList.remove('active');
+            }
+        }
+
+        function getAddressFromCoords(position) {
+            console.log('🔍 Получаем адрес по координатам');
+            
+            geocoder.geocode({ location: position }, function(results, status) {
+                if (status === 'OK') {
+                    if (results[0]) {
+                        const address = results[0].formatted_address;
+                        console.log('✅ Адрес найден:', address);
+                        document.getElementById('currentAddress').textContent = address;
+                        
+                        // Обновляем индикатор местоположения
+                        document.getElementById('userLocationIndicator').textContent = `Ваше местоположение: ${address}`;
+                    } else {
+                        console.log('❌ Адрес не найден');
+                        document.getElementById('currentAddress').textContent = 'Местоположение определено';
+                    }
+                } else {
+                    console.log('❌ Ошибка геокодирования:', status);
+                    document.getElementById('currentAddress').textContent = 'Местоположение определено';
+                }
+            });
+        }
+
+        function showLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+        }
+
+        function hideLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        function showUserLocationIndicator() {
+            const indicator = document.getElementById('userLocationIndicator');
+            indicator.style.display = 'block';
+            
+            // Скрываем через 3 секунды
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+        }
+
+        function selectAddress(address) {
+            console.log('🎯 Выбран адрес:', address);
+            document.getElementById('searchInput').value = address;
+            // Здесь можно добавить логику для навигации к выбранному адресу
+        }
+
+        // Функция для определения местоположения по кнопке
+        function findMyLocation() {
+            console.log('📍 Пользователь нажал "Определить моё местоположение"');
+            
+            const locationBtn = document.getElementById('locationBtn');
+            const btnText = locationBtn.querySelector('.location-btn-text');
+            const btnIcon = locationBtn.querySelector('.location-btn-icon');
+            
+            // Проверяем поддержку геолокации
+            if (!navigator.geolocation) {
+                alert('Геолокация не поддерживается вашим браузером');
+                return;
+            }
+            
+            // Блокируем кнопку и показываем процесс
+            locationBtn.disabled = true;
+            btnText.textContent = 'Определяем местоположение...';
+            btnIcon.textContent = '⟳';
+            
+            // Показываем индикатор загрузки
+            showLoadingIndicator();
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('✅ Геолокация получена по кнопке:', position.coords);
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Устанавливаем местоположение пользователя
+                    setUserLocation(pos);
+                    
+                    // Возвращаем кнопку в исходное состояние
+                    locationBtn.disabled = false;
+                    btnText.textContent = 'Определить моё местоположение';
+                    btnIcon.textContent = '⊕';
+                    
+                    hideLoadingIndicator();
+                    
+                    // Показываем уведомление об успехе
+                    showUserLocationIndicator();
+                },
+                function(error) {
+                    console.log('❌ Ошибка получения геолокации по кнопке:', error);
+                    
+                    // Возвращаем кнопку в исходное состояние
+                    locationBtn.disabled = false;
+                    btnText.textContent = 'Определить моё местоположение';
+                    btnIcon.textContent = '⊕';
+                    
+                    hideLoadingIndicator();
+                    
+                    // Показываем сообщение об ошибке
+                    let errorMessage = 'Не удалось определить местоположение. ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Доступ к геолокации запрещен.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Информация о местоположении недоступна.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Превышено время ожидания.';
+                            break;
+                        default:
+                            errorMessage += 'Произошла неизвестная ошибка.';
+                            break;
+                    }
+                    alert(errorMessage);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 60000 // 1 минута
+                }
+            );
+        }
+
+        // Функции для работы с попапом выбора назначения
+        function openDestinationPopup() {
+            console.log('📍 Открываем попап выбора назначения');
+            document.getElementById('destinationPopup').style.display = 'flex';
+            
+            // Обновляем адрес точки А
+            const currentAddress = document.getElementById('currentAddress').textContent;
+            document.getElementById('pointAAddress').textContent = currentAddress;
+            
+            // Фокусируемся на поле поиска
+            setTimeout(() => {
+                document.getElementById('destinationSearchInput').focus();
+            }, 300);
+        }
+
+        function closeDestinationPopup() {
+            console.log('❌ Закрываем попап выбора назначения');
+            document.getElementById('destinationPopup').style.display = 'none';
+            document.getElementById('destinationSearchInput').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        // Поиск мест через Google Places API
+        function searchPlaces(query) {
+            if (!query || query.length < 2) {
+                document.getElementById('searchResults').style.display = 'none';
+                return;
+            }
+
+            console.log('🔍 Поиск места:', query);
+            
+            if (!placesService) {
+                placesService = new google.maps.places.PlacesService(map);
+            }
+
+            const request = {
+                query: query,
+                location: userLocation || { lat: 40.5138, lng: 72.8019 },
+                radius: 50000 // 50км радиус поиска
+            };
+
+            placesService.textSearch(request, function(results, status) {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    displaySearchResults(results);
+                } else {
+                    console.log('❌ Ошибка поиска мест:', status);
+                    document.getElementById('searchResults').style.display = 'none';
+                }
+            });
+        }
+
+        // Отображение результатов поиска
+        function displaySearchResults(results) {
+            const searchResults = document.getElementById('searchResults');
+            searchResults.innerHTML = '';
+            
+            if (results.length === 0) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            results.slice(0, 5).forEach(place => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.onclick = () => selectSearchResult(place);
+                
+                resultItem.innerHTML = `
+                    <div class="result-info">
+                        <div class="result-name">${place.name}</div>
+                        <div class="result-address">${place.formatted_address || 'Адрес не указан'}</div>
+                    </div>
+                `;
+                
+                searchResults.appendChild(resultItem);
+            });
+            
+            searchResults.style.display = 'block';
+        }
+
+        // Выбор результата поиска
+        function selectSearchResult(place) {
+            console.log('✅ Выбрано место из поиска:', place.name);
+            selectDestination(place.name, place.geometry.location.lat(), place.geometry.location.lng(), place.formatted_address);
+        }
+
+        // Выбор назначения
+        function selectDestination(name, lat, lng, address = null) {
+            console.log('🎯 Выбрано назначение:', name, lat, lng);
+            
+            destinationLocation = { lat: lat, lng: lng };
+            
+            // Обновляем поле поиска
+            document.getElementById('searchInput').value = name;
+            
+            // Добавляем маркер на карту
+            addDestinationMarker(destinationLocation, name);
+            
+            // Закрываем попап
+            closeDestinationPopup();
+            
+            // Показываем страницу оформления заказа
+            showBookingPage();
+        }
+
+        // Добавление маркера назначения на карту
+        function addDestinationMarker(position, title) {
+            if (destinationMarker) {
+                destinationMarker.setMap(null);
+            }
+            
+            destinationMarker = new google.maps.Marker({
+                position: position,
+                map: map,
+                title: title,
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 0C4.48 0 0 4.48 0 10c0 7.5 10 20 10 20s10-12.5 10-20c0-5.52-4.48-10-10-10z" fill="#f44336"/>
+                            <circle cx="10" cy="10" r="4" fill="#ffffff"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(20, 30),
+                    anchor: new google.maps.Point(10, 30)
+                }
+            });
+        }
+
+        // Включение режима выбора точки на карте
+        function enableMapSelection() {
+            console.log('🗺️ Включаем режим выбора точки на карте');
+            
+            closeDestinationPopup();
+            document.getElementById('mapSelectionOverlay').style.display = 'flex';
+            
+            isMapSelectionMode = true;
+            map.setOptions({ cursor: 'crosshair' });
+            document.body.classList.add('map-selection-active');
+            
+            // Добавляем обработчик клика по карте
+            const clickListener = map.addListener('click', function(event) {
+                tempDestinationLocation = {
+                    lat: event.latLng.lat(),
+                    lng: event.latLng.lng()
+                };
+                
+                console.log('📍 Пользователь выбрал точку на карте:', tempDestinationLocation);
+                
+                // Показываем временный маркер
+                if (destinationMarker) {
+                    destinationMarker.setMap(null);
+                }
+                
+                addDestinationMarker(tempDestinationLocation, 'Выбранная точка');
+                
+                // Обновляем текст в диалоге
+                document.querySelector('.selection-text').textContent = 'Точка выбрана. Подтвердить выбор?';
+                
+                google.maps.event.removeListener(clickListener);
+            });
+        }
+
+        // Подтверждение выбора точки на карте
+        function confirmMapSelection() {
+            if (!tempDestinationLocation) {
+                alert('Пожалуйста, выберите точку на карте');
+                return;
+            }
+            
+            console.log('✅ Подтверждаем выбор точки на карте:', tempDestinationLocation);
+            
+            destinationLocation = tempDestinationLocation;
+            
+            // Получаем адрес по координатам
+            geocoder.geocode({ location: destinationLocation }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    document.getElementById('searchInput').value = address;
+                } else {
+                    document.getElementById('searchInput').value = `${destinationLocation.lat.toFixed(6)}, ${destinationLocation.lng.toFixed(6)}`;
+                }
+            });
+            
+            cancelMapSelection();
+        }
+
+        // Отмена выбора точки на карте
+        function cancelMapSelection() {
+            console.log('❌ Отменяем выбор точки на карте');
+            
+            document.getElementById('mapSelectionOverlay').style.display = 'none';
+            isMapSelectionMode = false;
+            tempDestinationLocation = null;
+            
+            map.setOptions({ cursor: 'default' });
+            document.body.classList.remove('map-selection-active');
+            
+            // Восстанавливаем текст в диалоге
+            document.querySelector('.selection-text').textContent = 'Выберите точку назначения на карте';
+            
+            // Если не подтвердили выбор, убираем временный маркер
+            if (!destinationLocation && destinationMarker) {
+                destinationMarker.setMap(null);
+                destinationMarker = null;
+            }
+        }
+
+        // Обработчик поиска в попапе
+        document.addEventListener('DOMContentLoaded', function() {
+            const destinationSearchInput = document.getElementById('destinationSearchInput');
+            if (destinationSearchInput) {
+                let searchTimeout;
+                destinationSearchInput.addEventListener('input', function(e) {
+                    const query = e.target.value;
+                    
+                    clearTimeout(searchTimeout);
+                                    searchTimeout = setTimeout(() => {
+                    searchPlaces(query);
+                }, 300); // Debounce 300ms
+            });
+        }
+
+        // Функция для обновления счетчика символов
+        function updateCharCounter() {
+            const textarea = document.getElementById('commentTextarea');
+            const counter = document.getElementById('charCounter');
+            
+            if (textarea && counter) {
+                const currentLength = textarea.value.length;
+                const maxLength = 500;
+                counter.textContent = `${currentLength}/${maxLength}`;
+                
+                // Предупреждение при достижении лимита
+                if (currentLength >= maxLength) {
+                    counter.style.color = '#ff6b6b';
+                } else if (currentLength >= maxLength * 0.8) {
+                    counter.style.color = '#ffa502';
+                } else {
+                    counter.style.color = '#888';
+                }
+            }
+        }
+
+        // Обработчики для textarea комментария
+        const commentTextarea = document.getElementById('commentTextarea');
+        if (commentTextarea) {
+            commentTextarea.addEventListener('input', updateCharCounter);
+        }
+
+        // Обработчики переключателей
+        const acOption = document.getElementById('acOption');
+        const childSeatOption = document.getElementById('childSeatOption');
+        
+        if (acOption) {
+            acOption.addEventListener('change', function() {
+                bookingOptions.ac = this.checked;
+                console.log('❄️ Кондиционер:', this.checked);
+            });
+        }
+        
+        if (childSeatOption) {
+            childSeatOption.addEventListener('change', function() {
+                bookingOptions.childSeat = this.checked;
+                console.log('👶 Детское кресло:', this.checked);
+            });
+        }
+        });
+
+        // Функции для страницы оформления заказа
+        function showBookingPage() {
+            console.log('📋 Показываем страницу оформления заказа');
+            
+            // Обновляем адреса в заказе
+            const currentAddress = document.getElementById('currentAddress').textContent;
+            const destinationAddress = document.getElementById('searchInput').value;
+            
+            document.getElementById('bookingStartAddress').textContent = currentAddress;
+            document.getElementById('bookingEndAddress').textContent = destinationAddress;
+            
+            // Показываем страницу
+            document.getElementById('bookingPage').style.display = 'block';
+            
+            // Сначала загружаем доступные типы машин, затем инициализируем слайдер
+            loadAvailableCarTypes().then(() => {
+                // Инициализируем слайдер после загрузки данных о тарифах
+            initCarSelection();
+            
+                // Рассчитываем цены
+            calculateDynamicPricing();
+            });
+        }
+
+        function hideBookingPage() {
+            console.log('❌ Скрываем страницу оформления заказа');
+            document.getElementById('bookingPage').style.display = 'none';
+        }
+
+        // Инициализация Swiper слайдера для выбора машин
+        let carSwiper = null;
+        
+        function initCarSelection() {
+            console.log('🚗 Инициализируем Swiper слайдер для выбора типа машины');
+            
+            // Дожидаемся загрузки Swiper
+            if (typeof Swiper === 'undefined') {
+                console.log('⏳ Swiper не загружен, ждем...');
+                setTimeout(initCarSelection, 100);
+                return;
+            }
+            
+            const swiperElement = document.getElementById('carSlider');
+            
+            if (!swiperElement) {
+                console.log('❌ Элемент #carSlider не найден');
+                return;
+            }
+            
+            // Уничтожаем предыдущий экземпляр Swiper если есть
+            if (carSwiper) {
+                carSwiper.destroy(true, true);
+                console.log('🔄 Предыдущий Swiper уничтожен');
+            }
+            
+            try {
+                // Инициализируем Swiper слайдер
+                carSwiper = new Swiper('#carSlider', {
+                    // Основные настройки
+                    slidesPerView: 1,
+                    spaceBetween: 0,
+                    centeredSlides: true,
+                    
+                    // Навигация
+                    pagination: {
+                        el: '.swiper-pagination',
+                        clickable: true,
+                        dynamicBullets: false,
+                    },
+                    
+                    // Touch настройки
+                    touchRatio: 1,
+                    touchAngle: 45,
+                    simulateTouch: true,
+                    allowTouchMove: true,
+                    
+                    // Переходы
+                    speed: 300,
+                    effect: 'slide',
+                    
+                    // Поведение
+                    loop: false,
+                    loopedSlides: 0,
+                    autoHeight: false,
+                    
+                    // Отзывчивость
+                    breakpoints: {
+                        320: {
+                            slidesPerView: 1,
+                            spaceBetween: 0
+                        },
+                        768: {
+                            slidesPerView: 1,
+                            spaceBetween: 0
+                        }
+                    },
+                    
+                    // События
+                    on: {
+                        init: function() {
+                            console.log('✅ Swiper инициализирован');
+                            updateSelectedTariff(0); // Устанавливаем первый тариф как выбранный
+                        },
+                        
+                        slideChange: function() {
+                            const activeIndex = this.activeIndex;
+                            updateSelectedTariff(activeIndex);
+                        },
+                        
+                        touchStart: function() {
+                            // Touch события для отладки (убрано для производительности)
+                        },
+                        
+                        touchEnd: function() {
+                            // Touch события для отладки (убрано для производительности)
+                    }
+                }
+            });
+                
+                console.log('✅ Swiper слайдер для машин инициализирован');
+                
+            } catch (error) {
+                console.log('❌ Ошибка инициализации Swiper слайдера:', error);
+                
+                // Fallback: используем простое отображение без слайдера
+                const firstSlide = document.querySelector('.swiper-slide .car-option');
+                if (firstSlide) {
+                    firstSlide.classList.add('selected');
+                    const carType = firstSlide.getAttribute('data-type');
+                    selectedCarType = carType;
+                    console.log('🔄 Используем fallback режим, выбран:', carType);
+                }
+            }
+        }
+        
+        // Функция обновления выбранного тарифа
+        function updateSelectedTariff(slideIndex) {
+            // Убираем selected класс со всех опций
+            document.querySelectorAll('.car-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Находим текущий слайд
+            const activeSlide = document.querySelectorAll('.swiper-slide')[slideIndex];
+            if (!activeSlide) return;
+            
+            const carOption = activeSlide.querySelector('.car-option');
+            if (!carOption) return;
+            
+            const carType = carOption.getAttribute('data-type');
+            
+            // Проверяем доступность тарифа
+            if (carAvailability[carType] === false) {
+                console.log('❌ Выбран недоступный тариф:', carType);
+                
+                // Показываем уведомление, но НЕ переключаем автоматически
+                showUnavailableTariffMessage(carType);
+                
+                // Визуально показываем что тариф недоступен
+                carOption.classList.add('unavailable');
+            } else {
+                console.log('✅ Выбран доступный тариф:', carType);
+                carOption.classList.remove('unavailable');
+            }
+            
+            // Всегда обновляем выбранный тариф (даже если недоступен)
+            carOption.classList.add('selected');
+                    selectedCarType = carType;
+                    
+            console.log('🚗 Текущий выбранный тип машины:', selectedCarType);
+            
+            // Обновляем состояние кнопки "Заказать"
+            updateOrderButtonState();
+        }
+        
+        // Функция обновления состояния кнопки "Заказать"
+        function updateOrderButtonState() {
+            const orderBtn = document.getElementById('orderBtn');
+            if (!orderBtn) return;
+            
+            // Проверяем доступность выбранного тарифа
+            const isAvailable = carAvailability[selectedCarType];
+            
+            if (isAvailable) {
+                // Тариф доступен - активная кнопка
+                orderBtn.style.opacity = '1';
+                orderBtn.style.pointerEvents = 'auto';
+                orderBtn.style.cursor = 'pointer';
+                orderBtn.disabled = false;
+                orderBtn.textContent = 'Заказать';
+                } else {
+                // Тариф недоступен - неактивная кнопка
+                orderBtn.style.opacity = '0.5';
+                orderBtn.style.pointerEvents = 'none';
+                orderBtn.style.cursor = 'not-allowed';
+                orderBtn.disabled = true;
+                orderBtn.textContent = 'Недоступно';
+            }
+            
+            console.log(`🎯 Кнопка заказа: ${isAvailable ? 'активна' : 'неактивна'} для тарифа ${selectedCarType}`);
+        }
+        
+        // Функция показа сообщения о недоступном тарифе
+        function showUnavailableTariffMessage(carType) {
+            const tariffNames = {
+                'economy': 'Эконом',
+                'comfort': 'Комфорт', 
+                'comfort-plus': 'Комфорт+',
+                'business': 'Бизнес'
+            };
+            
+            const message = `Тариф "${tariffNames[carType]}" сейчас недоступен. Нет свободных водителей.`;
+            
+            // Создаем уведомление
+            const notification = document.createElement('div');
+            notification.className = 'tariff-unavailable-notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #ff6b6b;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 10000;
+                font-size: 14px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Загрузка доступных типов машин из БД
+        async function loadAvailableCarTypes() {
+            try {
+                showTariffsLoader();
+                console.log('📡 Загружаем доступные тарифы из БД...');
+                
+                const response = await fetch('/api/available-tariffs', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Получаем данные о доступности тарифов
+                    const tariffs = data.tariffs;
+                    
+                    // Обновляем глобальную переменную
+                    carAvailability = {};
+                    Object.keys(tariffs).forEach(type => {
+                        carAvailability[type] = tariffs[type].available;
+                    });
+                    
+                    console.log('📊 Полученные тарифы:', tariffs);
+                    console.log('📋 Доступность:', carAvailability);
+                    
+                    // Применяем доступность к карточкам
+                    Object.keys(tariffs).forEach(type => {
+                        const optionElement = document.querySelector(`[data-type="${type}"]`);
+                        
+                        if (optionElement) {
+                            const cardElement = optionElement.querySelector('.car-card');
+                            const timeElement = optionElement.querySelector('.car-time');
+                            
+                            if (!tariffs[type].available) {
+                                // Недоступный тариф - делаем полупрозрачным
+                                if (cardElement) cardElement.classList.add('disabled');
+                                optionElement.classList.add('unavailable');
+                                optionElement.style.opacity = '0.5';
+                                
+                                // Обновляем текст времени
+                                if (timeElement) {
+                                    timeElement.textContent = 'Недоступно';
+                                    timeElement.style.backgroundColor = '#ff6b6b';
+                                    timeElement.style.color = '#fff';
+                                }
+            } else {
+                                // Доступный тариф - обычное отображение
+                                if (cardElement) cardElement.classList.remove('disabled');
+                                optionElement.classList.remove('unavailable');
+                                optionElement.style.opacity = '1';
+                                
+                                // Обновляем время подачи
+                                if (timeElement) {
+                                    timeElement.textContent = `${tariffs[type].estimated_time} мин`;
+                                    timeElement.style.backgroundColor = '#f0f0f0';
+                                    timeElement.style.color = '#888';
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ Доступные типы машин загружены из БД:', carAvailability);
+                    console.log(`🚗 Всего активных водителей: ${data.total_drivers}`);
+                    
+                    // Обновляем состояние кнопки заказа после загрузки доступности
+                    updateOrderButtonState();
+                    
+                    hideTariffsLoader();
+                    
+            } else {
+                    throw new Error(data.error || 'Ошибка получения тарифов');
+                }
+                
+            } catch (error) {
+                console.log('❌ Ошибка загрузки типов машин:', error);
+                
+                // Fallback к статическим данным при ошибке
+                carAvailability = {
+                    'economy': true,
+                    'comfort': false,
+                    'comfort-plus': false,
+                    'business': false
+                };
+                
+                // Применяем fallback доступность
+                Object.keys(carAvailability).forEach(type => {
+                    const optionElement = document.querySelector(`[data-type="${type}"]`);
+                    
+                    if (optionElement) {
+                        const cardElement = optionElement.querySelector('.car-card');
+                        
+                        if (!carAvailability[type]) {
+                            if (cardElement) cardElement.classList.add('disabled');
+                            optionElement.classList.add('unavailable');
+                            optionElement.style.opacity = '0.5';
+                        }
+                    }
+                });
+                
+                console.log('🔄 Используем fallback данные:', carAvailability);
+                
+                // Обновляем состояние кнопки заказа после fallback данных
+                updateOrderButtonState();
+                
+                hideTariffsLoader();
+            }
+        }
+
+        // Реальный расчет цен через Google Maps Directions API (как в диспетчере)
+        async function calculateDynamicPricing() {
+            try {
+                console.log('💰 Рассчитываем реальные цены через Google Maps...');
+                
+                // Проверяем координаты
+                const startCoords = userLocation;
+                const endCoords = destinationLocation;
+                
+                if (!startCoords || !endCoords) {
+                    console.log('⚠️ Координаты не готовы, используем fallback цены');
+                    useFallbackPrices();
+                    return;
+                }
+                
+                // Проверяем готовность Google Maps
+                if (!window.google || !window.google.maps || !window.google.maps.DirectionsService) {
+                    console.log('⚠️ Google Maps не готов, используем fallback цены');
+                    useFallbackPrices();
+                    return;
+                }
+                
+                // Тарифы как в диспетчере
+                const TARIFFS = {
+                    'economy': {
+                        boardingFee: 50,
+                        cityPricePerKm: 15,
+                        cityPricePerMinute: 0.5,
+                        minimumPrice: 50
+                    },
+                    'comfort': {
+                        boardingFee: 80,
+                        cityPricePerKm: 20,
+                        cityPricePerMinute: 0.8,
+                        minimumPrice: 80
+                    },
+                    'comfort-plus': {
+                        boardingFee: 100,
+                        cityPricePerKm: 25,
+                        cityPricePerMinute: 1.0,
+                        minimumPrice: 100
+                    },
+                    'business': {
+                        boardingFee: 150,
+                        cityPricePerKm: 35,
+                        cityPricePerMinute: 1.5,
+                        minimumPrice: 150
+                    }
+                };
+                
+                // Создаем DirectionsService
+                const directionsService = new google.maps.DirectionsService();
+                
+                // Запрос маршрута
+                directionsService.route({
+                    origin: startCoords,
+                    destination: endCoords,
+                    travelMode: google.maps.TravelMode.DRIVING
+                }, function(response, status) {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        const leg = response.routes[0].legs[0];
+                        const distance = (leg.distance && leg.distance.value ? leg.distance.value : 0) / 1000; // км
+                        const duration = (leg.duration && leg.duration.value ? leg.duration.value : 0) / 60; // мин
+                        
+                        console.log(`📏 Реальное расстояние: ${distance.toFixed(1)} км`);
+                        console.log(`⏱️ Реальное время: ${duration.toFixed(0)} мин`);
+                        
+                        // Рассчитываем цены для всех тарифов
+                        carPrices = {};
+                        const etaTimes = {};
+                        
+                        Object.keys(TARIFFS).forEach(tariffKey => {
+                            const tariffData = TARIFFS[tariffKey];
+                            
+                            // Расчет как в диспетчере
+                            let price = tariffData.boardingFee;
+                            
+                            if (distance > 0 && duration > 0) {
+                                const distancePrice = distance * tariffData.cityPricePerKm;
+                                const timePrice = duration * tariffData.cityPricePerMinute;
+                                price += distancePrice + timePrice;
+                            }
+                            
+                            // Минимальная цена для Бизнес
+                            if (tariffKey === 'business' && price < tariffData.minimumPrice) {
+                                price = tariffData.minimumPrice;
+                            }
+                            
+                            price = Math.ceil(price);
+                            carPrices[tariffKey] = price;
+                            
+                            // Время подачи (базовое + зависит от дистанции)
+                            let estimatedTime = 8; // базовое время
+                            if (distance > 10) estimatedTime += 5;
+                            if (distance > 20) estimatedTime += 10;
+                            etaTimes[tariffKey] = estimatedTime;
+                        });
+                        
+                        console.log('✅ Реальные цены рассчитаны:', carPrices);
+                        console.log('⏱️ Время подачи:', etaTimes);
+                
+                // Обновляем UI
+                        updatePricingUI(carPrices, etaTimes);
+                        
+                    } else {
+                        console.warn('⚠️ Google Directions не вернул маршрут:', status);
+                        // Fallback к простому расчету
+                        calculateSimpleRoutePricing(startCoords, endCoords);
+                    }
+                });
+                
+            } catch (error) {
+                console.log('❌ Ошибка расчета цен через Google Maps:', error);
+                useFallbackPrices();
+            }
+        }
+        
+        // Простой расчет при недоступности Directions API
+        function calculateSimpleRoutePricing(startCoords, endCoords) {
+            console.log('🔄 Используем простой расчет расстояния');
+            
+            // Простой расчет расстояния по прямой
+            function calculateDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+            
+            const distance = calculateDistance(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
+            const duration = (distance / 30) * 60; // 30 км/ч средняя скорость
+            
+            console.log(`📏 Простое расстояние: ${distance.toFixed(1)} км`);
+            console.log(`⏱️ Простое время: ${duration.toFixed(0)} мин`);
+            
+            // Применяем те же тарифы
+            const TARIFFS = {
+                'economy': { boardingFee: 50, cityPricePerKm: 15, cityPricePerMinute: 0.5, minimumPrice: 50 },
+                'comfort': { boardingFee: 80, cityPricePerKm: 20, cityPricePerMinute: 0.8, minimumPrice: 80 },
+                'comfort-plus': { boardingFee: 100, cityPricePerKm: 25, cityPricePerMinute: 1.0, minimumPrice: 100 },
+                'business': { boardingFee: 150, cityPricePerKm: 35, cityPricePerMinute: 1.5, minimumPrice: 150 }
+            };
+            
+            carPrices = {};
+            const etaTimes = {};
+            
+            Object.keys(TARIFFS).forEach(tariffKey => {
+                const tariffData = TARIFFS[tariffKey];
+                let price = tariffData.boardingFee + (distance * tariffData.cityPricePerKm) + (duration * tariffData.cityPricePerMinute);
+                
+                if (tariffKey === 'business' && price < tariffData.minimumPrice) {
+                    price = tariffData.minimumPrice;
+                }
+                
+                carPrices[tariffKey] = Math.ceil(price);
+                etaTimes[tariffKey] = Math.max(8, Math.ceil(distance / 30 * 60) + 5);
+            });
+            
+            updatePricingUI(carPrices, etaTimes);
+        }
+        
+        // Обновление UI с ценами
+        function updatePricingUI(prices, times) {
+            Object.keys(prices).forEach(type => {
+                    const priceElement = document.getElementById(`${type}Price`);
+                    const timeElement = document.getElementById(`${type}Time`);
+                    
+                    if (priceElement && timeElement) {
+                    // Цена и время показываем только для доступных тарифов
+                    if (carAvailability[type]) {
+                        priceElement.textContent = `${prices[type]} сом`;
+                        timeElement.textContent = `${times[type]} мин`;
+                        timeElement.style.backgroundColor = '#f0f0f0';
+                        timeElement.style.color = '#888';
+                    } else {
+                        // Для недоступных тарифов - все "Недоступно"
+                        priceElement.textContent = 'Недоступно';
+                        timeElement.textContent = 'Недоступно';
+                        timeElement.style.backgroundColor = '#ff6b6b';
+                        timeElement.style.color = '#fff';
+                    }
+                }
+            });
+            
+            // Обновляем состояние кнопки заказа после обновления цен
+            updateOrderButtonState();
+        }
+        
+        // Fallback цены при ошибке API
+        function useFallbackPrices() {
+            console.log('🔄 Используем fallback цены');
+            
+            const fallbackPrices = {
+                'economy': 150,
+                'comfort': 200,
+                'comfort-plus': 280,
+                'business': 350
+            };
+            
+            const fallbackTimes = {
+                'economy': 8,
+                'comfort': 10,
+                'comfort-plus': 12,
+                'business': 15
+            };
+            
+            carPrices = fallbackPrices;
+            
+            Object.keys(fallbackPrices).forEach(type => {
+                        const priceElement = document.getElementById(`${type}Price`);
+                        const timeElement = document.getElementById(`${type}Time`);
+                
+                if (priceElement && timeElement) {
+                    // Цена и время показываем только для доступных тарифов
+                    if (carAvailability[type]) {
+                        priceElement.textContent = `${fallbackPrices[type]} сом`;
+                        timeElement.textContent = `${fallbackTimes[type]} мин`;
+                        timeElement.style.backgroundColor = '#f0f0f0';
+                        timeElement.style.color = '#888';
+                    } else {
+                        // Для недоступных тарифов - все "Недоступно"
+                        priceElement.textContent = 'Недоступно';
+                        timeElement.textContent = 'Недоступно';
+                        timeElement.style.backgroundColor = '#ff6b6b';
+                        timeElement.style.color = '#fff';
+                    }
+                }
+            });
+            
+            console.log('✅ Fallback цены установлены:', fallbackPrices);
+            
+            // Обновляем состояние кнопки заказа
+            updateOrderButtonState();
+        }
+
+        // Модальное окно комментария
+        function openCommentPopup() {
+            console.log('💬 Открываем модальное окно комментария');
+            document.getElementById('commentModal').style.display = 'flex';
+            document.getElementById('commentTextarea').value = driverComment;
+            setTimeout(() => {
+                document.getElementById('commentTextarea').focus();
+            }, 100);
+        }
+
+        function closeCommentModal() {
+            console.log('❌ Закрываем модальное окно комментария');
+            document.getElementById('commentModal').style.display = 'none';
+        }
+
+        function saveComment() {
+            driverComment = document.getElementById('commentTextarea').value;
+            console.log('💾 Сохранен комментарий:', driverComment);
+            closeCommentModal();
+            
+            // Обновляем отображение опции
+            const optionLabel = document.querySelector('.booking-option:first-child .option-label');
+            if (driverComment.trim()) {
+                optionLabel.textContent = 'Комментарий водителю ✓';
+            } else {
+                optionLabel.textContent = 'Комментарий водителю';
+            }
+        }
+
+        // Модальное окно способа оплаты
+        function openPaymentPopup() {
+            console.log('💳 Открываем модальное окно способа оплаты');
+            document.getElementById('paymentModal').style.display = 'flex';
+            updatePaymentChecks();
+        }
+
+        function closePaymentModal() {
+            console.log('❌ Закрываем модальное окно способа оплаты');
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        function selectPaymentMethod(method) {
+            console.log('💳 Выбран способ оплаты:', method);
+            selectedPaymentMethod = method;
+            updatePaymentChecks();
+        }
+
+        function updatePaymentChecks() {
+            document.getElementById('cashCheck').textContent = selectedPaymentMethod === 'cash' ? '✓' : '○';
+            document.getElementById('cardCheck').textContent = selectedPaymentMethod === 'card' ? '✓' : '○';
+            
+            document.getElementById('cashCheck').className = selectedPaymentMethod === 'cash' ? 'method-check selected' : 'method-check';
+            document.getElementById('cardCheck').className = selectedPaymentMethod === 'card' ? 'method-check selected' : 'method-check';
+        }
+
+        function savePaymentMethod() {
+            console.log('💾 Сохранен способ оплаты:', selectedPaymentMethod);
+            closePaymentModal();
+            
+            // Обновляем отображение
+            const paymentText = selectedPaymentMethod === 'cash' ? 'Наличными' : 'Переводом на карту';
+            document.getElementById('paymentMethod').textContent = paymentText;
+        }
+
+        // Функция оформления заказа
+        async function placeOrder() {
+            console.log('🎯 Начинаем оформление заказа');
+            
+            // Проверка доступности тарифа
+            if (!carAvailability[selectedCarType]) {
+                showUnavailableTariffMessage(selectedCarType);
+                return;
+            }
+            
+            // Проверка обязательных данных
+            if (!userLocation || !destinationLocation) {
+                alert('Не все адреса указаны');
+                return;
+            }
+            
+            // Подготовка данных для заказа
+            const orderData = {
+                origin: document.getElementById('currentAddress').textContent || 'Текущее местоположение',
+                destination: document.getElementById('bookingEndAddress').textContent || 'Пункт назначения',
+                tariff: selectedCarType,
+                payment_method: selectedPaymentMethod,
+                comment: driverComment,
+                price: carPrices[selectedCarType] || 0,
+                options: bookingOptions
+            };
+            
+            console.log('📋 Данные заказа:', orderData);
+            
+            // Плавно скрываем страницу оформления заказа
+            hideBookingPage();
+            
+            // Показываем overlay поиска
+            showSearchCarOverlay();
+            
+            try {
+                // Имитируем поиск водителя (2-4 секунды)
+                await simulateDriverSearch();
+                
+                // Отправляем заказ на сервер
+                const response = await fetch('/api/user-orders/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('✅ Заказ успешно создан:', data);
+                    
+                    // Показываем информацию о найденном водителе
+                    showDriverFound(data);
+                } else {
+                    throw new Error(data.error || 'Ошибка создания заказа');
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка оформления заказа:', error);
+                hideSearchCarOverlay();
+                alert('Ошибка при создании заказа: ' + error.message);
+            }
+        }
+        
+        // Показать overlay поиска машины
+        function showSearchCarOverlay() {
+            const overlay = document.getElementById('searchCarOverlay');
+            overlay.style.display = 'block';
+            console.log('🔍 Показан overlay поиска машины');
+        }
+        
+        // Скрыть overlay поиска машины
+        function hideSearchCarOverlay() {
+            const overlay = document.getElementById('searchCarOverlay');
+            overlay.style.display = 'none';
+            console.log('❌ Скрыт overlay поиска машины');
+        }
+        
+        // Имитация поиска водителя
+        function simulateDriverSearch() {
+            return new Promise((resolve) => {
+                const duration = 2000 + Math.random() * 2000; // 2-4 секунды
+                setTimeout(resolve, duration);
+            });
+        }
+        
+        // Глобальная переменная для хранения данных текущего заказа
+        let currentOrderData = null;
+        let watchPositionId = null;
+        
+        // Показать информацию о найденном водителе
+        function showDriverFound(orderData) {
+            // Сохраняем данные заказа глобально
+            currentOrderData = orderData;
+            
+            // Скрываем overlay поиска
+            hideSearchCarOverlay();
+            
+            // Заполняем данные о водителе и машине
+            document.getElementById('foundDriverName').textContent = orderData.driver.full_name || orderData.driver.name;
+            document.getElementById('foundDriverCar').textContent = `${orderData.driver.car_color || 'белый'} ${orderData.driver.car_brand} ${orderData.driver.car_model}`;
+            document.getElementById('foundCarNumber').textContent = orderData.driver.car_number;
+            document.getElementById('foundDriverEta').textContent = orderData.estimated_time;
+            document.getElementById('foundDriverRating').textContent = orderData.driver.rating || '5.0';
+            document.getElementById('foundOrderNumber').textContent = orderData.order_number;
+            
+            // Показываем overlay с водителем
+            const overlay = document.getElementById('driverFoundOverlay');
+            overlay.style.display = 'block';
+            
+            // Начинаем отслеживание в реальном времени
+            startRealTimeTracking();
+            
+            console.log('✅ Показана информация о найденном водителе');
+        }
+        
+        // Отменить поиск заказа
+        function cancelOrderSearch() {
+            if (confirm('Вы уверены, что хотите отменить заказ?')) {
+                hideSearchCarOverlay();
+                console.log('❌ Поиск заказа отменен пользователем');
+            }
+        }
+        
+        // Закрыть информацию о найденном водителе
+        function closeDriverFound() {
+            const overlay = document.getElementById('driverFoundOverlay');
+            overlay.style.display = 'none';
+            
+            // Останавливаем отслеживание
+            stopRealTimeTracking();
+            
+            // Возвращаемся на главную страницу
+            hideBookingPage();
+            
+            console.log('✅ Заказ завершен, возврат на главную');
+        }
+
+        // Позвонить водителю
+        function callDriver() {
+            if (currentOrderData && currentOrderData.driver && currentOrderData.driver.phone) {
+                window.location.href = `tel:${currentOrderData.driver.phone}`;
+                console.log('📞 Вызов водителя:', currentOrderData.driver.phone);
+            } else {
+                alert('Номер телефона водителя недоступен');
+            }
+        }
+
+        // Отменить заказ
+        async function cancelOrder() {
+            if (!currentOrderData) {
+                console.log('❌ Нет данных о заказе для отмены');
+                return;
+            }
+
+            const confirmed = confirm('Вы уверены, что хотите отменить заказ?');
+            if (!confirmed) return;
+
+            try {
+                console.log('🚫 Отменяем заказ:', currentOrderData.order_id);
+                
+                const response = await fetch(`/api/orders/${currentOrderData.order_id}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cancelled_by: 'client',
+                        reason: 'Отменен заказчиком'
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('✅ Заказ успешно отменен');
+                    
+                    // Закрываем overlay
+                    document.getElementById('driverFoundOverlay').style.display = 'none';
+                    document.getElementById('taxiArrivedOverlay').style.display = 'none';
+                    
+                    // Останавливаем отслеживание
+                    stopRealTimeTracking();
+                    
+                    // Возвращаемся на главную
+                    hideBookingPage();
+                    
+                    // Сбрасываем данные заказа
+                    currentOrderData = null;
+                    
+                    alert('Заказ отменен');
+                } else {
+                    throw new Error('Ошибка отмены заказа');
+                }
+            } catch (error) {
+                console.error('❌ Ошибка при отмене заказа:', error);
+                alert('Не удалось отменить заказ. Попробуйте еще раз.');
+            }
+        }
+
+        // Начать отслеживание в реальном времени
+        function startRealTimeTracking() {
+            console.log('🎯 Запуск отслеживания в реальном времени');
+            
+            if (watchPositionId) {
+                navigator.geolocation.clearWatch(watchPositionId);
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 5000
+            };
+
+            watchPositionId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const newLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Обновляем местоположение пользователя
+                    userLocation = newLocation;
+                    
+                    // Обновляем маркер на карте
+                    if (userMarker && map) {
+                        userMarker.setPosition(newLocation);
+                    }
+                    
+                    console.log('📍 Обновлено местоположение пользователя:', newLocation);
+                    
+                    // Проверяем статус заказа (имитация)
+                    checkOrderStatus();
+                },
+                (error) => {
+                    console.log('⚠️ Ошибка отслеживания местоположения:', error);
+                },
+                options
+            );
+        }
+
+        // Остановить отслеживание в реальном времени
+        function stopRealTimeTracking() {
+            if (watchPositionId) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                watchPositionId = null;
+                console.log('🛑 Отслеживание остановлено');
+            }
+        }
+
+        // Проверить статус заказа (имитация прибытия водителя)
+        function checkOrderStatus() {
+            if (!currentOrderData) return;
+            
+            // Имитация: через 10 секунд после начала отслеживания показываем "Такси прибыло"
+            // В реальности это должно приходить от сервера через WebSocket или polling
+            if (!currentOrderData.driverArrivedShown) {
+                setTimeout(() => {
+                    showTaxiArrived();
+                    currentOrderData.driverArrivedShown = true;
+                }, 10000); // 10 секунд для демонстрации
+            }
+        }
+
+        // Показать окно "Такси прибыло"
+        function showTaxiArrived() {
+            if (!currentOrderData) return;
+            
+            console.log('🚗 Показываем окно "Такси прибыло"');
+            
+            // Закрываем overlay с информацией о водителе
+            document.getElementById('driverFoundOverlay').style.display = 'none';
+            
+            // Заполняем данные о прибывшем такси
+            document.getElementById('arrivedCarInfo').textContent = 
+                `${currentOrderData.driver.car_color || 'белый'} ${currentOrderData.driver.car_brand} ${currentOrderData.driver.car_model} ${currentOrderData.driver.car_number}`;
+            document.getElementById('arrivedDriverName').textContent = currentOrderData.driver.full_name || currentOrderData.driver.name;
+            
+            // Показываем overlay "Такси прибыло"
+            document.getElementById('taxiArrivedOverlay').style.display = 'block';
+            
+            // Возвращаем главную страницу в исходное состояние
+            hideBookingPage();
+            
+            console.log('✅ Окно "Такси прибыло" отображено');
+        }
+
+        // Закрыть окно "Такси прибыло"
+        function closeTaxiArrived() {
+            document.getElementById('taxiArrivedOverlay').style.display = 'none';
+            
+            // Останавливаем отслеживание
+            stopRealTimeTracking();
+            
+            // Сбрасываем данные заказа
+            currentOrderData = null;
+            
+            console.log('✅ Окно "Такси прибыло" закрыто');
+        }
+
+        // Загрузка частых адресов
+        async function loadFrequentAddresses() {
+            try {
+                console.log('📍 Загружаем частые адреса пользователя');
+                
+                // Получаем ID пользователя из localStorage
+                const userId = localStorage.getItem('user_id');
+                if (!userId) {
+                    console.log('❌ ID пользователя не найден');
+                    showNoAddressesMessage();
+                    return;
+                }
+
+                const response = await fetch(`/api/user/${userId}/frequent-addresses`);
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки адресов');
+                }
+
+                const data = await response.json();
+                console.log('✅ Частые адреса загружены:', data);
+
+                if (data.addresses && data.addresses.length > 0) {
+                    displayAddresses(data.addresses);
+                } else {
+                    showNoAddressesMessage();
+                }
+            } catch (error) {
+                console.log('❌ Ошибка загрузки частых адресов:', error);
+                showNoAddressesMessage();
+            }
+        }
+
+        function displayAddresses(addresses) {
+            const addressesList = document.getElementById('addressesList');
+            const noAddressesMessage = document.getElementById('noAddressesMessage');
+            
+            addressesList.innerHTML = '';
+            noAddressesMessage.style.display = 'none';
+
+            addresses.forEach(address => {
+                const addressItem = document.createElement('div');
+                addressItem.className = 'address-item';
+                addressItem.onclick = () => selectAddress(address.full_address);
+                
+                addressItem.innerHTML = `
+                    <div class="address-icon">📍</div>
+                    <div class="address-info">
+                        <div class="address-name">${address.name || address.short_address}</div>
+                        <div class="address-details">${address.full_address}</div>
+                    </div>
+                `;
+                
+                addressesList.appendChild(addressItem);
+            });
+        }
+
+        function showNoAddressesMessage() {
+            const addressesList = document.getElementById('addressesList');
+            const noAddressesMessage = document.getElementById('noAddressesMessage');
+            
+            addressesList.innerHTML = '';
+            noAddressesMessage.style.display = 'block';
+        }
+
+        // Функции управления лоадером тарифов
+        function showTariffsLoader() {
+            const loader = document.getElementById('tariffsLoader');
+            loader.style.display = 'block';
+            console.log('⏳ Показан лоадер тарифов');
+        }
+
+        function hideTariffsLoader() {
+            const loader = document.getElementById('tariffsLoader');
+            loader.style.display = 'none';
+            console.log('✅ Скрыт лоадер тарифов');
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 Страница загружена, начинаем инициализацию...');
+            
+            // Загружаем частые адреса
+            loadFrequentAddresses();
+            
+            // Загружаем Google Maps
+            loadGoogleMaps();
+        });
+
+        // Очистка отслеживания при закрытии страницы
+        window.addEventListener('beforeunload', function() {
+            console.log('🚪 Страница закрывается, останавливаем отслеживание геолокации');
+            stopLocationTracking();
+        });
+
+        // Очистка отслеживания при скрытии страницы (например, смена вкладки)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('👁️ Страница скрыта, приостанавливаем отслеживание');
+                stopLocationTracking();
+            } else {
+                console.log('👁️ Страница видима, проверяем необходимость возобновления отслеживания');
+                // Возобновляем отслеживание только если разрешение было дано
+                const savedGranted = localStorage.getItem('geolocation_granted');
+                if (savedGranted === 'true' && navigator.geolocation) {
+                    setTimeout(() => {
+                        console.log('🔄 Возобновляем отслеживание геолокации');
+                        startLocationTracking();
+                    }, 1000);
+                }
+            }
+        });
+
+        // Глобальная функция для инициализации карты (требуется для Google Maps API)
+        window.initMap = function() {
+            console.log('🗺️ Инициализация карты');
+            
+            // Проверяем, что Google Maps API загружен
+            if (!window.google || !window.google.maps || !window.google.maps.Map) {
+                console.log('❌ Google Maps API не загружен');
+                setTimeout(() => window.initMap(), 100); // Пробуем еще раз через 100мс
+                return;
+            }
+            
+            // Проверяем, что контейнер карты существует
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                console.log('❌ Контейнер карты не найден');
+                return;
+            }
+            
+            // Координаты Ош, Кыргызстан (по умолчанию)
+            const defaultLocation = { lat: 40.5138, lng: 72.8019 };
+
+            try {
+                // Создаем карту с максимальным приближением
+                map = new google.maps.Map(mapContainer, {
+                    zoom: 22, // Максимально возможный zoom
+                    center: defaultLocation,
+                    disableDefaultUI: true, // Убираем все стандартные элементы управления
+                    gestureHandling: 'greedy',
+                    styles: [
+                        {
+                            featureType: 'poi',
+                            elementType: 'labels',
+                            stylers: [{ visibility: 'off' }]
+                        }
+                    ]
+                });
+
+                console.log('✅ Карта успешно создана');
+
+                // Инициализируем геокодер
+                geocoder = new google.maps.Geocoder();
+
+                // Проверяем, поддерживается ли геолокация
+                if (navigator.geolocation) {
+                    console.log('📍 Геолокация поддерживается');
+                    // Проверяем статус разрешений
+                    checkGeolocationPermission();
+                } else {
+                    console.log('❌ Геолокация не поддерживается');
+                    useDefaultLocation();
+                }
+                
+            } catch (error) {
+                console.log('❌ Ошибка создания карты:', error);
+                alert('Ошибка инициализации карты. Попробуйте обновить страницу.');
+            }
+        };
+
+        // Загрузка Google Maps
+        function loadGoogleMaps() {
+            if (window.google && window.google.maps && window.google.maps.Map) {
+                console.log('🗺️ Google Maps уже загружен, инициализируем карту');
+                window.initMap();
+                return;
+            }
+
+            console.log('📥 Загружаем Google Maps API оптимально...');
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places&loading=async&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            script.onload = function() {
+                console.log('✅ Google Maps API загружен оптимально');
+            };
+            script.onerror = function(error) {
+                console.error('❌ Ошибка загрузки Google Maps API:', error);
+                // Fallback - показываем страницу без карты
+                document.body.classList.add('maps-error');
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>
