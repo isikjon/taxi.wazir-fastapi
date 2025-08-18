@@ -5988,7 +5988,19 @@ async def get_available_tariffs(db: Session = Depends(get_db)):
 async def create_user_order(request: Request, db: Session = Depends(get_db)):
     """Создание заказа от пользователя мобильного приложения"""
     try:
-        data = await request.json()
+        # Логирование входящего запроса
+        logger.info("📱 Получен запрос на создание заказа от пользователя")
+        
+        # Получаем данные из запроса
+        try:
+            data = await request.json()
+            logger.info(f"📋 Данные запроса: {data}")
+        except Exception as json_error:
+            logger.error(f"❌ Ошибка парсинга JSON: {json_error}")
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Некорректный JSON в запросе"}
+            )
         
         # Валидация данных
         required_fields = ['origin', 'destination', 'tariff', 'payment_method']
@@ -6038,6 +6050,8 @@ async def create_user_order(request: Request, db: Session = Depends(get_db)):
         
     except Exception as e:
         logger.error(f"❌ Ошибка создания заказа пользователем: {str(e)}")
+        import traceback
+        logger.error(f"❌ Полная ошибка: {traceback.format_exc()}")
         return JSONResponse(
             status_code=500,
             content={
