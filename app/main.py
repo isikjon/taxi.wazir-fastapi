@@ -95,15 +95,35 @@ async def test_endpoint():
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Список исключенных путей, которые не требуют авторизации
-        excluded_paths = ['/disp/login', '/login', '/static', '/driver/', '/api/driver/', '/api/twogis/', '/user/', '/api/user/']
+        excluded_paths = [
+            '/disp/login', 
+            '/login', 
+            '/static', 
+            '/driver/', 
+            '/api/driver/', 
+            '/api/twogis/', 
+            '/user/', 
+            '/api/user/',
+            '/api/user-orders/',  # Добавляем endpoint для создания заказов пользователем
+            '/api/available-tariffs',  # Добавляем endpoint для тарифов
+            '/api/orders/',  # Добавляем endpoints для заказов
+            '/test'  # Тестовый endpoint
+        ]
+        
+        # Логирование для отладки
+        logger.info(f"🔍 AuthMiddleware: проверяем путь {request.url.path}")
         
         # Проверяем, начинается ли путь с любого из исключенных путей
         is_excluded = any(request.url.path.startswith(path) for path in excluded_paths)
         
+        logger.info(f"🔍 AuthMiddleware: путь {'исключен' if is_excluded else 'НЕ исключен'}")
+        
         # Если путь не исключен, проверяем наличие сессии
         if not is_excluded:
             session = request.cookies.get("session")
+            logger.info(f"🔍 AuthMiddleware: сессия {'найдена' if session else 'НЕ найдена'}")
             if not session:
+                logger.info(f"🔍 AuthMiddleware: перенаправляем на логин")
                 return RedirectResponse(url="/disp/login", status_code=303)
         
         return await call_next(request)
