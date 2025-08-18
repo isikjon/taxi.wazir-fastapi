@@ -6004,43 +6004,15 @@ async def create_user_order(request: Request, db: Session = Depends(get_db)):
         import random
         order_number = f"WZ{datetime.datetime.now().strftime('%Y%m%d')}{random.randint(1000, 9999)}"
         
-        # Ищем доступного водителя по тарифу
-        tariff_mapping = {
-            'economy': ['Эконом', 'Бюджетный'],
-            'comfort': ['Комфорт', 'Стандартный'],
-            'comfort-plus': ['Комфорт+'],
-            'business': ['Бизнес', 'Люкс']
-        }
-        
-        target_tariffs = tariff_mapping.get(data['tariff'], [])
-        available_driver = None
-        
-        for tariff_name in target_tariffs:
-            driver = db.query(models.Driver).filter(
-                models.Driver.status == "accepted",
-                models.Driver.tariff == tariff_name
-            ).first()
-            if driver:
-                available_driver = driver
-                break
-        
-        if not available_driver:
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "success": False, 
-                    "error": "Нет доступных водителей для выбранного тарифа"
-                }
-            )
-        
-        # Создаём заказ
+        # РЕАЛЬНАЯ ЛОГИКА: создаём заказ БЕЗ назначения водителя
+        # Заказ будет ожидать принятия водителем
         order_data = schemas.OrderCreate(
             order_number=order_number,
             time=datetime.datetime.now().strftime("%H:%M"),
             origin=data['origin'],
             destination=data['destination'],
-            driver_id=available_driver.id,
-            status="Ожидает водителя",
+            driver_id=None,  # НЕТ водителя - заказ ждёт принятия
+            status="Ожидает принятия",  # Статус ожидания
             price=data.get('price', 0),
             tariff=data['tariff'],
             notes=data.get('comment', ''),
@@ -6049,45 +6021,18 @@ async def create_user_order(request: Request, db: Session = Depends(get_db)):
         
         new_order = crud.create_order(db=db, order=order_data)
         
-        logger.info(f"📱 Заказ {order_number} создан пользователем для водителя {available_driver.full_name}")
+        logger.info(f"📱 Заказ {order_number} создан пользователем, ожидает принятия водителем")
         
-        # Получаем информацию о машине
-        car_info = {}
-        if available_driver.car:
-            car_info = {
-                "brand": available_driver.car.brand,
-                "model": available_driver.car.model,
-                "color": getattr(available_driver.car, 'color', 'белый'),
-                "number": available_driver.car.number
-            }
-        else:
-            car_info = {
-                "brand": "LADA",
-                "model": "Vesta", 
-                "color": "синий",
-                "number": "7940МР-1"
-            }
-
+        # Возвращаем заказ БЕЗ данных водителя - он пока не назначен
         return JSONResponse(
             status_code=201,
             content={
                 "success": True,
-                "message": "Заказ успешно создан",
+                "message": "Заказ создан и ожидает принятия водителем",
                 "order_id": new_order.id,
                 "order_number": new_order.order_number,
-                "driver": {
-                    "full_name": available_driver.full_name,
-                    "name": available_driver.full_name,  # Для обратной совместимости
-                    "phone": available_driver.phone,
-                    "car_brand": car_info["brand"],
-                    "car_model": car_info["model"],
-                    "car_color": car_info["color"],
-                    "car_number": car_info["number"],
-                    "car_info": f"{car_info['color']} {car_info['brand']} {car_info['model']}",  # Для обратной совместимости
-                    "tariff": available_driver.tariff,
-                    "rating": getattr(available_driver, 'rating', 5.0)
-                },
-                "estimated_time": 6  # Время подачи в минутах
+                "status": "waiting_for_driver",  # Статус для фронта
+                "tariff": data['tariff']
             }
         )
         

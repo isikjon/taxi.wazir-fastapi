@@ -586,17 +586,190 @@
             color: #333;
         }
 
-        .map-selection-overlay {
+        /* СТИЛИ ДЛЯ ВЫБОРА ТОЧКИ - ФИРМЕННЫЙ ДИЗАЙН */
+        .map-selection-bottom-sheet {
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 2500;
+            z-index: 15000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .map-selection-bottom-sheet.sheet-visible {
+            transform: translateY(0);
+        }
+
+        .bottom-sheet-content {
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px;
+            min-height: 180px;
+        }
+
+        .bottom-sheet-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sheet-indicator {
+            width: 36px;
+            height: 3px;
+            background: #ccc;
+            margin: 0 auto 16px;
+        }
+
+        .bottom-sheet-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .bottom-sheet-header p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        .map-instruction {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 12px;
+            background: #f5f5f5;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .instruction-icon {
+            font-size: 20px;
+            color: #666;
+        }
+
+        .instruction-text {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .bottom-sheet-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        .cancel-selection-btn {
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 10px 24px;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cancel-selection-btn:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+        /* СТИЛИ ДЛЯ УВЕДОМЛЕНИЯ О МАРШРУТЕ - ФИРМЕННЫЙ ДИЗАЙН */
+        .route-info-toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20000;
+            animation: toastSlideDown 0.3s ease;
+        }
+
+        .route-info-content {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 12px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+        }
+
+        .route-icon {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .route-details {
+            flex: 1;
+        }
+
+        .route-distance {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .route-duration {
+            font-size: 13px;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .route-close {
+            width: 20px;
+            height: 20px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: background 0.2s ease;
+        }
+
+        .route-close:hover {
+            background: #e0e0e0;
+        }
+
+        @keyframes toastSlideDown {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 480px) {
+            .bottom-sheet-content {
+                padding: 16px 20px 28px;
+            }
+            
+            .map-instruction {
+                padding: 16px;
+            }
+            
+            .instruction-text {
+                font-size: 14px;
+            }
+
+            .route-info-toast {
+                left: 16px;
+                right: 16px;
+                transform: none;
+            }
+
+            .route-info-content {
+                min-width: auto;
+                padding: 10px 14px;
+            }
         }
 
         .map-selection-info {
@@ -1268,66 +1441,207 @@
             height: 20px;
         }
 
-        /* Стили для "Такси прибыло" */
+        /* Стили для "Такси прибыло" - фирменный дизайн */
         .taxi-arrived-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10001;
-            display: none;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
         .taxi-arrived-content {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
             background: white;
-            border-radius: 20px 20px 0 0;
-            padding: 30px 20px;
+            border: 1px solid #e0e0e0;
+            padding: 24px;
+            max-width: 320px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .arrived-header {
             text-align: center;
-            animation: slideUpFromBottom 0.4s ease-out;
-            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .arrived-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+        .arrived-header h3 {
+            font-size: 20px;
+            font-weight: 500;
+            color: #333;
+            margin: 0 0 8px 0;
         }
 
-        .taxi-arrived-content h3 {
-            margin: 0 0 10px 0;
-            font-size: 22px;
-            color: #4CAF50;
-            font-weight: 600;
-        }
-
-        .taxi-arrived-content p {
-            margin: 0 0 20px 0;
+        .arrived-header p {
+            font-size: 14px;
             color: #666;
-            font-size: 16px;
+            margin: 0;
         }
 
-        .arrived-car-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 12px;
+        .arrived-car-details {
             margin-bottom: 20px;
         }
 
-        .arrived-car-model {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+        .car-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
         }
 
-        .arrived-driver-name {
+        .info-label {
             font-size: 14px;
             color: #666;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .arrived-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .call-driver-btn {
+            flex: 1;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .call-driver-btn:hover {
+            background: #555;
+        }
+
+        .close-arrived-btn {
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .close-arrived-btn:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+        /* Стили для ожидания водителя - фирменный дизайн */
+        .waiting-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .waiting-content {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 32px 24px;
+            max-width: 300px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .waiting-header {
+            margin-bottom: 24px;
+        }
+
+        .waiting-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .waiting-header p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        .waiting-spinner {
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .waiting-details {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .waiting-actions {
+            margin-top: 24px;
+        }
+
+        .cancel-waiting-btn {
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .cancel-waiting-btn:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
         }
 
         .taxi-arrived-content .call-btn {
@@ -1661,13 +1975,27 @@
         </div>
     </div>
 
-    <!-- Индикатор выбора точки на карте -->
-    <div class="map-selection-overlay" id="mapSelectionOverlay" style="display: none;">
-        <div class="map-selection-info">
-            <div class="selection-text">Выберите точку назначения на карте</div>
-            <div class="selection-buttons">
-                <button class="selection-btn selection-btn-confirm" onclick="confirmMapSelection()">Подтвердить</button>
-                <button class="selection-btn selection-btn-cancel" onclick="cancelMapSelection()">Отмена</button>
+    <!-- Bottom Sheet для выбора точки на карте -->
+    <div class="map-selection-bottom-sheet" id="mapSelectionBottomSheet" style="display: none;">
+        <div class="bottom-sheet-content">
+            <div class="bottom-sheet-header">
+                <div class="sheet-indicator"></div>
+                <h3>Выберите точку на карте</h3>
+                <p>Нажмите на карту в нужном месте</p>
+            </div>
+            
+            <div class="map-instruction">
+                <div class="instruction-icon">•</div>
+                <div class="instruction-text">
+                    Коснитесь карты, чтобы<br>
+                    указать точку назначения
+                </div>
+            </div>
+            
+            <div class="bottom-sheet-actions">
+                <button class="cancel-selection-btn" onclick="cancelMapSelection()">
+                    Отменить
+                </button>
             </div>
         </div>
     </div>
@@ -1921,23 +2249,64 @@
         </div>
     </div>
 
-    <!-- Overlay "Такси прибыло" -->
-    <div id="taxiArrivedOverlay" class="taxi-arrived-overlay" style="display: none;">
-        <div class="taxi-arrived-content">
-            <div class="arrived-icon">🚗</div>
-            <h3>Ваше такси прибыло</h3>
-            <p>Водитель ожидает вас у подъезда</p>
-            
-            <!-- Информация о водителе и машине -->
-            <div class="arrived-car-info">
-                <div class="arrived-car-model" id="arrivedCarInfo">Загрузка...</div>
-                <div class="arrived-driver-name" id="arrivedDriverName">Загрузка...</div>
+    <!-- Overlay ожидания принятия заказа -->
+    <div id="waitingOverlay" class="waiting-overlay" style="display: none;">
+        <div class="waiting-content">
+            <div class="waiting-header">
+                <h3>Ищем водителя</h3>
+                <p>Заказ ожидает принятия</p>
             </div>
             
-            <button class="call-btn" onclick="callDriver()">
-                <img src="https://wazir.kg/static/navigator/ic_call.png" alt="Позвонить">
-                Позвонить водителю
-            </button>
+            <div class="waiting-spinner">
+                <div class="spinner"></div>
+            </div>
+            
+            <div class="waiting-details">
+                <div class="detail-row">
+                    <span class="detail-label">Номер заказа:</span>
+                    <span class="detail-value" id="waitingOrderNumber">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Тариф:</span>
+                    <span class="detail-value" id="waitingTariff">-</span>
+                </div>
+            </div>
+            
+            <div class="waiting-actions">
+                <button class="cancel-waiting-btn" onclick="cancelWaitingOrder()">
+                    Отменить заказ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay "Такси прибыло" - фирменный стиль -->
+    <div id="taxiArrivedOverlay" class="taxi-arrived-overlay" style="display: none;">
+        <div class="taxi-arrived-content">
+            <div class="arrived-header">
+                <h3>Ваше такси прибыло</h3>
+                <p>Водитель ожидает вас у подъезда</p>
+            </div>
+            
+            <div class="arrived-car-details">
+                <div class="car-info-row">
+                    <span class="info-label">Автомобиль:</span>
+                    <span class="info-value" id="arrivedCarInfo">Загрузка...</span>
+                </div>
+                <div class="car-info-row">
+                    <span class="info-label">Водитель:</span>
+                    <span class="info-value" id="arrivedDriverName">Загрузка...</span>
+                </div>
+            </div>
+            
+            <div class="arrived-actions">
+                <button class="call-driver-btn" onclick="callDriver()">
+                    Позвонить водителю
+                </button>
+                <button class="close-arrived-btn" onclick="closeTaxiArrived()">
+                    Закрыть
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2442,8 +2811,13 @@
             // Закрываем попап
             closeDestinationPopup();
             
-            // Показываем страницу оформления заказа
-            showBookingPage();
+            // Автоматически прокладываем маршрут и открываем оформление заказа
+            calculateRouteAndPrices();
+            
+            // Показываем страницу оформления заказа через небольшую задержку
+            setTimeout(() => {
+                showBookingPage();
+            }, 300);
         }
 
         // Добавление маркера назначения на карту
@@ -2470,11 +2844,12 @@
         }
 
         // Включение режима выбора точки на карте
+        // НОВАЯ ФУНКЦИЯ: Современный выбор точки с bottom sheet
         function enableMapSelection() {
-            console.log('🗺️ Включаем режим выбора точки на карте');
+            console.log('🗺️ Активируем современный выбор точки');
             
             closeDestinationPopup();
-            document.getElementById('mapSelectionOverlay').style.display = 'flex';
+            showMapSelectionSheet();
             
             isMapSelectionMode = true;
             map.setOptions({ cursor: 'crosshair' });
@@ -2487,59 +2862,215 @@
                     lng: event.latLng.lng()
                 };
                 
-                console.log('📍 Пользователь выбрал точку на карте:', tempDestinationLocation);
+                console.log('📍 Точка выбрана:', tempDestinationLocation);
                 
-                // Показываем временный маркер
+                // Показываем маркер
                 if (destinationMarker) {
                     destinationMarker.setMap(null);
                 }
                 
-                addDestinationMarker(tempDestinationLocation, 'Выбранная точка');
+                addDestinationMarker(tempDestinationLocation, 'Точка назначения');
                 
-                // Обновляем текст в диалоге
-                document.querySelector('.selection-text').textContent = 'Точка выбрана. Подтвердить выбор?';
+                // АВТОМАТИЧЕСКИ подтверждаем без popup!
+                autoConfirmMapSelection();
                 
                 google.maps.event.removeListener(clickListener);
             });
         }
-
-        // Подтверждение выбора точки на карте
-        function confirmMapSelection() {
-            if (!tempDestinationLocation) {
-                alert('Пожалуйста, выберите точку на карте');
+        
+        // Показать bottom sheet для выбора точки
+        function showMapSelectionSheet() {
+            const sheet = document.getElementById('mapSelectionBottomSheet');
+            sheet.style.display = 'block';
+            
+            // Анимация появления снизу
+            requestAnimationFrame(() => {
+                sheet.classList.add('sheet-visible');
+            });
+        }
+        
+        // Скрыть bottom sheet
+        function hideMapSelectionSheet() {
+            const sheet = document.getElementById('mapSelectionBottomSheet');
+            sheet.classList.remove('sheet-visible');
+            
+            setTimeout(() => {
+                sheet.style.display = 'none';
+            }, 300);
+        }
+        
+        // АВТОМАТИЧЕСКОЕ прокладывание маршрута и расчёт цен
+        function calculateRouteAndPrices() {
+            if (!userLocation || !destinationLocation) {
+                console.log('❌ Не хватает данных для прокладывания маршрута');
                 return;
             }
             
-            console.log('✅ Подтверждаем выбор точки на карте:', tempDestinationLocation);
+            console.log('🗺️ Прокладываем маршрут автоматически...');
             
-            destinationLocation = tempDestinationLocation;
+            // Показываем индикатор загрузки
+            showLoadingIndicator();
             
-            // Получаем адрес по координатам
-            geocoder.geocode({ location: destinationLocation }, function(results, status) {
-                if (status === 'OK' && results[0]) {
-                    const address = results[0].formatted_address;
-                    document.getElementById('searchInput').value = address;
-                } else {
-                    document.getElementById('searchInput').value = `${destinationLocation.lat.toFixed(6)}, ${destinationLocation.lng.toFixed(6)}`;
+            // Создаём сервис маршрутов Google Maps
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true, // Убираем стандартные маркеры
+                polylineOptions: {
+                    strokeColor: '#007bff',
+                    strokeWeight: 5,
+                    strokeOpacity: 0.8
                 }
             });
             
-            cancelMapSelection();
+            directionsRenderer.setMap(map);
+            
+            const request = {
+                origin: userLocation,
+                destination: destinationLocation,
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.METRIC,
+                avoidHighways: false,
+                avoidTolls: false
+            };
+            
+            directionsService.route(request, function(result, status) {
+                hideLoadingIndicator();
+                
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    
+                    // Получаем данные о маршруте
+                    const route = result.routes[0];
+                    const leg = route.legs[0];
+                    
+                    // Сохраняем данные маршрута глобально
+                    window.currentRoute = {
+                        distance: leg.distance.text,
+                        duration: leg.duration.text,
+                        distanceValue: leg.distance.value,
+                        durationValue: leg.duration.value
+                    };
+                    
+                    console.log('✅ Маршрут проложен:', window.currentRoute);
+                    
+                    // Автоматически рассчитываем цены для всех тарифов
+                    calculatePricesForAllTariffs();
+                    
+                    console.log('Маршрут проложен, цены рассчитаны, готов к оформлению заказа');
+                    
+                } else {
+                    console.error('❌ Ошибка прокладывания маршрута:', status);
+                    alert('Не удалось проложить маршрут. Попробуйте выбрать другую точку.');
+                }
+            });
+        }
+        
+        // Расчёт цен для всех тарифов
+        function calculatePricesForAllTariffs() {
+            if (!window.currentRoute) return;
+            
+            const distance = window.currentRoute.distanceValue / 1000; // в км
+            const duration = window.currentRoute.durationValue / 60; // в минутах
+            
+            // Тарифы такси (примерные цены за км + базовая стоимость)
+            const tariffs = {
+                'economy': { base: 80, perKm: 15, name: 'Эконом' },
+                'comfort': { base: 120, perKm: 20, name: 'Комфорт' },
+                'business': { base: 200, perKm: 30, name: 'Бизнес' },
+                'premium': { base: 300, perKm: 40, name: 'Премиум' }
+            };
+            
+            // Рассчитываем цены
+            for (const [type, tariff] of Object.entries(tariffs)) {
+                const price = Math.round(tariff.base + (distance * tariff.perKm));
+                carPrices[type] = price;
+                carAvailability[type] = true; // Все тарифы доступны
+            }
+            
+            console.log('💰 Цены рассчитаны:', carPrices);
+        }
+        
+        // Показать информацию о маршруте (теперь только обновляет цены)
+        function showRouteInfo() {
+            if (!window.currentRoute) return;
+            
+            console.log('Маршрут готов:', window.currentRoute);
+            
+            // Обновляем цены в интерфейсе, если карточки тарифов видны
+            updateTariffCards();
+        }
+        
+        // Обновляем цены в карточках тарифов
+        function updateTariffCards() {
+            if (!carPrices || Object.keys(carPrices).length === 0) return;
+            
+            // Ищем элементы цен для каждого тарифа
+            const tariffElements = {
+                'economy': document.querySelector('.tariff-card[data-type="economy"] .price'),
+                'comfort': document.querySelector('.tariff-card[data-type="comfort"] .price'),
+                'business': document.querySelector('.tariff-card[data-type="business"] .price'),
+                'premium': document.querySelector('.tariff-card[data-type="premium"] .price')
+            };
+            
+            // Обновляем цены
+            for (const [type, element] of Object.entries(tariffElements)) {
+                if (element && carPrices[type]) {
+                    element.textContent = `${carPrices[type]} сом`;
+                }
+            }
+            
+            console.log('🎨 Цены обновлены в интерфейсе');
+        }
+
+        // АВТОМАТИЧЕСКОЕ подтверждение выбора точки - БЕЗ popup!
+        function autoConfirmMapSelection() {
+            if (!tempDestinationLocation) {
+                return;
+            }
+            
+            console.log('Автоматически подтверждаем точку:', tempDestinationLocation);
+            
+            destinationLocation = tempDestinationLocation;
+            
+            // Получаем адрес по координатам и АВТОМАТИЧЕСКИ прокладываем маршрут
+            geocoder.geocode({ location: destinationLocation }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    
+                    // Заполняем поле поиска
+                    document.getElementById('searchInput').value = address;
+                    
+                    // Закрываем bottom sheet с анимацией
+                    hideMapSelectionSheet();
+                    
+                    // АВТОМАТИЧЕСКИ прокладываем маршрут и рассчитываем цены
+                    calculateRouteAndPrices();
+                    
+                    // Автоматически открываем экран оформления заказа через полсекунды
+                    setTimeout(() => {
+                        showBookingPage();
+                    }, 500);
+                } else {
+                    document.getElementById('searchInput').value = 'Выбранная точка на карте';
+                    hideMapSelectionSheet();
+                }
+            });
+            
+            isMapSelectionMode = false;
+            map.setOptions({ cursor: 'default' });
+            document.body.classList.remove('map-selection-active');
         }
 
         // Отмена выбора точки на карте
         function cancelMapSelection() {
             console.log('❌ Отменяем выбор точки на карте');
             
-            document.getElementById('mapSelectionOverlay').style.display = 'none';
+            hideMapSelectionSheet();
             isMapSelectionMode = false;
             tempDestinationLocation = null;
             
             map.setOptions({ cursor: 'default' });
             document.body.classList.remove('map-selection-active');
-            
-            // Восстанавливаем текст в диалоге
-            document.querySelector('.selection-text').textContent = 'Выберите точку назначения на карте';
             
             // Если не подтвердили выбор, убираем временный маркер
             if (!destinationLocation && destinationMarker) {
@@ -2626,10 +3157,11 @@
             // Сначала загружаем доступные типы машин, затем инициализируем слайдер
             loadAvailableCarTypes().then(() => {
                 // Инициализируем слайдер после загрузки данных о тарифах
-            initCarSelection();
-            
-                // Рассчитываем цены
-            calculateDynamicPricing();
+                initCarSelection();
+                
+                // Обновляем цены из уже рассчитанных данных
+                updateTariffCards();
+                calculateDynamicPricing();
             });
         }
 
@@ -3318,10 +3850,15 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    console.log('✅ Заказ успешно создан:', data);
+                    console.log('✅ Заказ создан:', data);
                     
-                    // Показываем информацию о найденном водителе
-                    showDriverFound(data);
+                    if (data.status === 'waiting_for_driver') {
+                        // Заказ ожидает принятия водителем - показываем реальное ожидание
+                        showWaitingForDriver(data);
+                    } else if (data.driver) {
+                        // Водитель уже назначен - показываем информацию
+                        showDriverFound(data);
+                    }
                 } else {
                     throw new Error(data.error || 'Ошибка создания заказа');
                 }
@@ -3359,6 +3896,103 @@
         let currentOrderData = null;
         let watchPositionId = null;
         
+        // Показать ожидание принятия заказа водителем
+        function showWaitingForDriver(orderData) {
+            currentOrderData = orderData;
+            
+            console.log('⏳ Показываем ожидание принятия заказа');
+            
+            // Скрываем overlay поиска
+            hideSearchCarOverlay();
+            
+            // Заполняем данные ожидания
+            document.getElementById('waitingOrderNumber').textContent = orderData.order_number;
+            document.getElementById('waitingTariff').textContent = getTariffDisplayName(orderData.tariff);
+            
+            // Показываем overlay ожидания
+            document.getElementById('waitingOverlay').style.display = 'block';
+            
+            // Запускаем отслеживание заказа для поиска водителя
+            startDriverSearchTracking();
+        }
+
+        // Отменить ожидающий заказ
+        async function cancelWaitingOrder() {
+            if (!currentOrderData) return;
+            
+            try {
+                const response = await fetch(`/api/orders/${currentOrderData.order_id}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reason: 'Отменено пользователем'
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Заказ отменен');
+                    hideWaitingOverlay();
+                    currentOrderData = null;
+                } else {
+                    throw new Error('Ошибка отмены заказа');
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка отмены заказа:', error);
+                alert('Ошибка при отмене заказа');
+            }
+        }
+
+        // Скрыть overlay ожидания
+        function hideWaitingOverlay() {
+            document.getElementById('waitingOverlay').style.display = 'none';
+            // Останавливаем поиск водителя
+            if (currentOrderData && currentOrderData.searchInterval) {
+                clearInterval(currentOrderData.searchInterval);
+                currentOrderData.searchInterval = null;
+            }
+        }
+
+        // Запустить отслеживание поиска водителя
+        function startDriverSearchTracking() {
+            if (!currentOrderData) return;
+            
+            // Проверяем каждые 3 секунды
+            currentOrderData.searchInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/orders/${currentOrderData.order_id}/status`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'driver_accepted' && data.driver) {
+                        // Водитель принял заказ!
+                        clearInterval(currentOrderData.searchInterval);
+                        hideWaitingOverlay();
+                        
+                        // Обновляем данные заказа с информацией о водителе
+                        currentOrderData = { ...currentOrderData, ...data };
+                        showDriverFound(currentOrderData);
+                    }
+                    
+                } catch (error) {
+                    console.log('⚠️ Ошибка проверки статуса заказа:', error);
+                }
+                
+            }, 3000); // Проверяем каждые 3 секунды
+        }
+
+        // Получить отображаемое название тарифа
+        function getTariffDisplayName(tariff) {
+            const names = {
+                'economy': 'Эконом',
+                'comfort': 'Комфорт',
+                'comfort-plus': 'Комфорт+',
+                'business': 'Бизнес'
+            };
+            return names[tariff] || tariff;
+        }
+
         // Показать информацию о найденном водителе
         function showDriverFound(orderData) {
             // Сохраняем данные заказа глобально
@@ -3498,8 +4132,12 @@
                     
                     console.log('📍 Обновлено местоположение пользователя:', newLocation);
                     
-                    // Проверяем статус заказа (имитация)
-                    checkOrderStatus();
+                    // Периодически проверяем статус заказа
+                    if (currentOrderData && !currentOrderData.statusCheckInterval) {
+                        currentOrderData.statusCheckInterval = setInterval(() => {
+                            checkOrderStatus();
+                        }, 5000); // Проверяем каждые 5 секунд
+                    }
                 },
                 (error) => {
                     console.log('⚠️ Ошибка отслеживания местоположения:', error);
@@ -3515,19 +4153,32 @@
                 watchPositionId = null;
                 console.log('🛑 Отслеживание остановлено');
             }
+            
+            // Останавливаем проверку статуса заказа
+            if (currentOrderData && currentOrderData.statusCheckInterval) {
+                clearInterval(currentOrderData.statusCheckInterval);
+                currentOrderData.statusCheckInterval = null;
+                console.log('🛑 Остановлена проверка статуса заказа');
+            }
         }
 
-        // Проверить статус заказа (имитация прибытия водителя)
-        function checkOrderStatus() {
+        // РЕАЛЬНАЯ проверка статуса заказа через API
+        async function checkOrderStatus() {
             if (!currentOrderData) return;
             
-            // Имитация: через 10 секунд после начала отслеживания показываем "Такси прибыло"
-            // В реальности это должно приходить от сервера через WebSocket или polling
-            if (!currentOrderData.driverArrivedShown) {
-                setTimeout(() => {
+            try {
+                // Проверяем реальный статус заказа на сервере
+                const response = await fetch(`/api/orders/${currentOrderData.order_id}/status`);
+                const data = await response.json();
+                
+                if (data.status === 'driver_arrived' && !currentOrderData.driverArrivedShown) {
+                    console.log('Водитель реально прибыл на место');
                     showTaxiArrived();
                     currentOrderData.driverArrivedShown = true;
-                }, 0); // Убираем демо-задержку
+                }
+                
+            } catch (error) {
+                console.log('Ошибка проверки статуса заказа:', error);
             }
         }
 
@@ -3560,6 +4211,11 @@
             
             // Останавливаем отслеживание
             stopRealTimeTracking();
+            
+            // Останавливаем проверку статуса
+            if (currentOrderData && currentOrderData.statusCheckInterval) {
+                clearInterval(currentOrderData.statusCheckInterval);
+            }
             
             // Сбрасываем данные заказа
             currentOrderData = null;

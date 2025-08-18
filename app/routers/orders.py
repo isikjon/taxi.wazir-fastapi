@@ -91,4 +91,19 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
     db_order = crud.get_order(db, order_id=order_id)
     if db_order is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    return crud.delete_order(db=db, order_id=order_id) 
+    return crud.delete_order(db=db, order_id=order_id)
+
+@router.get("/{order_id}/status")
+def get_order_status(order_id: int, db: Session = Depends(get_db)):
+    """Получить статус заказа для отслеживания"""
+    db_order = crud.get_order(db, order_id=order_id)
+    if db_order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    return {
+        "order_id": order_id,
+        "status": db_order.status,
+        "driver_id": db_order.driver_id,
+        "created_at": db_order.created_at,
+        "updated_at": getattr(db_order, 'updated_at', None)
+    } 
