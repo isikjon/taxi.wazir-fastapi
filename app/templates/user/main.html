@@ -1594,17 +1594,7 @@
     <!-- Карта на весь экран -->
     <div id="map"></div>
 
-    <!-- Попап для запроса геолокации -->
-    <div class="location-popup" id="locationPopup">
-        <div class="popup-content">
-            <h3>Разрешить доступ к местоположению</h3>
-            <p>Для лучшего опыта использования приложения нам необходимо знать ваше текущее местоположение</p>
-            <div class="popup-buttons">
-                <button class="popup-btn popup-btn-primary" onclick="requestLocation()">Разрешить</button>
-                <button class="popup-btn popup-btn-secondary" onclick="useDefaultLocation()">Не сейчас</button>
-            </div>
-        </div>
-    </div>
+    <!-- УДАЛЕН КАСТОМНЫЙ ПОПАП ГЕОЛОКАЦИИ - используем системный диалог -->
 
     <!-- Кнопка определения местоположения -->
     <div class="location-button-container">
@@ -1893,8 +1883,8 @@
             <!-- Информация о машине -->
             <div class="car-info">
                 <div class="car-model">
-                    <span id="foundDriverCar">синий LADA (ВАЗ) Vesta</span>
-                    <span class="car-number" id="foundCarNumber">7940МР-1</span>
+                    <span id="foundDriverCar">Загрузка...</span>
+                    <span class="car-number" id="foundCarNumber">-</span>
                 </div>
             </div>
             
@@ -1904,10 +1894,10 @@
                     <div class="avatar-circle"></div>
                 </div>
                 <div class="driver-details">
-                    <div class="driver-name" id="foundDriverName">Гулецкий Антон Анатольевич</div>
+                    <div class="driver-name" id="foundDriverName">Загрузка...</div>
                     <div class="driver-rating">
                         <span class="star-icon">★</span>
-                        <span id="foundDriverRating">5.0</span>
+                        <span id="foundDriverRating">-</span>
                     </div>
                 </div>
             </div>
@@ -1940,8 +1930,8 @@
             
             <!-- Информация о водителе и машине -->
             <div class="arrived-car-info">
-                <div class="arrived-car-model" id="arrivedCarInfo">синий LADA (ВАЗ) Vesta 7940МР-1</div>
-                <div class="arrived-driver-name" id="arrivedDriverName">Гулецкий Антон Анатольевич</div>
+                <div class="arrived-car-model" id="arrivedCarInfo">Загрузка...</div>
+                <div class="arrived-driver-name" id="arrivedDriverName">Загрузка...</div>
             </div>
             
             <button class="call-btn" onclick="callDriver()">
@@ -1975,185 +1965,67 @@
 
 
 
-        function showLocationPopup() {
-            console.log('🔔 Показываем попап для запроса геолокации');
-            document.getElementById('locationPopup').style.display = 'flex';
-        }
+        // УДАЛЕНЫ СТАРЫЕ ФУНКЦИИ showLocationPopup, hideLocationPopup, requestLocation
+        // Используем только прямой системный запрос GPS
 
-        function hideLocationPopup() {
-            console.log('🔒 Скрываем попап геолокации');
-            document.getElementById('locationPopup').style.display = 'none';
-        }
-
-        function requestLocation() {
-            console.log('📍 Пользователь разрешил доступ к геолокации');
-            hideLocationPopup();
-            showLoadingIndicator();
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    console.log('✅ Геолокация получена:', position.coords);
-                    const pos = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    
-                    // Сохраняем статус разрешения в localStorage
-                    localStorage.setItem('geolocation_granted', 'true');
-                    localStorage.setItem('geolocation_timestamp', Date.now().toString());
-                    
-                    setUserLocation(pos);
-                    hideLoadingIndicator();
-                    
-                    // Запускаем автономное отслеживание
-                    startLocationTracking();
-                },
-                function(error) {
-                    console.log('❌ Ошибка получения геолокации:', error);
-                    hideLoadingIndicator();
-                    
-                    // Сохраняем отказ в localStorage
-                    localStorage.setItem('geolocation_granted', 'false');
-                    localStorage.setItem('geolocation_timestamp', Date.now().toString());
-                    
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            alert('Доступ к геолокации запрещен. Используем местоположение по умолчанию.');
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            alert('Информация о местоположении недоступна.');
-                            break;
-                        case error.TIMEOUT:
-                            alert('Превышено время ожидания запроса геолокации.');
-                            break;
-                        default:
-                            alert('Произошла неизвестная ошибка при получении местоположения.');
-                            break;
-                    }
-                    useDefaultLocation();
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 300000 // 5 минут
-                }
-            );
-        }
-
-        function useDefaultLocation() {
-            console.log('🏠 Используем местоположение по умолчанию (Ош)');
-            hideLocationPopup();
-            hideLoadingIndicator();
-            
-            // Сохраняем отказ от геолокации в localStorage
-            localStorage.setItem('geolocation_granted', 'false');
-            localStorage.setItem('geolocation_timestamp', Date.now().toString());
-            
-            const defaultLocation = { lat: 40.5138, lng: 72.8019 };
-            setUserLocation(defaultLocation);
-            
-            // Обновляем адрес
-            document.getElementById('currentAddress').textContent = 'Ош, Кыргызстан';
-            
-            // Обновляем кнопку, указывая, что местоположение не реальное
-            updateLocationButton(false);
-        }
+        // УДАЛЕНА СТАРАЯ ФУНКЦИЯ useDefaultLocation - используем только реальный GPS
 
         // Глобальная переменная для отслеживания местоположения
         let watchId = null;
-
-        // Умная проверка разрешений на геолокацию
-        async function checkGeolocationPermission() {
-            console.log('🔍 Проверяем статус разрешений на геолокацию');
+        
+        // НОВАЯ ФУНКЦИЯ: Реальное GPS отслеживание
+        function startRealTimeGPSTracking() {
+            console.log('🎯 Запуск РЕАЛЬНОГО GPS отслеживания');
             
-            try {
-                // Проверяем сохраненное состояние в localStorage
-                const savedGranted = localStorage.getItem('geolocation_granted');
-                const savedTimestamp = localStorage.getItem('geolocation_timestamp');
-                
-                // Если прошло больше 24 часов, перепроверяем
-                const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-                const timestampExpired = !savedTimestamp || parseInt(savedTimestamp) < oneDayAgo;
-                
-                // Проверяем Permissions API, если поддерживается
-                if ('permissions' in navigator) {
-                    const permission = await navigator.permissions.query({ name: 'geolocation' });
-                    console.log('🛡️ Статус разрешения:', permission.state);
-                    
-                    if (permission.state === 'granted') {
-                        console.log('✅ Разрешение уже дано, получаем геолокацию');
-                        getCurrentLocationSilently();
-                        return;
-                    } else if (permission.state === 'denied') {
-                        console.log('❌ Разрешение отклонено');
-                        localStorage.setItem('geolocation_granted', 'false');
-                        useDefaultLocation();
-                        return;
-                    }
-                }
-                
-                // Если localStorage говорит, что разрешение было дано и не истекло
-                if (savedGranted === 'true' && !timestampExpired) {
-                    console.log('✅ Используем сохраненное разрешение');
-                    getCurrentLocationSilently();
-                    return;
-                }
-                
-                // Если localStorage говорит об отказе и не истекло
-                if (savedGranted === 'false' && !timestampExpired) {
-                    console.log('❌ Используем сохраненный отказ');
-                    useDefaultLocation();
-                    return;
-                }
-                
-                // Если состояние неизвестно или истекло - показываем попап
-                console.log('❓ Статус неизвестен, показываем попап');
-                showLocationPopup();
-                
-            } catch (error) {
-                console.log('❌ Ошибка проверки разрешений:', error);
-                showLocationPopup();
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
             }
-        }
-
-        // Тихое получение геолокации (без попапа)
-        function getCurrentLocationSilently() {
-            console.log('📍 Тихо получаем текущую геолокацию');
-            showLoadingIndicator();
             
-            navigator.geolocation.getCurrentPosition(
+            watchId = navigator.geolocation.watchPosition(
                 function(position) {
-                    console.log('✅ Геолокация получена тихо:', position.coords);
-                    const pos = {
+                    console.log('📍 GPS обновление:', position.coords);
+                    const currentLocation = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     };
                     
-                    setUserLocation(pos);
-                    hideLoadingIndicator();
-                    
-                    // Запускаем автономное отслеживание
-                    startLocationTracking();
+                    // Обновляем местоположение пользователя в реальном времени
+                    setUserLocation(currentLocation);
                 },
                 function(error) {
-                    console.log('❌ Ошибка тихого получения геолокации:', error);
-                    hideLoadingIndicator();
-                    
-                    if (error.code === error.PERMISSION_DENIED) {
-                        // Разрешение было отозвано
-                        localStorage.setItem('geolocation_granted', 'false');
-                        localStorage.setItem('geolocation_timestamp', Date.now().toString());
-                    }
-                    
-                    useDefaultLocation();
+                    console.error('❌ Ошибка GPS отслеживания:', error);
+                    // Не показываем alert, просто логируем
                 },
                 {
                     enableHighAccuracy: true,
                     timeout: 10000,
-                    maximumAge: 300000 // 5 минут
+                    maximumAge: 5000  // Обновления каждые 5 секунд
                 }
             );
         }
+        
+        // НОВАЯ ФУНКЦИЯ: Инструкции по включению GPS
+        function showGPSInstructions() {
+            const instructions = `
+            📱 Как включить GPS:
+            
+            Android Chrome:
+            1. Нажмите на замок рядом с адресом
+            2. Выберите "Местоположение" → "Разрешить"
+            3. Обновите страницу
+            
+            iPhone Safari:
+            1. Настройки → Safari → Местоположение
+            2. Выберите "При использовании"
+            3. Обновите страницу
+            `;
+            
+            alert(instructions);
+        }
+
+        // УДАЛЕНА СТАРАЯ ФУНКЦИЯ checkGeolocationPermission - используем прямой системный запрос
+
+        // УДАЛЕНА СТАРАЯ ФУНКЦИЯ getCurrentLocationSilently - используем прямой системный запрос
 
         // Автономное отслеживание местоположения
         function startLocationTracking() {
@@ -2179,9 +2051,7 @@
                     console.log('❌ Ошибка отслеживания местоположения:', error);
                     
                     if (error.code === error.PERMISSION_DENIED) {
-                        // Разрешение было отозвано
-                        localStorage.setItem('geolocation_granted', 'false');
-                        localStorage.setItem('geolocation_timestamp', Date.now().toString());
+                        // Убираем localStorage - используем только системный запрос
                         stopLocationTracking();
                     }
                 },
@@ -2515,7 +2385,7 @@
 
             const request = {
                 query: query,
-                location: userLocation || { lat: 40.5138, lng: 72.8019 },
+                location: userLocation || { lat: 0, lng: 0 },
                 radius: 50000 // 50км радиус поиска
             };
 
@@ -3663,7 +3533,7 @@
                 setTimeout(() => {
                     showTaxiArrived();
                     currentOrderData.driverArrivedShown = true;
-                }, 10000); // 10 секунд для демонстрации
+                }, 0); // Убираем демо-задержку
             }
         }
 
@@ -3804,9 +3674,8 @@
                 stopLocationTracking();
             } else {
                 console.log('👁️ Страница видима, проверяем необходимость возобновления отслеживания');
-                // Возобновляем отслеживание только если разрешение было дано
-                const savedGranted = localStorage.getItem('geolocation_granted');
-                if (savedGranted === 'true' && navigator.geolocation) {
+                // Всегда возобновляем отслеживание (если поддерживается)
+                if (navigator.geolocation) {
                     setTimeout(() => {
                         console.log('🔄 Возобновляем отслеживание геолокации');
                         startLocationTracking();
@@ -3833,14 +3702,13 @@
                 return;
             }
             
-            // Координаты Ош, Кыргызстан (по умолчанию)
-            const defaultLocation = { lat: 40.5138, lng: 72.8019 };
+            // Убираем дефолтные координаты - используем только реальный GPS
 
             try {
                 // Создаем карту с максимальным приближением
                 map = new google.maps.Map(mapContainer, {
                     zoom: 22, // Максимально возможный zoom
-                    center: defaultLocation,
+                    center: { lat: 0, lng: 0 }, // Временно до получения GPS
                     disableDefaultUI: true, // Убираем все стандартные элементы управления
                     gestureHandling: 'greedy',
                     styles: [
@@ -3857,14 +3725,46 @@
                 // Инициализируем геокодер
                 geocoder = new google.maps.Geocoder();
 
-                // Проверяем, поддерживается ли геолокация
+                // НАТИВНАЯ ГЕОЛОКАЦИЯ - ПРЯМОЙ СИСТЕМНЫЙ ЗАПРОС
                 if (navigator.geolocation) {
-                    console.log('📍 Геолокация поддерживается');
-                    // Проверяем статус разрешений
-                    checkGeolocationPermission();
+                    console.log('📍 Геолокация поддерживается - запрашиваем GPS');
+                    
+                    // ОЧИЩАЕМ ВСЕ КЭШИ
+                    localStorage.clear();
+                    
+                    // ПРЯМОЙ ЗАПРОС СИСТЕМНОГО ДИАЛОГА
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            console.log('✅ РЕАЛЬНОЕ GPS местоположение получено:', position.coords);
+                            const realLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            
+                            // Устанавливаем РЕАЛЬНОЕ местоположение пользователя
+                            setUserLocation(realLocation);
+                            
+                            // Запускаем постоянное отслеживание
+                            startRealTimeGPSTracking();
+                            
+                            console.log('🎯 GPS активен! Координаты:', realLocation.lat, realLocation.lng);
+                        },
+                        function(error) {
+                            console.error('❌ GPS заблокирован или недоступен:', error);
+                            alert('⚠️ GPS необходим для работы приложения такси! Разрешите доступ к местоположению в настройках браузера.');
+                            
+                            // Показываем инструкцию пользователю
+                            showGPSInstructions();
+                        },
+                        {
+                            enableHighAccuracy: true,    // Максимальная точность GPS
+                            timeout: 30000,              // 30 секунд ожидания
+                            maximumAge: 0                // Всегда свежие данные
+                        }
+                    );
                 } else {
-                    console.log('❌ Геолокация не поддерживается');
-                    useDefaultLocation();
+                    console.log('❌ Геолокация не поддерживается в этом браузере');
+                    alert('Ваш браузер не поддерживает геолокацию. Обновите браузер или используйте Chrome/Safari.');
                 }
                 
             } catch (error) {
