@@ -74,7 +74,7 @@ class OrderBase(BaseModel):
     time: str
     origin: str
     destination: str
-    driver_id: int
+    driver_id: Optional[int] = None  # Водитель может быть не назначен при создании заказа
     status: Optional[str] = "Ожидает водителя"
     price: Optional[float] = None
     tariff: Optional[str] = None

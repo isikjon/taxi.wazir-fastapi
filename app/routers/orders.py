@@ -13,13 +13,14 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.Order, status_code=status.HTTP_201_CREATED)
 def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
-    # Проверяем, существует ли водитель
-    db_driver = crud.get_driver(db, driver_id=order.driver_id)
-    if db_driver is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Driver not found"
-        )
+    # Проверяем, существует ли водитель (только если он указан)
+    if order.driver_id is not None:
+        db_driver = crud.get_driver(db, driver_id=order.driver_id)
+        if db_driver is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Driver not found"
+            )
     
     # Валидация формата времени (чч:мм)
     try:

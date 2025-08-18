@@ -79,11 +79,11 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 templates = Jinja2Templates(directory="app/templates")
 
 # Подключаем API роутеры
-app.include_router(drivers.router)
-app.include_router(cars.router)
-app.include_router(orders.router)
-app.include_router(messages.router)
-app.include_router(twogis.router)
+app.include_router(drivers.router, prefix="/api")
+app.include_router(cars.router, prefix="/api")
+app.include_router(orders.router, prefix="/api")
+app.include_router(messages.router, prefix="/api")
+app.include_router(twogis.router, prefix="/api")
 
 # Простой тестовый endpoint
 @app.get("/test")
@@ -5276,7 +5276,7 @@ async def verify_driver_photo(
             content={"success": False, "detail": f"Ошибка сервера: {str(e)}"}
         )
 
-@app.post("/api/orders/")
+@app.post("/api/admin/orders/")
 async def create_order_from_form(
     request: Request,
     db: Session = Depends(get_db),
