@@ -98,396 +98,387 @@
         }
         
         .activity-badge {
-            background: #606060;
+            background: #4CAF50;
             color: white;
             padding: 4px 8px;
-            border-radius: 0;
+            border-radius: 12px;
             font-size: 12px;
+            font-weight: 500;
         }
         
-        .price-text {
+        .order-price {
+            font-weight: 600;
+            color: #2196F3;
             font-size: 16px;
-            color: #333;
         }
         
-        .pickup-location {
-            color: #666;
-        }
-        
-        /* Кнопки */
-        .order-buttons {
+        .order-actions {
             display: flex;
-            padding: 15px 20px;
             gap: 10px;
+            padding: 15px 20px;
         }
         
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 0;
-            font-size: 14px;
-            font-weight: 400;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
         .btn-accept {
-            background: #606060;
-            color: white;
-        }
-
-        .btn-decline {
-            background: #ccc;
-            color: #333;
-        }
-        
-        .btn:hover {
-            opacity: 0.8;
-        }
-        
-        /* Сообщение о пропуске */
-        .skip-message {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            z-index: 1001;
-            padding: 20px;
-            border-radius: 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            display: none;
-        }
-        
-        .skip-message.show {
-            display: block;
-        }
-        
-        .skip-title {
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: #333;
-            font-weight: 400;
-        }
-        
-        .skip-subtitle {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 20px;
-            font-weight: 400;
-        }
-        
-        .btn-continue {
-            background: #606060;
+            background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 0;
             padding: 12px 24px;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 400;
+            font-weight: 500;
             cursor: pointer;
+            flex: 1;
         }
         
-        /* Скрыть контролы карты */
-        .gm-style-cc {
-            display: none !important;
+        .btn-reject {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
         }
         
-        .gm-bundled-control {
-            display: none !important;
-        }
-
-        /* Панель навигации */
+        /* Навигационная панель */
         .navigation-panel {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             background: white;
-            z-index: 1000;
-            display: none;
+            z-index: 1001;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
             padding: 20px;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            display: none;
         }
-
-        /* Прогресс бар сверху */
-        #topProgressBar {
-            position: fixed;
-            top: 60px;
-            left: 0;
-            right: 0;
-            z-index: 999;
-            background: white;
-            padding: 10px 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        #topProgressBar .progress-fill {
-            background: #4CAF50;
-            height: 6px;
-            border-radius: 0;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        #topProgressBar .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-
+        
         .navigation-panel.show {
+            transform: translateY(0);
             display: block;
         }
-
-        .navigation-panel .progress-bar {
-            background: #f0f0f0;
-            height: 8px;
-            border-radius: 0;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .progress-fill {
-            background: #4CAF50;
-            height: 100%;
-            border-radius: 0;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: #666;
-            margin-top: 8px;
-        }
-
-        .navigation-instruction {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-            padding: 16px;
-            background: #f8f8f8;
-            border-radius: 0;
-        }
-
-        .instruction-icon {
-            font-size: 24px;
-            margin-right: 16px;
-        }
-
+        
         .instruction-main {
             font-size: 18px;
             font-weight: 600;
             color: #333;
+            margin-bottom: 8px;
+            text-align: center;
         }
-
+        
         .instruction-sub {
             font-size: 14px;
             color: #666;
-        }
-
-        .btn-complete {
-            background: #606060;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 0;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        /* Результат поездки */
-        .trip-result {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            z-index: 1000;
-            display: none;
-            padding: 24px;
-            box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
             text-align: center;
-        }
-
-        .trip-result.show {
-            display: block;
-        }
-
-        .result-title {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .result-price {
-            font-size: 32px;
-            font-weight: 600;
-            color: #333;
-            margin: 8px 0;
-        }
-
-        .result-subtitle {
-            font-size: 14px;
-            color: #666;
             margin-bottom: 20px;
         }
-
-        .result-stats {
+        
+        .trip-info {
             display: flex;
             justify-content: space-between;
-            margin: 20px 0;
-            padding: 16px 0;
-            border-top: 1px solid #eee;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
         }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
+        
+        .trip-info-item {
+            text-align: center;
         }
-
-        .stat-item span:first-child {
-            font-size: 14px;
+        
+        .trip-info-label {
+            font-size: 12px;
             color: #666;
+            margin-bottom: 4px;
         }
-
-        .stat-item span:last-child {
+        
+        .trip-info-value {
             font-size: 16px;
-            color: #333;
             font-weight: 600;
+            color: #333;
         }
-
-
-
-        .btn-done {
-            background: #606060;
+        
+        .btn-complete {
+            background: #2196F3;
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 0;
+            padding: 15px;
+            border-radius: 12px;
             font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
             width: 100%;
+        }
+        
+        /* Уведомления о геолокации */
+        .geolocation-notification {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            right: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 1002;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .geolocation-notification.show {
+            display: block;
+        }
+        
+        .geolocation-notification.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .geolocation-notification.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .geolocation-notification .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: inherit;
+        }
+        
+        /* Индикатор статуса GPS */
+        .gps-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            z-index: 1003;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .gps-status.searching {
+            background: #ff9800;
+            animation: pulse 2s infinite;
+        }
+        
+        .gps-status.active {
+            background: #4CAF50;
+        }
+        
+        .gps-status.error {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Прогресс бар сверху */
+        .top-progress-bar {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 15px;
+            z-index: 999;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Уведомления о геолокации */
+        .geolocation-notification {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            right: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 1002;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .geolocation-notification.show {
+            display: block;
+        }
+        
+        .geolocation-notification.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .geolocation-notification.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .geolocation-notification .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: inherit;
+        }
+        
+        /* Индикатор статуса GPS */
+        .gps-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            z-index: 1003;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .gps-status.searching {
+            background: #ff9800;
+            animation: pulse 2s infinite;
+        }
+        
+        .gps-status.active {
+            background: #4CAF50;
+        }
+        
+        .gps-status.error {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
-<body data-driver-id="{{ driver_id }}">
+<body>
+    <!-- Индикатор статуса GPS -->
+    <div id="gpsStatus" class="gps-status searching">
+        📡
+    </div>
+    
+    <!-- Уведомления о геолокации -->
+    <div id="geolocationNotification" class="geolocation-notification">
+        <button class="close-btn" onclick="closeGeolocationNotification()">&times;</button>
+        <div id="geolocationMessage"></div>
+    </div>
+    
     <!-- Верхняя панель статуса -->
     <div class="status-bar">
-        <div class="status-text" id="statusText">Пропустить</div>
-        <div class="balance-text" id="balanceText">0 сом<br>0 заказов</div>
-                    </div>
-
-    <!-- Карта на весь экран -->
+        <div class="status-text" id="statusText">Загрузка...</div>
+        <div class="balance-text" id="balanceText">0 сом • 0 заказов</div>
+    </div>
+    
+    <!-- Прогресс бар сверху -->
+    <div id="topProgressBar" class="top-progress-bar">
+        <div class="progress-info">
+            <span>Прогресс поездки</span>
+            <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+    
+    <!-- Контейнер карты -->
     <div class="map-container">
         <div id="map"></div>
-                    </div>
-
+    </div>
+    
     <!-- Блок нового заказа -->
-    <div class="order-popup" id="orderPopup">
-        <!-- Блок 1: Время и расстояние -->
+    <div id="orderPopup" class="order-popup">
         <div class="order-block">
             <div class="order-duration-distance">
-                <span id="orderDuration">5 мин</span>
-                <span>•</span>
-                <span id="orderDistance">2км</span>
-                </div>
-            <div style="font-size: 12px; color: #999; margin-top: 4px;" id="orderSubtitle">Ближняя подача</div>
-                </div>
-
-        <!-- Блок 2: Активность и цена -->
+                <span>⏱️ <span id="orderDuration">5 мин</span></span>
+                <span>📍 <span id="orderDistance">1.2 км</span></span>
+            </div>
+        </div>
         <div class="order-block">
             <div class="order-activity-price">
-                <div>
-                    <span class="activity-badge">Активность</span>
-                    <span style="margin-left: 8px;" id="activityPoints">4+</span>
-                </div>
-                <div>
-                    <span class="price-text" id="orderPrice">× 2,2</span>
-                </div>
+                <span class="activity-badge">Активность <span id="orderActivity">49</span></span>
+                <span class="order-price">💵 <span id="orderPrice">150</span> сом</span>
             </div>
-                </div>
-
-        <!-- Блок 3: Откуда -->
-        <div class="order-block">
-            <div style="font-size: 12px; color: #999; margin-bottom: 4px;">Откуда</div>
-            <div class="pickup-location" id="orderOrigin">Льва Толстого, 16</div>
-            <div style="font-size: 12px; color: #999; margin-top: 4px;">Комментарий</div>
-            <div style="font-size: 14px; color: #333;" id="orderComment">Ожидайте у шлагбаума, я подойду.</div>
-                </div>
-
-        <!-- Блок 4: Кнопки -->
-        <div class="order-buttons">
-            <button class="btn btn-accept" onclick="acceptOrder()">Принять</button>
-            <button class="btn btn-decline" onclick="declineOrder()">Пропустить</button>
         </div>
-                </div>
-
-    <!-- Сообщение о пропуске заказа -->
-    <div class="skip-message" id="skipMessage">
-        <div class="skip-title">Активность</div>
-        <div style="font-size: 24px; margin: 10px 0; color: #333;">49/100</div>
-        <div style="font-size: 12px; color: #999; margin-bottom: 8px;">Заказ пропущен</div>
-        <div class="skip-subtitle">Примите следующий заказ, чтобы восстановить показатель</div>
-        <button class="btn-continue" onclick="continueWaiting()">Продолжить</button>
-                </div>
-
-    <!-- Прогресс бар сверху -->
-    <div id="topProgressBar" style="display: none;">
-        <div class="progress-fill" id="progressFill" style="background: #666; height: 6px; width: 0%; transition: width 0.3s ease;"></div>
-        <div class="progress-info" style="display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-top: 5px;">
-            <span id="tripDistance">10км</span>
-            <span id="tripDuration">20:30</span>
-            <span id="tripTime">26мин</span>
-                    </div>
-                </div>
-
-    <!-- Блок навигации внизу во время поездки -->
-    <div class="navigation-panel" id="navigationPanel">
-        <!-- Текущая инструкция -->
-        <div class="navigation-instruction" id="navigationInstruction">
-            <div class="instruction-icon">➡️</div>
-            <div class="instruction-text">
-                <div class="instruction-main" id="instructionMain">Через 15мин</div>
-                <div class="instruction-sub" id="instructionSub">Время приезда</div>
-                </div>
+        <div class="order-actions">
+            <button class="btn-accept" onclick="acceptOrder()">Принять</button>
+            <button class="btn-reject" onclick="rejectOrder()">Отклонить</button>
+        </div>
+    </div>
+    
+    <!-- Навигационная панель -->
+    <div id="navigationPanel" class="navigation-panel">
+        <div class="instruction-main" id="instructionMain">Следуйте к клиенту</div>
+        <div class="instruction-sub" id="instructionSub">Маршрут построен</div>
+        
+        <div class="trip-info">
+            <div class="trip-info-item">
+                <div class="trip-info-label">Расстояние</div>
+                <div class="trip-info-value" id="tripDistance">0 км</div>
             </div>
-        
-        <!-- Кнопка завершения -->
-        <button class="btn-complete" id="btnComplete" onclick="completeTripEarly()">Завершить</button>
-        </div>
-
-    <!-- Блок результата поездки -->
-    <div class="trip-result" id="tripResult">
-        <div class="result-title">Поездка завершена</div>
-        <div class="result-price" id="resultPrice">64 СОМ</div>
-        <div class="result-subtitle">Оплата наличными</div>
-        
-        <div class="result-stats">
-            <div class="stat-item">
-                <span>Доход</span>
-                <span id="resultIncome">64 СОМ</span>
-        </div>
-            <div class="stat-item">
-                <span>Активность</span>
-                <span id="resultActivity">+1<br>54/100</span>
+            <div class="trip-info-item">
+                <div class="trip-info-label">Время</div>
+                <div class="trip-info-value" id="tripDuration">0 мин</div>
+            </div>
+            <div class="trip-info-item">
+                <div class="trip-info-label">Прибытие</div>
+                <div class="trip-info-value" id="tripTime">--:--</div>
             </div>
         </div>
         
-
-        
-        <button class="btn-done" onclick="finishTrip()">Готово</button>
+        <button class="btn-complete" id="btnComplete" onclick="arrivedAtPickup()">Прибыл к клиенту</button>
     </div>
 
     <script>
@@ -495,55 +486,245 @@
         let driverMarker;
         let currentOrder = null;
         let driverId = parseInt('{{ driver_id|default(1) }}') || 1;
-        let mapInitialized = false; // Флаг для предотвращения повторной инициализации
-        let geolocationInProgress = false; // Флаг для предотвращения множественных вызовов геолокации
+        let mapInitialized = false;
         let isOnline = true;
         let currentLocation = null;
-        let driverActivity = 49; // Текущая активность водителя
+        let driverActivity = 49;
         let driverBalance = 0;
         let orderCount = 0;
-        let processedOrderIds = []; // Список обработанных заказов (принятых/отклоненных)
+        let processedOrderIds = [];
         
         // Переменные для навигации
         let directionsService;
         let directionsRenderer;
-        let watchPositionId;
-        let tripState = 'waiting'; // waiting, to_pickup, in_trip, completed
+        let watchPositionId = null;
+        let tripState = 'waiting';
         let currentTrip = null;
-        let routeProgress = 0; // 0-100%
+        let routeProgress = 0;
         let totalTripDistance = 0;
         let completedDistance = 0;
-
+        
+        // Переменные для геолокации
+        let geolocationPermission = null;
+        let lastKnownPosition = null;
+        let lastKnownHeading = null;
+        let positionAccuracy = 0;
+        let headingAccuracy = 0;
+        let isGeolocationActive = false;
+        let geolocationErrorCount = 0;
+        let maxGeolocationErrors = 5;
+        
         // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Страница "На линии" загружена');
             console.log('👤 ID водителя:', driverId);
             
-            // ОБЯЗАТЕЛЬНО запрашиваем геолокацию
-            requestLocationPermission();
+            // Проверяем сохраненные разрешения геолокации
+            checkSavedGeolocationPermission();
             
             // Загружаем данные водителя
             loadDriverData();
             
-            // Ожидаем загрузки Google Maps (ручная проверка как fallback)
-            waitForGoogleMapsManual();
+            // Ожидаем загрузки Google Maps
+            waitForGoogleMaps();
         });
 
-        function requestLocationPermission() {
-            if (!navigator.geolocation) {
-                alert('❌ Ваш браузер не поддерживает геолокацию!\n\nДля работы такси приложения ОБЯЗАТЕЛЬНО нужен GPS!');
-                return;
-            }
-
-            // Показываем важность геолокации
-            const message = '🚗 ВАЖНО: Для работы такси приложения нужен доступ к вашему местоположению.\n\n📍 GPS необходим для:\n• Навигации к клиентам\n• Отслеживания маршрута\n• Точного расчета расстояний\n\nРазрешить доступ к GPS?';
+        // Проверяем сохраненные разрешения геолокации
+        function checkSavedGeolocationPermission() {
+            const savedPermission = localStorage.getItem('wazir_geolocation_permission');
+            const savedTimestamp = localStorage.getItem('wazir_geolocation_timestamp');
             
-            if (!confirm(message)) {
-                alert('⚠️ БЕЗ GPS приложение не может работать!\n\nПерезагрузите страницу и разрешите доступ.');
+            if (savedPermission && savedTimestamp) {
+                const timestamp = parseInt(savedTimestamp);
+                const now = Date.now();
+                const hoursSincePermission = (now - timestamp) / (1000 * 60 * 60);
+                
+                // Разрешение действует 24 часа
+                if (hoursSincePermission < 24) {
+                    geolocationPermission = savedPermission;
+                    console.log('✅ Используем сохраненное разрешение геолокации:', geolocationPermission);
+                    
+                    if (geolocationPermission === 'granted') {
+                        showGeolocationNotification('GPS разрешен, ожидаем инициализации карты', 'success');
+                        updateGPSStatus('searching');
+                    } else if (geolocationPermission === 'denied') {
+                        showGeolocationNotification('GPS заблокирован. Разрешите доступ в настройках браузера', 'error');
+                        updateGPSStatus('error');
+                    }
+                } else {
+                    // Разрешение истекло, очищаем
+                    localStorage.removeItem('wazir_geolocation_permission');
+                    localStorage.removeItem('wazir_geolocation_timestamp');
+                    geolocationPermission = null;
+                    console.log('⏰ Разрешение геолокации истекло, запрашиваем заново');
+                }
+            }
+            
+            // Если нет сохраненного разрешения, запрашиваем
+            if (!geolocationPermission) {
+                requestGeolocationPermission();
+            }
+        }
+
+        // Запрашиваем разрешение на геолокацию (только один раз)
+        function requestGeolocationPermission() {
+            if (!navigator.geolocation) {
+                showGeolocationNotification('❌ Ваш браузер не поддерживает геолокацию!', 'error');
+                updateGPSStatus('error');
                 return;
             }
 
-            console.log('✅ Разрешение на геолокацию получено, ожидаем инициализации карты');
+            // Проверяем текущий статус разрешения
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+                    geolocationPermission = result.state;
+                    console.log('🔐 Статус разрешения геолокации:', geolocationPermission);
+                    
+                    if (geolocationPermission === 'granted') {
+                        handleGeolocationPermissionGranted();
+                    } else if (geolocationPermission === 'denied') {
+                        handleGeolocationPermissionDenied();
+                    } else if (geolocationPermission === 'prompt') {
+                        handleGeolocationPermissionPrompt();
+                    }
+                });
+            } else {
+                // Fallback для браузеров без Permissions API
+                handleGeolocationPermissionPrompt();
+            }
+        }
+
+        // Обработка разрешенного доступа к геолокации
+        function handleGeolocationPermissionGranted() {
+            geolocationPermission = 'granted';
+            saveGeolocationPermission();
+            showGeolocationNotification('✅ GPS разрешен, ожидаем инициализации карты', 'success');
+            updateGPSStatus('searching');
+            console.log('✅ Разрешение на геолокацию получено');
+        }
+
+        // Обработка заблокированного доступа к геолокации
+        function handleGeolocationPermissionDenied() {
+            geolocationPermission = 'denied';
+            saveGeolocationPermission();
+            showGeolocationNotification('❌ GPS заблокирован. Разрешите доступ в настройках браузера', 'error');
+            updateGPSStatus('error');
+            console.log('❌ Доступ к геолокации заблокирован');
+        }
+
+        // Обработка запроса разрешения
+        function handleGeolocationPermissionPrompt() {
+            // Показываем уведомление вместо alert
+            showGeolocationNotification('📍 Для работы такси нужен доступ к GPS. Разрешите доступ к местоположению.', '');
+            
+            // Запрашиваем текущую позицию для получения разрешения
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    handleGeolocationPermissionGranted();
+                    // Сохраняем позицию для использования
+                    lastKnownPosition = position;
+                    currentLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    if (position.coords.heading !== null) {
+                        lastKnownHeading = position.coords.heading;
+                    }
+                    positionAccuracy = position.coords.accuracy;
+                    console.log('📍 Первичная позиция получена:', currentLocation);
+                },
+                function(error) {
+                    console.log('❌ Ошибка получения первичной позиции:', error);
+                    if (error.code === error.PERMISSION_DENIED) {
+                        handleGeolocationPermissionDenied();
+                    } else {
+                        showGeolocationNotification('⚠️ Не удалось получить позицию. Проверьте GPS и попробуйте снова.', 'error');
+                        updateGPSStatus('error');
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Сохраняем разрешение геолокации
+        function saveGeolocationPermission() {
+            if (geolocationPermission) {
+                localStorage.setItem('wazir_geolocation_permission', geolocationPermission);
+                localStorage.setItem('wazir_geolocation_timestamp', Date.now().toString());
+                console.log('💾 Разрешение геолокации сохранено:', geolocationPermission);
+            }
+        }
+
+                // Закрываем уведомление о геолокации
+        function closeGeolocationNotification() {
+            const notification = document.getElementById('geolocationNotification');
+            notification.classList.remove('show', 'success', 'error');
+        }
+        
+        // Обновляем статус GPS индикатора
+        function updateGPSStatus(status) {
+            const gpsStatus = document.getElementById('gpsStatus');
+            gpsStatus.className = `gps-status ${status}`;
+            
+            if (status === 'searching') {
+                gpsStatus.innerHTML = '📡';
+                gpsStatus.title = 'Поиск GPS сигнала...';
+            } else if (status === 'active') {
+                gpsStatus.innerHTML = '📍';
+                gpsStatus.title = 'GPS активен';
+            } else if (status === 'error') {
+                gpsStatus.innerHTML = '❌';
+                gpsStatus.title = 'Ошибка GPS';
+            }
+        }
+        
+        // Показываем уведомление о геолокации
+        function showGeolocationNotification(message, type = '') {
+            const notification = document.getElementById('geolocationNotification');
+            const messageEl = document.getElementById('geolocationMessage');
+            
+            messageEl.textContent = message;
+            notification.className = 'geolocation-notification show';
+            
+            if (type === 'success') {
+                notification.classList.add('success');
+            } else if (type === 'error') {
+                notification.classList.add('error');
+            }
+            
+            // Автоматически скрываем через 5 секунд
+            setTimeout(() => {
+                if (notification.classList.contains('show')) {
+                    closeGeolocationNotification();
+                }
+            }, 5000);
+        }
+
+        // Закрываем уведомление о геолокации
+        function closeGeolocationNotification() {
+            const notification = document.getElementById('geolocationNotification');
+            notification.classList.remove('show', 'success', 'error');
+        }
+
+        // Обновляем статус GPS индикатора
+        function updateGPSStatus(status) {
+            const gpsStatus = document.getElementById('gpsStatus');
+            gpsStatus.className = `gps-status ${status}`;
+            
+            if (status === 'searching') {
+                gpsStatus.innerHTML = '📡';
+                gpsStatus.title = 'Поиск GPS сигнала...';
+            } else if (status === 'active') {
+                gpsStatus.innerHTML = '📍';
+                gpsStatus.title = 'GPS активен';
+            } else if (status === 'error') {
+                gpsStatus.innerHTML = '❌';
+                gpsStatus.title = 'Ошибка GPS';
+            }
         }
 
         // Глобальная функция для callback Google Maps API
@@ -558,13 +739,13 @@
             }
         }
         
-        function waitForGoogleMapsManual() {
+        function waitForGoogleMaps() {
             if (window.google && window.google.maps && window.google.maps.Map) {
                 console.log('✅ Google Maps API готов (ручная проверка)');
                 initMap();
             } else {
                 console.log('⏳ Ожидание Google Maps API...');
-                setTimeout(waitForGoogleMapsManual, 500);
+                setTimeout(waitForGoogleMaps, 500);
             }
         }
 
@@ -580,7 +761,7 @@
             
             map = new google.maps.Map(document.getElementById('map'), {
                 center: oshCenter,
-                zoom: 22, // Максимальное приближение
+                zoom: 22,
                 gestureHandling: 'greedy',
                 mapTypeControl: false,
                 streetViewControl: false,
@@ -599,144 +780,243 @@
             });
             directionsRenderer.setMap(map);
             
-            console.log('✅ Карта инициализирована, запускаем геолокацию');
+            console.log('✅ Карта инициализирована');
             
-            mapInitialized = true; // Помечаем карту как инициализированную
+            mapInitialized = true;
             
-            // Теперь, когда карта готова, получаем геолокацию
-            getDriverLocationWithRetry(3);
-            
-            // Дополнительная проверка через 3 секунды для убеждения, что маркер остается
-            setTimeout(() => {
-                if (currentLocation && map && driverMarker) {
-                    console.log('🔄 Дополнительная проверка маркера через 3 секунды');
-                    updateDriverLocationOnMap();
-                }
-            }, 3000);
+            // Если у нас есть разрешение на геолокацию, запускаем отслеживание
+            if (geolocationPermission === 'granted') {
+                startContinuousPositionTracking();
+            }
             
             startOrderPolling();
         }
 
-        // Агрессивное получение геолокации для водителя
-        function getDriverLocationWithRetry(attemptsLeft = 3, highAccuracy = true) {
-            if (geolocationInProgress && attemptsLeft === 3) {
-                console.log('⚠️ Геолокация уже выполняется, пропускаем первичный вызов');
+        // Запускаем постоянное отслеживание позиции
+        function startContinuousPositionTracking() {
+            if (isGeolocationActive) {
+                console.log('⚠️ Отслеживание позиции уже активно');
                 return;
             }
             
-            if (attemptsLeft === 3) {
-                geolocationInProgress = true;
+            if (!navigator.geolocation) {
+                console.log('❌ Геолокация не поддерживается');
+                return;
             }
             
-            console.log(`🎯 Водитель: попытка получения геолокации ${4 - attemptsLeft + 1}/3, точность: ${highAccuracy ? 'высокая' : 'низкая'}`);
+            console.log('📍 Запускаем постоянное отслеживание позиции...');
             
             const options = {
-                enableHighAccuracy: highAccuracy,
-                timeout: highAccuracy ? 15000 : 25000,
-                maximumAge: 30000
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 5000
             };
             
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    console.log('✅ Геолокация водителя получена:', position.coords);
-                    currentLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    
-                    // Проверяем, что карта инициализирована
-                    if (!map) {
-                        console.log('⚠️ Карта еще не готова, ожидаем...');
-                        setTimeout(() => {
-                            if (map) {
-                                updateDriverLocationOnMap();
-                            }
-                            geolocationInProgress = false; // Сбрасываем флаг в любом случае
-                        }, 1000);
-                        return;
-                    }
-                    
-                    updateDriverLocationOnMap();
-                    geolocationInProgress = false; // Сбрасываем флаг после успешного получения
-                },
-                (error) => {
-                    console.log(`❌ Ошибка геолокации водителя (попытка ${4 - attemptsLeft + 1}):`, error);
-                    
-                    if (attemptsLeft > 1) {
-                        setTimeout(() => {
-                            if (attemptsLeft === 2 && highAccuracy) {
-                                getDriverLocationWithRetry(attemptsLeft - 1, false);
-                            } else {
-                                getDriverLocationWithRetry(attemptsLeft - 1, highAccuracy);
-                            }
-                        }, 2000);
-                    } else {
-                        console.log('💀 Все попытки получения геолокации водителя исчерпаны');
-                        geolocationInProgress = false; // Сбрасываем флаг после исчерпания попыток
-                        alert('❌ Не удалось получить ваше местоположение!\n\nВключите GPS и разрешите доступ к геолокации для корректной работы.');
-                    }
-                },
+            watchPositionId = navigator.geolocation.watchPosition(
+                handlePositionUpdate,
+                handlePositionError,
                 options
             );
+            
+            isGeolocationActive = true;
+            updateGPSStatus('active');
+            console.log('✅ Отслеживание позиции запущено');
         }
 
-        function updateDriverLocationOnMap() {
+        // Останавливаем отслеживание позиции
+        function stopPositionTracking() {
+            if (watchPositionId) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                watchPositionId = null;
+                isGeolocationActive = false;
+                updateGPSStatus('searching');
+                console.log('⏹️ Отслеживание позиции остановлено');
+            }
+        }
+
+        // Обработка обновления позиции
+        function handlePositionUpdate(position) {
+            const newPosition = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            
+            // Обновляем текущую позицию
+            currentLocation = newPosition;
+            lastKnownPosition = position;
+            positionAccuracy = position.coords.accuracy;
+            
+            // Обновляем направление движения если доступно
+            if (position.coords.heading !== null && !isNaN(position.coords.heading)) {
+                lastKnownHeading = position.coords.heading;
+                headingAccuracy = position.coords.headingAccuracy || 0;
+                console.log('🧭 Направление движения обновлено:', lastKnownHeading, '°');
+            }
+            
+            console.log('📍 Позиция обновлена:', newPosition, 'точность:', positionAccuracy, 'м');
+            
+            // Обновляем маркер на карте
+            updateDriverMarkerOnMap();
+            
+            // Проверяем прогресс поездки если активно
+            if (tripState === 'to_pickup' && currentTrip) {
+                checkArrivalToPickup(newPosition);
+            } else if (tripState === 'in_trip' && currentTrip) {
+                updateTripProgress(newPosition);
+            }
+            
+            // Сбрасываем счетчик ошибок
+            geolocationErrorCount = 0;
+        }
+
+        // Обработка ошибок геолокации
+        function handlePositionError(error) {
+            geolocationErrorCount++;
+            console.error('❌ Ошибка геолокации:', error);
+            
+            let errorMessage = '';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Доступ к GPS заблокирован';
+                    geolocationPermission = 'denied';
+                    saveGeolocationPermission();
+                    updateGPSStatus('error');
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Информация о местоположении недоступна';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Превышено время ожидания GPS';
+                    break;
+                default:
+                    errorMessage = 'Неизвестная ошибка GPS';
+            }
+            
+            console.log(`❌ Ошибка GPS (${geolocationErrorCount}/${maxGeolocationErrors}):`, errorMessage);
+            
+            // Если много ошибок подряд, останавливаем отслеживание
+            if (geolocationErrorCount >= maxGeolocationErrors) {
+                console.log('💀 Слишком много ошибок GPS, останавливаем отслеживание');
+                stopPositionTracking();
+                showGeolocationNotification('⚠️ Проблемы с GPS. Проверьте настройки и перезагрузите страницу.', 'error');
+            }
+        }
+
+        // Обновляем маркер водителя на карте
+        function updateDriverMarkerOnMap() {
             if (!currentLocation || !map || !mapInitialized) {
-                console.log('⚠️ Нет данных для обновления местоположения');
+                console.log('⚠️ Нет данных для обновления маркера');
                 return;
             }
             
-            console.log('📍 Обновляем местоположение водителя на карте', currentLocation);
+            console.log('📍 Обновляем маркер водителя на карте');
             
-            // Центрируем карту и устанавливаем максимальное приближение
+            // Центрируем карту на текущей позиции
             map.setCenter(currentLocation);
-            map.setZoom(22);
             
             // Создаем или обновляем маркер водителя
             if (driverMarker) {
-                console.log('📍 Обновляем позицию существующего маркера');
                 driverMarker.setPosition(currentLocation);
-                driverMarker.setMap(map); // Убеждаемся, что маркер привязан к карте
+                
+                // Обновляем направление маркера если доступно
+                if (lastKnownHeading !== null && !isNaN(lastKnownHeading)) {
+                    updateMarkerHeading(lastKnownHeading);
+                }
             } else {
-                console.log('📍 Создаем новый маркер водителя');
-                driverMarker = new google.maps.Marker({
-                    position: currentLocation,
-                    map: map,
-                    icon: {
-                        url: 'https://wazir.kg/static/navigator/map.png',
-                        scaledSize: new google.maps.Size(50, 50),
-                        anchor: new google.maps.Point(25, 25),
-                        optimized: false
-                    },
-                    zIndex: 1000,
-                    title: 'Ваше местоположение (водитель)',
-                    clickable: true
-                });
-                console.log('✅ Маркер водителя создан');
+                createDriverMarker();
             }
             
-            // Проверяем, что маркер действительно на карте
-            if (driverMarker && driverMarker.getMap() !== map) {
-                console.log('⚠️ Маркер не привязан к карте, исправляем');
-                driverMarker.setMap(map);
-            }
-            
-            // Дополнительная проверка видимости маркера
-            if (driverMarker) {
-                console.log('✅ Маркер присутствует на карте:', {
-                    position: driverMarker.getPosition().toJSON(),
-                    visible: driverMarker.getVisible(),
-                    map: driverMarker.getMap() === map ? 'привязан' : 'не привязан'
-                });
-            }
-            
-            console.log('✅ Местоположение водителя успешно обновлено на карте');
+            console.log('✅ Маркер водителя обновлен');
         }
 
+        // Создаем маркер водителя
+        function createDriverMarker() {
+            if (!currentLocation || !map) {
+                console.log('⚠️ Нет данных для создания маркера');
+                return;
+            }
+            
+            console.log('📍 Создаем новый маркер водителя');
+            
+            // Создаем кастомную иконку с возможностью поворота
+            const icon = {
+                url: 'https://wazir.kg/static/navigator/map.png',
+                scaledSize: new google.maps.Size(50, 50),
+                anchor: new google.maps.Point(25, 25),
+                optimized: false
+            };
+            
+            driverMarker = new google.maps.Marker({
+                position: currentLocation,
+                map: map,
+                icon: icon,
+                zIndex: 1000,
+                title: 'Ваше местоположение (водитель)',
+                clickable: true
+            });
+            
+            // Устанавливаем начальное направление если доступно
+            if (lastKnownHeading !== null && !isNaN(lastKnownHeading)) {
+                updateMarkerHeading(lastKnownHeading);
+            }
+            
+            console.log('✅ Маркер водителя создан');
+        }
+
+        // Обновляем направление маркера водителя
+        function updateMarkerHeading(heading) {
+            if (!driverMarker || !map) {
+                return;
+            }
+            
+            // Нормализуем угол (0-360 градусов)
+            const normalizedHeading = ((heading % 360) + 360) % 360;
+            
+            // Поворачиваем иконку маркера
+            const icon = driverMarker.getIcon();
+            if (icon && icon.url) {
+                const rotatedIcon = {
+                    ...icon,
+                    rotation: normalizedHeading
+                };
+                driverMarker.setIcon(rotatedIcon);
+                
+                console.log('🧭 Маркер повернут на', normalizedHeading, '°');
+            }
+        }
+
+        // Получаем текущую позицию (fallback)
         function getCurrentLocation() {
-            // Эта функция заменена на getDriverLocationWithRetry для лучшей надежности
-            console.log('⚠️ getCurrentLocation заменена на getDriverLocationWithRetry');
-            getDriverLocationWithRetry(3);
+            if (geolocationPermission === 'granted' && isGeolocationActive) {
+                console.log('📍 Отслеживание уже активно, используем текущую позицию');
+                return;
+            }
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        if (position.coords.heading !== null) {
+                            lastKnownHeading = position.coords.heading;
+                        }
+                        positionAccuracy = position.coords.accuracy;
+                        
+                        console.log('📍 Текущая позиция получена:', currentLocation);
+                        updateDriverMarkerOnMap();
+                    },
+                    function(error) {
+                        console.error('❌ Ошибка получения текущей позиции:', error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 30000
+                    }
+                );
+            }
         }
 
         function loadDriverData() {
@@ -1077,8 +1357,10 @@
             // Начинаем построение маршрута
             buildRoute(currentLocation, { lat: currentTrip.pickupLat, lng: currentTrip.pickupLng });
             
-            // Запускаем отслеживание позиции
-            startPositionTracking();
+            // Запускаем отслеживание позиции (если еще не запущено)
+            if (!isGeolocationActive) {
+                startContinuousPositionTracking();
+            }
         }
 
         function buildRoute(origin, destination) {
@@ -1146,48 +1428,7 @@
             }
         }
 
-        function startPositionTracking() {
-            if (navigator.geolocation) {
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 5000
-                };
-
-                watchPositionId = navigator.geolocation.watchPosition(
-                    updatePosition,
-                    handlePositionError,
-                    options
-                );
-            }
-        }
-
-        function updatePosition(position) {
-            const newPosition = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-
-            currentLocation = newPosition;
-
-            // Обновляем маркер водителя
-            if (driverMarker) {
-                driverMarker.setPosition(newPosition);
-            } else {
-                createDriverMarker();
-            }
-
-            // Проверяем прогресс поездки
-            if (tripState === 'to_pickup') {
-                checkArrivalToPickup(newPosition);
-            } else if (tripState === 'in_trip') {
-                updateTripProgress(newPosition);
-            }
-        }
-
-        function handlePositionError(error) {
-            console.error('❌ Ошибка геолокации:', error);
-        }
+        // Старые функции геолокации заменены на новые - startContinuousPositionTracking, handlePositionUpdate, handlePositionError
 
         function checkArrivalToPickup(position) {
             const pickupLocation = { lat: currentTrip.pickupLat, lng: currentTrip.pickupLng };
@@ -1426,8 +1667,14 @@
             
             // Очищаем маршрут
             if (directionsRenderer) {
-            directionsRenderer.setDirections({routes: []});
-        }
+                directionsRenderer.setDirections({routes: []});
+            }
+            
+            // Останавливаем отслеживание позиции для поездки
+            if (isGeolocationActive && tripState !== 'waiting') {
+                console.log('📍 Останавливаем отслеживание позиции для поездки');
+                // Не останавливаем полностью, так как нужно для общего отслеживания
+            }
 
             // Возвращаемся к ожиданию заказов
             document.getElementById('statusText').textContent = `Активность ${driverActivity}`;
@@ -1435,6 +1682,26 @@
             
             console.log('🔄 Возвращение к ожиданию заказов');
         }
+        
+        // Очищаем отслеживание при уходе со страницы
+        window.addEventListener('beforeunload', function() {
+            if (watchPositionId) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                console.log('🧹 Отслеживание позиции очищено при уходе со страницы');
+            }
+        });
+        
+        // Очищаем отслеживание при скрытии страницы (мобильные браузеры)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('📱 Страница скрыта, приостанавливаем отслеживание');
+            } else {
+                console.log('📱 Страница активна, возобновляем отслеживание');
+                if (geolocationPermission === 'granted' && !isGeolocationActive) {
+                    startContinuousPositionTracking();
+                }
+            }
+        });
     </script>
     
     <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key|default('') }}&libraries=places&loading=async&callback=waitForGoogleMaps"></script>
