@@ -5304,7 +5304,7 @@ async def create_order_from_form(
     order_date: str = Form(...),
     order_time: str = Form(...),
     route_number: str = Form(...),
-    driver_id: int = Form(...),
+    driver_id: Optional[int] = Form(None),
     tariff: str = Form(...),
     payment_method: str = Form(...),
     origin: str = Form(...),
@@ -5315,11 +5315,22 @@ async def create_order_from_form(
     """Создание заказа из формы диспетчерской"""
     try:
         logger.info(f"📝 Создание заказа: {order_number}")
+        logger.info(f"📊 Данные заказа: driver_id={driver_id}, tariff={tariff}, price={price}")
         
-        # Проверяем существование водителя
-        driver = crud.get_driver(db, driver_id=driver_id)
-        if not driver:
-            raise HTTPException(status_code=404, detail="Водитель не найден")
+        # Проверяем существование водителя если он выбран
+        if driver_id and driver_id != '':
+            try:
+                driver_id_int = int(driver_id)
+                driver = crud.get_driver(db, driver_id=driver_id_int)
+                if not driver:
+                    raise HTTPException(status_code=404, detail="Водитель не найден")
+                order_status = "Назначен"
+                final_driver_id = driver_id_int
+            except (ValueError, TypeError):
+                raise HTTPException(status_code=400, detail="Некорректный ID водителя")
+        else:
+            order_status = "Ожидает водителя"
+            final_driver_id = None
         
         # Конвертируем цену
         order_price = None
@@ -5335,8 +5346,8 @@ async def create_order_from_form(
             time=order_time,
             origin=origin,
             destination=destination,
-            driver_id=driver_id,
-            status="Ожидает водителя",
+            driver_id=final_driver_id,
+            status=order_status,
             price=order_price,
             tariff=tariff,
             notes=notes,
@@ -5345,7 +5356,8 @@ async def create_order_from_form(
         
         # Создаём заказ в БД
         new_order = crud.create_order(db=db, order=order_data)
-        logger.info(f"✅ Заказ {order_number} создан успешно")
+        logger.info(f"✅ Заказ {order_number} создан успешно с ID: {new_order.id}")
+        logger.info(f"📋 Статус заказа: {order_status}, Водитель: {final_driver_id or 'не назначен'}")
         
         return JSONResponse(
             status_code=201,
@@ -5359,8 +5371,20 @@ async def create_order_from_form(
         
     except HTTPException:
         raise
+    except ValidationError as e:
+        logger.error(f"❌ Ошибка валидации данных заказа: {e}")
+        error_details = []
+        for error in e.errors():
+            field = error['loc'][0] if error['loc'] else 'unknown'
+            message = error['msg']
+            error_details.append(f"{field}: {message}")
+        raise HTTPException(
+            status_code=422,
+            detail=f"Ошибка валидации: {'; '.join(error_details)}"
+        )
     except Exception as e:
         logger.error(f"❌ Ошибка создания заказа: {e}")
+        logger.error(f"🔍 Детали ошибки: {type(e).__name__}: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Ошибка создания заказа: {str(e)}"

@@ -70,16 +70,47 @@ class Driver(DriverBase):
 
 # Order schemas
 class OrderBase(BaseModel):
-    order_number: str
-    time: str
-    origin: str
-    destination: str
+    order_number: str = Field(..., min_length=1, description="Номер заказа")
+    time: str = Field(..., min_length=1, description="Время заказа")
+    origin: str = Field(..., min_length=1, description="Адрес отправления")
+    destination: str = Field(..., min_length=1, description="Адрес назначения")
     driver_id: Optional[int] = None  # Водитель может быть не назначен при создании заказа
     status: Optional[str] = "Ожидает водителя"
     price: Optional[float] = None
-    tariff: Optional[str] = None
+    tariff: Optional[str] = Field(..., min_length=1, description="Тариф")
     notes: Optional[str] = None
-    payment_method: Optional[str] = None
+    payment_method: Optional[str] = Field(..., min_length=1, description="Способ оплаты")
+    
+    # Валидаторы
+    @validator('order_number')
+    def order_number_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Номер заказа не может быть пустым')
+        return v.strip()
+    
+    @validator('origin')
+    def origin_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Адрес отправления не может быть пустым')
+        return v.strip()
+    
+    @validator('destination')
+    def destination_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Адрес назначения не может быть пустым')
+        return v.strip()
+    
+    @validator('tariff')
+    def tariff_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Тариф не может быть пустым')
+        return v.strip()
+    
+    @validator('payment_method')
+    def payment_method_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Способ оплаты не может быть пустым')
+        return v.strip()
 
 class OrderCreate(OrderBase):
     pass

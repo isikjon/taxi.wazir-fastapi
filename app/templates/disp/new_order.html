@@ -911,10 +911,11 @@
             const notes = $('#notes').val();
             const calculatedPrice = $('#calculated-price').val();
             
-            if (!driverId) {
-                alert('Выберите водителя');
-                return false;
-            }
+            // Водитель может быть не выбран - заказ будет создан без назначения
+            // if (!driverId) {
+            //     alert('Выберите водителя');
+            //     return false;
+            // }
             if (!tariff) {
                 alert('Выберите тариф');
                 return false;
@@ -923,35 +924,68 @@
                 alert('Выберите способ оплаты');
                 return false;
             }
-            if (!origin) {
+            if (!origin || origin.trim() === '') {
                 alert('Укажите адрес отправления');
                 return false;
             }
-            if (!destination) {
+            if (!destination || destination.trim() === '') {
                 alert('Укажите адрес назначения');
+                return false;
+            }
+            
+            // Дополнительная валидация
+            if (!orderNumber || orderNumber.trim() === '') {
+                alert('Укажите номер заказа');
+                return false;
+            }
+            
+            if (!orderDate || orderDate.trim() === '') {
+                alert('Укажите дату заказа');
+                return false;
+            }
+            
+            if (!orderTime || orderTime.trim() === '') {
+                alert('Укажите время заказа');
                 return false;
             }
             
             // Формируем данные для отправки
             const formData = new FormData();
-            formData.append('order_number', orderNumber);
-            formData.append('order_date', orderDate);
-            formData.append('order_time', orderTime);
-            formData.append('route_number', routeNumber);
-            formData.append('driver_id', driverId);
-            formData.append('tariff', tariff);
-            formData.append('payment_method', paymentMethod);
-            formData.append('origin', origin);
-            formData.append('destination', destination);
+            formData.append('order_number', orderNumber || '');
+            formData.append('order_date', orderDate || '');
+            formData.append('order_time', orderTime || '');
+            formData.append('route_number', routeNumber || '');
+            formData.append('driver_id', driverId || ''); // Пустая строка если водитель не выбран
+            formData.append('tariff', tariff || '');
+            formData.append('payment_method', paymentMethod || '');
+            formData.append('origin', origin.trim());
+            formData.append('destination', destination.trim());
             formData.append('notes', notes || '');
             formData.append('price', calculatedPrice || '0');
+            
+            // Логируем данные для отправки
+            console.log('📤 Отправляем данные заказа:', {
+                order_number: orderNumber,
+                driver_id: driverId || 'не выбран',
+                tariff: tariff,
+                origin: origin,
+                destination: destination,
+                price: calculatedPrice || '0'
+            });
             
             // Отправляем данные
             fetch('/api/orders/', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     alert(`Заказ ${data.order_number} успешно создан!`);
