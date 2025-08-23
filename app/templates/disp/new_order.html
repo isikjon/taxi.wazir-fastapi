@@ -973,15 +973,35 @@
                 price: calculatedPrice || '0'
             });
             
+            // Логируем FormData для отладки
+            for (let [key, value] of formData.entries()) {
+                console.log(`📋 ${key}: ${value}`);
+            }
+            
             // Отправляем данные
-            fetch('/api/orders/', {
+            fetch('/api/admin/orders/', {
                 method: 'POST',
                 body: formData
             })
             .then(response => {
+                console.log('📥 Ответ сервера:', response.status, response.statusText);
+                
                 if (!response.ok) {
                     return response.json().then(errorData => {
-                        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                        console.error('❌ Ошибка сервера:', errorData);
+                        let errorDetail = 'Неизвестная ошибка сервера';
+                        
+                        if (errorData.detail) {
+                            errorDetail = errorData.detail;
+                        } else if (errorData.message) {
+                            errorDetail = errorData.message;
+                        } else if (typeof errorData === 'string') {
+                            errorDetail = errorData;
+                        } else {
+                            errorDetail = JSON.stringify(errorData);
+                        }
+                        
+                        throw new Error(errorDetail);
                     });
                 }
                 return response.json();
@@ -996,7 +1016,17 @@
             })
             .catch(error => {
                 console.error('Ошибка:', error);
-                alert('Ошибка при создании заказа: ' + error.message);
+                let errorMessage = 'Неизвестная ошибка';
+                
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (typeof error === 'object') {
+                    errorMessage = JSON.stringify(error);
+                } else {
+                    errorMessage = String(error);
+                }
+                
+                alert('Ошибка при создании заказа: ' + errorMessage);
             });
         });
         

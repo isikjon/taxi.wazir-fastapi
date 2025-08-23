@@ -20,6 +20,7 @@ from pathlib import Path
 from math import ceil
 from contextlib import asynccontextmanager
 import hashlib
+from geopy.distance import geodesic
 
 # Настройка подробного логирования
 logging.basicConfig(
@@ -161,6 +162,21 @@ class CancelOrderRequest(BaseModel):
     cancelled_by: str  # "client" или "driver"
     reason: Optional[str] = None
 
+# Модель для обновления позиции водителя
+class UpdateDriverLocationRequest(BaseModel):
+    driver_id: int
+    latitude: float
+    longitude: float
+    order_id: Optional[int] = None
+
+# Модель для завершения заказа с прогрессом
+class CompleteOrderRequest(BaseModel):
+    order_id: int
+    driver_id: int
+    completion_type: str  # "full" или "partial"
+    final_latitude: Optional[float] = None
+    final_longitude: Optional[float] = None
+
 # Функция для создания JWT токена
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -171,6 +187,74 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jose.jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+# Функция для расчета расстояния между двумя точками в километрах
+def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Рассчитывает расстояние между двумя точками в километрах"""
+    if not all([lat1, lng1, lat2, lng2]):
+        return 0.0
+    
+    try:
+        point1 = (lat1, lng1)
+        point2 = (lat2, lng2)
+        distance = geodesic(point1, point2).kilometers
+        return round(distance, 3)
+    except Exception as e:
+        logger.error(f"Ошибка расчета расстояния: {e}")
+        return 0.0
+
+# Функция для расчета прогресса выполнения заказа
+def calculate_order_progress(order, current_lat: float, current_lng: float) -> dict:
+    """Рассчитывает прогресс выполнения заказа"""
+    
+    if not all([order.origin_lat, order.origin_lng, order.destination_lat, order.destination_lng]):
+        return {"progress": 0.0, "completed_distance": 0.0, "remaining_distance": 0.0}
+    
+    # Общее расстояние маршрута
+    total_distance = order.total_distance
+    if not total_distance:
+        total_distance = calculate_distance(
+            order.origin_lat, order.origin_lng,
+            order.destination_lat, order.destination_lng
+        )
+        if total_distance == 0:
+            return {"progress": 0.0, "completed_distance": 0.0, "remaining_distance": 0.0}
+    
+    # Расстояние от текущей позиции до пункта назначения
+    remaining_distance = calculate_distance(
+        current_lat, current_lng,
+        order.destination_lat, order.destination_lng
+    )
+    
+    # Пройденное расстояние
+    completed_distance = max(0, total_distance - remaining_distance)
+    
+    # Процент выполнения (максимум 100%)
+    progress_percentage = min(100.0, (completed_distance / total_distance) * 100) if total_distance > 0 else 0.0
+    
+    return {
+        "progress": round(progress_percentage, 2),
+        "completed_distance": round(completed_distance, 3),
+        "remaining_distance": round(remaining_distance, 3),
+        "total_distance": round(total_distance, 3)
+    }
+
+# Функция для расчета фактической оплаты с учетом прогресса
+def calculate_actual_payment(base_price: float, progress_percentage: float, min_percentage: float = 10.0) -> float:
+    """Рассчитывает фактическую оплату с учетом прогресса выполнения заказа"""
+    if not base_price or base_price <= 0:
+        return 0.0
+    
+    # Минимальная оплата (например, 10% от общей суммы)
+    min_payment = base_price * (min_percentage / 100)
+    
+    # Оплата по прогрессу
+    progress_payment = base_price * (progress_percentage / 100)
+    
+    # Возвращаем максимум между минимальной оплатой и оплатой по прогрессу
+    actual_payment = max(min_payment, progress_payment)
+    
+    return round(actual_payment, 2)
 
 
 @app.get("/driver/", response_class=HTMLResponse)
@@ -2722,7 +2806,7 @@ async def find_driver_by_phone(request: Request, db: Session = Depends(get_db)):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 @app.get("/api/driver/{driver_id}/profile")
-async def get_driver_profile(driver_id: str, db: Session = Depends(get_db)):
+async def get_driver_profile(driver_id: int, db: Session = Depends(get_db)):
     """
     Получение данных профиля водителя для отображения в профиле
     """
@@ -2745,7 +2829,7 @@ async def get_driver_profile(driver_id: str, db: Session = Depends(get_db)):
             car_data = {
                 "brand": car.brand,
                 "model": car.model,
-                "number": car.number,
+                "number": car.license_plate,
                 "sts": car.sts if hasattr(car, 'sts') else None
             }
         
@@ -5316,6 +5400,7 @@ async def create_order_from_form(
     try:
         logger.info(f"📝 Создание заказа: {order_number}")
         logger.info(f"📊 Данные заказа: driver_id={driver_id}, tariff={tariff}, price={price}")
+        logger.info(f"📊 Все данные: order_date={order_date}, order_time={order_time}, origin={origin}, destination={destination}")
         
         # Проверяем существование водителя если он выбран
         if driver_id and driver_id != '':
@@ -5385,6 +5470,8 @@ async def create_order_from_form(
     except Exception as e:
         logger.error(f"❌ Ошибка создания заказа: {e}")
         logger.error(f"🔍 Детали ошибки: {type(e).__name__}: {str(e)}")
+        import traceback
+        logger.error(f"🔍 Стек ошибки: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
             detail=f"Ошибка создания заказа: {str(e)}"
@@ -6192,6 +6279,193 @@ async def get_order_status(order_id: int, db: Session = Depends(get_db)):
         
     except Exception as e:
         logger.error(f"❌ Ошибка получения статуса заказа: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
+        )
+
+# API для обновления позиции водителя
+@app.post("/api/driver/update-location", response_class=JSONResponse)
+async def update_driver_location(request: UpdateDriverLocationRequest, db: Session = Depends(get_db)):
+    """Обновление позиции водителя и расчет прогресса заказа"""
+    try:
+        # Находим водителя
+        driver = db.query(models.Driver).filter(models.Driver.id == request.driver_id).first()
+        if not driver:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Водитель не найден"}
+            )
+        
+        # Обновляем позицию водителя
+        driver.current_lat = request.latitude
+        driver.current_lng = request.longitude
+        driver.last_location_update = datetime.now()
+        driver.is_online = True
+        
+        response_data = {
+            "success": True,
+            "driver_id": driver.id,
+            "location_updated": True
+        }
+        
+        # Если указан заказ, рассчитываем прогресс
+        if request.order_id:
+            order = db.query(models.Order).filter(
+                models.Order.id == request.order_id,
+                models.Order.driver_id == request.driver_id
+            ).first()
+            
+            if order and order.status in ["Выполняется", "В пути"]:
+                # Рассчитываем прогресс
+                progress_data = calculate_order_progress(order, request.latitude, request.longitude)
+                
+                # Обновляем данные заказа
+                order.completed_distance = progress_data["completed_distance"]
+                order.progress_percentage = progress_data["progress"]
+                
+                # Рассчитываем фактическую оплату
+                if order.price:
+                    actual_payment = calculate_actual_payment(order.price, progress_data["progress"])
+                    order.actual_price = actual_payment
+                
+                response_data.update({
+                    "order_progress": {
+                        "progress_percentage": progress_data["progress"],
+                        "completed_distance": progress_data["completed_distance"],
+                        "remaining_distance": progress_data["remaining_distance"],
+                        "total_distance": progress_data["total_distance"],
+                        "actual_payment": order.actual_price
+                    }
+                })
+        
+        db.commit()
+        return JSONResponse(content=response_data)
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка обновления позиции водителя: {str(e)}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
+        )
+
+# API для завершения заказа с учетом прогресса
+@app.post("/api/order/complete-with-progress", response_class=JSONResponse)
+async def complete_order_with_progress(request: CompleteOrderRequest, db: Session = Depends(get_db)):
+    """Завершение заказа с расчетом фактической оплаты по прогрессу"""
+    try:
+        # Находим заказ
+        order = db.query(models.Order).filter(
+            models.Order.id == request.order_id,
+            models.Order.driver_id == request.driver_id
+        ).first()
+        
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Заказ не найден"}
+            )
+        
+        # Находим водителя
+        driver = db.query(models.Driver).filter(models.Driver.id == request.driver_id).first()
+        if not driver:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Водитель не найден"}
+            )
+        
+        # Обновляем позицию если указана
+        if request.final_latitude and request.final_longitude:
+            driver.current_lat = request.final_latitude
+            driver.current_lng = request.final_longitude
+            driver.last_location_update = datetime.now()
+            
+            # Рассчитываем финальный прогресс
+            progress_data = calculate_order_progress(order, request.final_latitude, request.final_longitude)
+            order.completed_distance = progress_data["completed_distance"]
+            order.progress_percentage = progress_data["progress"]
+        
+        # Рассчитываем фактическую оплату
+        if order.price:
+            if request.completion_type == "full":
+                # Полное завершение - 100% оплаты
+                order.actual_price = order.price
+                order.progress_percentage = 100.0
+            else:
+                # Частичное завершение - оплата по прогрессу
+                actual_payment = calculate_actual_payment(order.price, order.progress_percentage or 0.0)
+                order.actual_price = actual_payment
+        
+        # Обновляем статус заказа
+        order.status = "Завершен"
+        order.completed_at = datetime.now()
+        
+        # Обновляем баланс водителя
+        if order.actual_price:
+            driver.balance += order.actual_price
+        
+        db.commit()
+        
+        return JSONResponse(content={
+            "success": True,
+            "order_id": order.id,
+            "completion_type": request.completion_type,
+            "progress_percentage": order.progress_percentage,
+            "base_price": order.price,
+            "actual_payment": order.actual_price,
+            "driver_balance": driver.balance,
+            "message": f"Заказ завершен на {order.progress_percentage:.1f}%. Получено: {order.actual_price:.2f} сом"
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка завершения заказа: {str(e)}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
+        )
+
+# API для получения прогресса заказа
+@app.get("/api/order/{order_id}/progress", response_class=JSONResponse)
+async def get_order_progress(order_id: int, db: Session = Depends(get_db)):
+    """Получение текущего прогресса выполнения заказа"""
+    try:
+        order = db.query(models.Order).filter(models.Order.id == order_id).first()
+        if not order:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Заказ не найден"}
+            )
+        
+        # Если есть водитель, получаем его текущую позицию
+        current_progress = 0.0
+        if order.driver and order.driver.current_lat and order.driver.current_lng:
+            progress_data = calculate_order_progress(
+                order, 
+                order.driver.current_lat, 
+                order.driver.current_lng
+            )
+            current_progress = progress_data["progress"]
+        
+        return JSONResponse(content={
+            "success": True,
+            "order_id": order.id,
+            "status": order.status,
+            "progress_percentage": order.progress_percentage or current_progress,
+            "completed_distance": order.completed_distance or 0.0,
+            "total_distance": order.total_distance or 0.0,
+            "base_price": order.price,
+            "actual_price": order.actual_price,
+            "driver_location": {
+                "lat": order.driver.current_lat if order.driver else None,
+                "lng": order.driver.current_lng if order.driver else None,
+                "last_update": order.driver.last_location_update.isoformat() if order.driver and order.driver.last_location_update else None
+            } if order.driver else None
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения прогресса заказа: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "error": f"Ошибка сервера: {str(e)}"}

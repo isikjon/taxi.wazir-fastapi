@@ -37,6 +37,12 @@ class Driver(Base):
     # Адрес водителя
     address = Column(String(255), nullable=True)
     
+    # Поля для отслеживания позиции водителя
+    current_lat = Column(Float, nullable=True)  # Текущая широта
+    current_lng = Column(Float, nullable=True)  # Текущая долгота
+    last_location_update = Column(DateTime, nullable=True)  # Время последнего обновления позиции
+    is_online = Column(Boolean, default=False)  # Статус "на линии"
+    
     cars = relationship("Car", back_populates="driver")
     
     orders = relationship("Order", back_populates="driver")
@@ -108,6 +114,18 @@ class Order(Base):
     tariff = Column(String(50), nullable=True)  # Тариф (Эконом, Комфорт, и т.д.)
     notes = Column(Text, nullable=True)  # Примечание от диспетчера
     payment_method = Column(String(50), nullable=True)  # Способ оплаты
+    
+    # Поля для отслеживания прогресса заказа
+    origin_lat = Column(Float, nullable=True)  # Широта точки отправления
+    origin_lng = Column(Float, nullable=True)  # Долгота точки отправления
+    destination_lat = Column(Float, nullable=True)  # Широта точки назначения
+    destination_lng = Column(Float, nullable=True)  # Долгота точки назначения
+    total_distance = Column(Float, nullable=True)  # Общее расстояние маршрута в км
+    completed_distance = Column(Float, default=0.0)  # Пройденное расстояние в км
+    progress_percentage = Column(Float, default=0.0)  # Процент выполнения заказа (0-100)
+    actual_price = Column(Float, nullable=True)  # Фактическая оплата с учетом прогресса
+    started_at = Column(DateTime, nullable=True)  # Время начала поездки
+    completed_at = Column(DateTime, nullable=True)  # Время завершения поездки
     
     # Связь с водителем
     driver = relationship("Driver", back_populates="orders")

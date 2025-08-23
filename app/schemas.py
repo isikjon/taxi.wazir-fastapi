@@ -70,47 +70,47 @@ class Driver(DriverBase):
 
 # Order schemas
 class OrderBase(BaseModel):
-    order_number: str = Field(..., min_length=1, description="Номер заказа")
-    time: str = Field(..., min_length=1, description="Время заказа")
-    origin: str = Field(..., min_length=1, description="Адрес отправления")
-    destination: str = Field(..., min_length=1, description="Адрес назначения")
-    driver_id: Optional[int] = None  # Водитель может быть не назначен при создании заказа
-    status: Optional[str] = "Ожидает водителя"
-    price: Optional[float] = None
-    tariff: Optional[str] = Field(..., min_length=1, description="Тариф")
-    notes: Optional[str] = None
-    payment_method: Optional[str] = Field(..., min_length=1, description="Способ оплаты")
+    order_number: Optional[str] = Field(None, min_length=1, description="Номер заказа")
+    time: Optional[str] = Field(None, min_length=1, description="Время заказа")
+    origin: Optional[str] = Field(None, min_length=1, description="Адрес отправления")
+    destination: Optional[str] = Field(None, min_length=1, description="Адрес назначения")
+    driver_id: Optional[int] = Field(None, ge=1, description="ID водителя")
+    status: Optional[str] = Field("Ожидает водителя", description="Статус заказа")
+    price: Optional[float] = Field(None, ge=0, description="Стоимость заказа")
+    tariff: Optional[str] = Field(None, min_length=1, description="Тариф")
+    notes: Optional[str] = Field(None, description="Примечание к заказу")
+    payment_method: Optional[str] = Field(None, min_length=1, description="Способ оплаты")
     
     # Валидаторы
     @validator('order_number')
     def order_number_must_not_be_empty(cls, v):
-        if not v or not v.strip():
+        if v is not None and (not v or not v.strip()):
             raise ValueError('Номер заказа не может быть пустым')
-        return v.strip()
+        return v.strip() if v else None
     
     @validator('origin')
     def origin_must_not_be_empty(cls, v):
-        if not v or not v.strip():
+        if v is not None and (not v or not v.strip()):
             raise ValueError('Адрес отправления не может быть пустым')
-        return v.strip()
+        return v.strip() if v else None
     
     @validator('destination')
     def destination_must_not_be_empty(cls, v):
-        if not v or not v.strip():
+        if v is not None and (not v or not v.strip()):
             raise ValueError('Адрес назначения не может быть пустым')
-        return v.strip()
+        return v.strip() if v else None
     
     @validator('tariff')
     def tariff_must_not_be_empty(cls, v):
-        if not v or not v.strip():
+        if v is not None and (not v or not v.strip()):
             raise ValueError('Тариф не может быть пустым')
-        return v.strip()
+        return v.strip() if v else None
     
     @validator('payment_method')
     def payment_method_must_not_be_empty(cls, v):
-        if not v or not v.strip():
+        if v is not None and (not v or not v.strip()):
             raise ValueError('Способ оплаты не может быть пустым')
-        return v.strip()
+        return v.strip() if v else None
 
 class OrderCreate(OrderBase):
     pass

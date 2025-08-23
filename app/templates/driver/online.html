@@ -6,6 +6,9 @@
     <title>На линии - WAZIR</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
     <style>
+        /* Импорт шрифта Montserrat */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        
         body {
             margin: 0;
             padding: 0;
@@ -13,6 +16,8 @@
             overflow: hidden;
             font-family: 'Montserrat', sans-serif;
             font-weight: 400;
+            background: #1a1a1a;
+            color: #ffffff;
         }
         
         /* Карта на весь экран */
@@ -36,22 +41,26 @@
             top: 0;
             left: 0;
             right: 0;
-            background: #606060;
-            color: white;
-            padding: 12px 20px;
+            background: #2a2a2a;
+            color: #ffffff;
+            padding: 16px 20px;
             z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
+            font-weight: 500;
+            border-bottom: 1px solid #404040;
         }
         
         .status-text {
-            font-weight: 400;
+            font-weight: 500;
+            color: #ffffff;
         }
         
         .balance-text {
-            font-weight: 400;
+            font-weight: 500;
+            color: #cccccc;
         }
         
         /* Блок нового заказа */
@@ -60,12 +69,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: #2a2a2a;
             z-index: 1001;
             transform: translateY(100%);
             transition: transform 0.3s ease;
             border-radius: 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            border-top: 1px solid #404040;
         }
 
         .order-popup.show {
@@ -74,11 +84,12 @@
         
         /* Блоки заказа */
         .order-block {
-            background: #f9f9f9;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
+            background: #2a2a2a;
+            padding: 20px;
+            border-bottom: 1px solid #404040;
             font-size: 14px;
             font-weight: 400;
+            color: #ffffff;
         }
         
         .order-block:last-child {
@@ -89,57 +100,86 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 16px;
         }
         
         .order-activity-price {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .order-origin,
+        .order-destination {
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .order-origin strong,
+        .order-destination strong {
+            color: #cccccc;
+            font-weight: 500;
+            margin-right: 8px;
         }
         
         .activity-badge {
-            background: #4CAF50;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+            background: #404040;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 0;
             font-size: 12px;
             font-weight: 500;
+            border: 1px solid #606060;
         }
         
         .order-price {
             font-weight: 600;
-            color: #2196F3;
+            color: #ffffff;
             font-size: 16px;
         }
         
         .order-actions {
             display: flex;
-            gap: 10px;
-            padding: 15px 20px;
+            gap: 12px;
+            padding: 20px;
+            background: #1a1a1a;
         }
         
         .btn-accept {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            background: #404040;
+            color: #ffffff;
+            border: 1px solid #606060;
+            padding: 16px 24px;
+            border-radius: 0;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             flex: 1;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-accept:hover {
+            background: #505050;
         }
         
         .btn-reject {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            background: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #606060;
+            padding: 16px 24px;
+            border-radius: 0;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             flex: 1;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-reject:hover {
+            background: #404040;
         }
         
         /* Навигационная панель */
@@ -148,14 +188,15 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: #2a2a2a;
             z-index: 1001;
             transform: translateY(100%);
             transition: transform 0.3s ease;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
-            padding: 20px;
+            border-radius: 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            padding: 24px;
             display: none;
+            border-top: 1px solid #404040;
         }
         
         .navigation-panel.show {
@@ -166,25 +207,28 @@
         .instruction-main {
             font-size: 18px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
+            color: #ffffff;
+            margin-bottom: 12px;
             text-align: center;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .instruction-sub {
             font-size: 14px;
-            color: #666;
+            color: #cccccc;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .trip-info {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 12px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 0;
+            border: 1px solid #404040;
         }
         
         .trip-info-item {
@@ -193,26 +237,34 @@
         
         .trip-info-label {
             font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
+            color: #cccccc;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .trip-info-value {
             font-size: 16px;
             font-weight: 600;
-            color: #333;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .btn-complete {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
+            background: #404040;
+            color: #ffffff;
+            border: 1px solid #606060;
+            padding: 16px;
+            border-radius: 0;
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
             width: 100%;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-complete:hover {
+            background: #505050;
         }
         
         /* Уведомления о геолокации */
@@ -221,13 +273,15 @@
             top: 80px;
             left: 20px;
             right: 20px;
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 0;
+            padding: 16px;
             z-index: 1002;
             display: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .geolocation-notification.show {
@@ -235,15 +289,15 @@
         }
         
         .geolocation-notification.success {
-            background: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
+            background: #1a1a1a;
+            border-color: #404040;
+            color: #ffffff;
         }
         
         .geolocation-notification.error {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
+            background: #2a2a2a;
+            border-color: #606060;
+            color: #ffffff;
         }
         
         .geolocation-notification .close-btn {
@@ -252,7 +306,8 @@
             border: none;
             font-size: 18px;
             cursor: pointer;
-            color: inherit;
+            color: #cccccc;
+            font-family: 'Montserrat', sans-serif;
         }
         
         /* Индикатор статуса GPS */
@@ -262,7 +317,7 @@
             right: 20px;
             width: 40px;
             height: 40px;
-            border-radius: 50%;
+            border-radius: 0;
             z-index: 1003;
             display: flex;
             align-items: center;
@@ -273,16 +328,16 @@
         }
         
         .gps-status.searching {
-            background: #ff9800;
+            background: #606060;
             animation: pulse 2s infinite;
         }
         
         .gps-status.active {
-            background: #4CAF50;
+            background: #404040;
         }
         
         .gps-status.error {
-            background: #f44336;
+            background: #2a2a2a;
         }
         
         @keyframes pulse {
@@ -297,66 +352,42 @@
             top: 60px;
             left: 20px;
             right: 20px;
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 0;
+            padding: 16px;
             z-index: 999;
             display: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid #404040;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .progress-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            color: #ffffff;
         }
         
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
+            background: #1a1a1a;
+            border-radius: 0;
             overflow: hidden;
+            border: 1px solid #404040;
         }
         
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #2196F3);
-            border-radius: 4px;
+            background: #606060;
+            border-radius: 0;
             transition: width 0.3s ease;
         }
         
-        /* Уведомления о геолокации */
-        .geolocation-notification {
-            position: fixed;
-            top: 80px;
-            left: 20px;
-            right: 20px;
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            z-index: 1002;
-            display: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .geolocation-notification.show {
-            display: block;
-        }
-        
-        .geolocation-notification.success {
-            background: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
-        }
-        
-        .geolocation-notification.error {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
+
         
         .geolocation-notification .close-btn {
             float: right;
@@ -439,6 +470,138 @@
             font-size: 12px;
             opacity: 0.6;
             margin-top: 5px;
+            color: #cccccc;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        /* Индикатор скорости */
+        .speed-indicator {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: #2a2a2a;
+            color: #ffffff;
+            padding: 16px;
+            z-index: 1003;
+            border: 1px solid #404040;
+            border-radius: 0;
+            font-family: 'Montserrat', sans-serif;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .speed-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        
+        .speed-unit {
+            font-size: 14px;
+            color: #cccccc;
+            margin-bottom: 8px;
+        }
+        
+        /* Мобильная адаптивность */
+        @media (max-width: 768px) {
+            .status-bar {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+            
+            .order-popup {
+                padding: 0;
+            }
+            
+            .order-block {
+                padding: 16px;
+            }
+            
+            .order-actions {
+                padding: 16px;
+                gap: 8px;
+            }
+            
+            .btn-accept,
+            .btn-reject {
+                padding: 14px 20px;
+                font-size: 13px;
+            }
+            
+            .navigation-panel {
+                padding: 20px;
+            }
+            
+            .trip-info {
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .speed-indicator {
+                top: 70px;
+                left: 16px;
+                padding: 12px;
+                min-width: 70px;
+            }
+            
+            .speed-value {
+                font-size: 20px;
+            }
+            
+            .gps-status {
+                top: 70px;
+                right: 16px;
+                width: 36px;
+                height: 36px;
+            }
+        }
+        
+        /* Темная тема для карты */
+        .map-container {
+            filter: brightness(0.8) contrast(1.2);
+        }
+        
+        /* Анимации для плавности */
+        .order-popup,
+        .navigation-panel {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Фокус для кнопок */
+        .btn-accept:focus,
+        .btn-reject:focus,
+        .btn-complete:focus {
+            outline: 2px solid #606060;
+            outline-offset: 2px;
+        }
+        
+        /* Улучшение читаемости */
+        .order-block {
+            line-height: 1.5;
+        }
+        
+        .order-duration-distance span,
+        .order-activity-price span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Иконки для лучшего восприятия */
+        .order-duration-distance span:first-child::before {
+            content: "⏱️";
+            margin-right: 4px;
+        }
+        
+        .order-duration-distance span:last-child::before {
+            content: "📍";
+            margin-right: 4px;
+        }
+        
+        .order-activity-price span:last-child::before {
+            content: "💵";
+            margin-right: 4px;
         }
     </style>
 </head>
@@ -487,14 +650,24 @@
     <div id="orderPopup" class="order-popup">
         <div class="order-block">
             <div class="order-duration-distance">
-                <span>⏱️ <span id="orderDuration">5 мин</span></span>
-                <span>📍 <span id="orderDistance">1.2 км</span></span>
+                <span><span id="orderDuration">5 мин</span></span>
+                <span><span id="orderDistance">1.2 км</span></span>
             </div>
         </div>
         <div class="order-block">
             <div class="order-activity-price">
                 <span class="activity-badge">Активность <span id="orderActivity">49</span></span>
-                <span class="order-price">💵 <span id="orderPrice">150</span> сом</span>
+                <span class="order-price"><span id="orderPrice">150</span> сом</span>
+            </div>
+        </div>
+        <div class="order-block">
+            <div class="order-origin">
+                <strong>Откуда:</strong> <span id="orderOrigin">Адрес отправления</span>
+            </div>
+        </div>
+        <div class="order-block">
+            <div class="order-destination">
+                <strong>Куда:</strong> <span id="orderDestination">Адрес назначения</span>
             </div>
         </div>
         <div class="order-actions">
@@ -530,6 +703,8 @@
         let map;
         let driverMarker;
         let currentOrder = null;
+        let lastLocationUpdateTime = 0;
+        const LOCATION_UPDATE_INTERVAL = 10000; // 10 секунд
         let driverId = parseInt('{{ driver_id|default(1) }}') || 1;
         let mapInitialized = false;
         let isOnline = true;
@@ -964,6 +1139,9 @@
             
             console.log('📍 Позиция обновлена:', newPosition, 'точность:', positionAccuracy, 'м');
             
+            // Отправляем позицию на сервер
+            updateDriverLocationOnServer(newPosition);
+            
             // Обновляем маркер на карте
             updateDriverMarkerOnMap();
             
@@ -976,6 +1154,70 @@
             
             // Сбрасываем счетчик ошибок
             geolocationErrorCount = 0;
+        }
+
+        // Отправка позиции водителя на сервер
+        function updateDriverLocationOnServer(position) {
+            const currentTime = Date.now();
+            
+            // Ограничиваем частоту отправки данных
+            if (currentTime - lastLocationUpdateTime < LOCATION_UPDATE_INTERVAL) {
+                return;
+            }
+            
+            lastLocationUpdateTime = currentTime;
+            
+            const locationData = {
+                driver_id: driverId,
+                latitude: position.lat,
+                longitude: position.lng,
+                order_id: currentOrder ? currentOrder.id : null
+            };
+            
+            console.log('📡 Отправляем позицию на сервер:', locationData);
+            
+            fetch('/api/driver/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(locationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Позиция обновлена на сервере');
+                    
+                    // Если есть данные о прогрессе заказа, обновляем UI
+                    if (data.order_progress) {
+                        updateOrderProgressUI(data.order_progress);
+                    }
+                } else {
+                    console.error('❌ Ошибка обновления позиции:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка отправки позиции на сервер:', error);
+            });
+        }
+        
+        // Обновление UI с прогрессом заказа
+        function updateOrderProgressUI(progressData) {
+            console.log('📊 Обновляем прогресс заказа:', progressData);
+            
+            // Обновляем прогресс бар если он есть
+            const progressBar = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            if (progressBar && progressPercent) {
+                progressBar.style.width = `${progressData.progress_percentage}%`;
+                progressPercent.textContent = `${progressData.progress_percentage.toFixed(1)}%`;
+            }
+            
+            // Можно добавить уведомление о текущей оплате
+            if (progressData.actual_payment) {
+                console.log(`💰 Текущая оплата: ${progressData.actual_payment} сом (${progressData.progress_percentage.toFixed(1)}%)`);
+            }
         }
 
         // Обработка ошибок геолокации
@@ -1300,24 +1542,46 @@
                 activity: '4+',
                 price: order.price ? `${order.price} СОМ` : '433 СОМ',
                 origin: order.origin || 'Не указано',
+                destination: order.destination || 'Не указано',
                 comment: order.notes || 'Комментарий отсутствует'
             };
             
-            document.getElementById('orderDuration').textContent = orderData.duration;
-            document.getElementById('orderDistance').textContent = orderData.distance;
-            document.getElementById('orderSubtitle').textContent = orderData.subtitle;
-            document.getElementById('activityPoints').textContent = orderData.activity;
-            document.getElementById('orderPrice').textContent = orderData.price;
-            document.getElementById('orderOrigin').textContent = orderData.origin;
-            document.getElementById('orderComment').textContent = orderData.comment;
+            // Безопасное обновление элементов с проверкой существования
+            const updateElement = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                } else {
+                    console.warn(`⚠️ Элемент ${id} не найден в DOM`);
+                }
+            };
+            
+            updateElement('orderDuration', orderData.duration);
+            updateElement('orderDistance', orderData.distance);
+            updateElement('orderSubtitle', orderData.subtitle);
+            updateElement('activityPoints', orderData.activity);
+            updateElement('orderPrice', orderData.price);
+            updateElement('orderOrigin', orderData.origin);
+            updateElement('orderDestination', orderData.destination);
+            updateElement('orderComment', orderData.comment);
             
             currentOrder = orderData;
             
             // Показываем блок заказа
-            document.getElementById('orderPopup').classList.add('show');
+            const orderPopup = document.getElementById('orderPopup');
+            if (orderPopup) {
+                orderPopup.classList.add('show');
+            } else {
+                console.warn('⚠️ Элемент orderPopup не найден в DOM');
+            }
             
             // Меняем статус на "Пропустить"  
-            document.getElementById('statusText').textContent = 'Пропустить';
+            const statusText = document.getElementById('statusText');
+            if (statusText) {
+                statusText.textContent = 'Пропустить';
+            } else {
+                console.warn('⚠️ Элемент statusText не найден в DOM');
+            }
         }
 
         function acceptOrder() {
@@ -1672,19 +1936,99 @@
         }
 
         function completeTripEarly() {
-            console.log('🏁 Досрочное завершение поездки');
+            console.log('🏁 Досрочное завершение поездки на', Math.round(routeProgress) + '%');
             
-            const completionPercentage = Math.max(routeProgress * 100, 50); // минимум 50%
-            const finalPrice = Math.round((parseInt(currentTrip.price) || 433) * (completionPercentage / 100));
+            if (!currentTrip || !currentLocation) {
+                console.error('❌ Нет данных для завершения поездки');
+                return;
+            }
             
-            showTripResult(finalPrice, completionPercentage);
+            // Отправляем запрос с текущими координатами и типом завершения
+            const requestData = {
+                order_id: currentTrip.orderId,
+                driver_id: driverId,
+                completion_type: "partial",
+                final_latitude: currentLocation.lat,
+                final_longitude: currentLocation.lng
+            };
+            
+            console.log('📤 Отправляем завершение поездки:', requestData);
+            
+            fetch('/api/order/complete-with-progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Поездка завершена:', data);
+                    
+                    // Обновляем баланс водителя
+                    driverBalance = data.driver_balance;
+                    updateStatusBar();
+                    
+                    // Показываем результат
+                    showTripResult(data.actual_payment, data.progress_percentage, data);
+                } else {
+                    console.error('❌ Ошибка завершения поездки:', data.error);
+                    alert('Ошибка завершения поездки: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка запроса завершения поездки:', error);
+                alert('Ошибка сети при завершении поездки: ' + error.message);
+            });
         }
 
         function completeTripAutomatically() {
             console.log('🏁 Автоматическое завершение поездки');
             
-            const fullPrice = parseInt(currentTrip.price) || 433;
-            showTripResult(fullPrice, 100);
+            if (!currentTrip || !currentLocation) {
+                console.error('❌ Нет данных для автоматического завершения поездки');
+                return;
+            }
+            
+            // Отправляем запрос с текущими координатами и полным завершением
+            const requestData = {
+                order_id: currentTrip.orderId,
+                driver_id: driverId,
+                completion_type: "full",
+                final_latitude: currentLocation.lat,
+                final_longitude: currentLocation.lng
+            };
+            
+            console.log('📤 Отправляем автоматическое завершение поездки:', requestData);
+            
+            fetch('/api/order/complete-with-progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Поездка автоматически завершена:', data);
+                    
+                    // Обновляем баланс водителя
+                    driverBalance = data.driver_balance;
+                    updateStatusBar();
+                    
+                    // Показываем результат
+                    showTripResult(data.actual_payment, data.progress_percentage, data);
+                } else {
+                    console.error('❌ Ошибка автоматического завершения поездки:', data.error);
+                    alert('Ошибка завершения поездки: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка запроса автоматического завершения поездки:', error);
+                alert('Ошибка сети при завершении поездки: ' + error.message);
+            });
         }
 
         function showTripResult(finalPrice, completionPercentage, data = null) {
