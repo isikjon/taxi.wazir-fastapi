@@ -15,6 +15,34 @@
                 body {
                     padding: 100px 0;
                 }
+                
+                /* Убираем border-radius у кнопок */
+                .main__btn, button {
+                    border-radius: 0px !important;
+                }
+                
+                /* Спиннер загрузки */
+                .spinner {
+                    display: none;
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #f3f3f3;
+                    border-top: 2px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin-left: 10px;
+                }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                .btn-with-spinner {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
         </style>
     </head>
     <body>
@@ -45,7 +73,7 @@
                         <div class="register__tabs">
                             <div class="tabs">
                                 <button class="active" style="width: 50%;">Пользователь</button>
-                                <button style="width: 50%;"><a href="/driver/auth/1"></a>Водитель</button>
+                                <button style="width: 50%;" onclick="window.location.href='/driver/auth/1'">Водитель</button>
                             </div>
                         </div>
                         <div class="register__form">
@@ -54,7 +82,10 @@
                                     name="phone" required
                                     style="padding-right: 60px; width: 100%;">
                                 <button type="submit"
-                                    class="main__btn">Продолжить</button>
+                                    class="main__btn btn-with-spinner">
+                                    <span class="btn-text">Продолжить</span>
+                                    <div class="spinner"></div>
+                                </button>
                             </form>
                             <div class="register__block">
                                 <a href="#">
@@ -105,8 +136,17 @@
                     e.preventDefault();
                     const phoneNumber = iti.getNumber();
                     
+                    // Показываем спиннер
+                    $('.spinner').show();
+                    $('.btn-text').text('Отправка...');
+                    $('.main__btn').prop('disabled', true);
+                    
                     localStorage.setItem('user_phone', phoneNumber);
-                    console.log('Телефон сохранен в localStorage:', phoneNumber);
+                    console.log('📱 Телефон сохранен в localStorage:', phoneNumber);
+                    console.log('📋 Текущее состояние localStorage:', {
+                        user_phone: localStorage.getItem('user_phone'),
+                        keys: Object.keys(localStorage)
+                    });
                     
                     $.ajax({
                         url: '/api/user/login',
@@ -114,10 +154,16 @@
                         contentType: 'application/json',
                         data: JSON.stringify({ phone: phoneNumber }),
                         success: function(response) {
+                            console.log('Код отправлен:', response);
+                            // Перенаправляем на следующий шаг
                             window.location.href = "{{ url_for('user_auth_step2') }}?phone=" + encodeURIComponent(phoneNumber);
                         },
                         error: function(xhr) {
-                            // Обработка ошибок
+                            console.error('Ошибка отправки:', xhr);
+                            // Скрываем спиннер и восстанавливаем кнопку
+                            $('.spinner').hide();
+                            $('.btn-text').text('Продолжить');
+                            $('.main__btn').prop('disabled', false);
                             alert('Произошла ошибка при отправке кода. Пожалуйста, попробуйте снова.');
                         }
                     });

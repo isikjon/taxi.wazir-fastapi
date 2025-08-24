@@ -1878,9 +1878,174 @@
         .method-check.selected {
             color: #606060;
         }
+
+        /* Боковое меню */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -90%;
+            width: 90%;
+            height: 100vh;
+            background-color: #ffffff;
+            z-index: 5000;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .side-menu.menu-open {
+            left: 0;
+        }
+
+        .side-menu-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .side-menu-header {
+            padding: 20px 0;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .user-name {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+            text-align: center;
+        }
+
+        .side-menu-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: #333;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .menu-item:hover {
+            background-color: #606060;
+            color: #ffffff;
+            border-color: #606060;
+        }
+
+        .menu-item:active {
+            background-color: #555;
+            transform: translateY(1px);
+        }
+
+        .menu-text {
+            display: block;
+        }
+
+        .side-menu-footer {
+            padding: 20px 0;
+            border-top: 1px solid #e0e0e0;
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 18px 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 0;
+        }
+
+        .logout-btn:hover {
+            background-color: #ff6b6b;
+            color: #ffffff;
+            border-color: #ff6b6b;
+        }
+
+        .logout-btn:active {
+            background-color: #e55a5a;
+            transform: translateY(1px);
+        }
+
+        /* Overlay для закрытия меню */
+        .side-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 4999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .side-menu-overlay.overlay-visible {
+            display: block;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
+    <!-- Боковое меню -->
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-content">
+            <!-- Заголовок с именем пользователя -->
+            <div class="side-menu-header">
+                <h1 class="user-name" id="userName">Имя Фамилия</h1>
+            </div>
+            
+            <!-- Навигация меню -->
+            <nav class="side-menu-nav">
+                <a href="/user/settings" class="menu-item" onclick="closeSideMenu()">
+                    <span class="menu-text">Настройки</span>
+                </a>
+                <a href="/user/payment" class="menu-item" onclick="closeSideMenu()">
+                    <span class="menu-text">Способ оплаты</span>
+                </a>
+                <a href="/user/history" class="menu-item">
+                    <span class="menu-text">История заказов</span>
+                </a>
+                <a href="/user/become-driver" class="menu-item">
+                    <span class="menu-text">Стать водителем</span>
+                </a>
+                <a href="/user/support" class="menu-item">
+                    <span class="menu-text">Служба поддержки</span>
+                </a>
+                <a href="/user/info" class="menu-item">
+                    <span class="menu-text">Информация</span>
+                </a>
+            </nav>
+            
+            <!-- Кнопка выхода -->
+            <div class="side-menu-footer">
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overlay для закрытия меню -->
+    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeSideMenu()"></div>
+
     <!-- Простой лоадер тарифов -->
     <div id="tariffsLoader" class="tariffs-loader">
         <div class="simple-spinner"></div>
@@ -1889,7 +2054,7 @@
     <!-- Заголовок с поиском -->
     <div class="header">
         <div class="header-top">
-            <button class="menu-btn">☰</button>
+            <button class="menu-btn" onclick="openSideMenu()">☰</button>
             <div class="address-display" id="currentAddress">Ваш адрес</div>
         </div>
         <input type="text" class="search-box" placeholder="Куда едем?" id="searchInput" onclick="openDestinationPopup()" readonly>
@@ -4300,9 +4465,83 @@
             console.log('✅ Скрыт лоадер тарифов');
         }
 
+        // Функции для работы с боковым меню
+        function openSideMenu() {
+            console.log('📱 Открываем боковое меню');
+            document.getElementById('sideMenu').classList.add('menu-open');
+            document.getElementById('sideMenuOverlay').classList.add('overlay-visible');
+        }
+
+        function closeSideMenu() {
+            console.log('❌ Закрываем боковое меню');
+            document.getElementById('sideMenu').classList.remove('menu-open');
+            document.getElementById('sideMenuOverlay').classList.remove('overlay-visible');
+        }
+
+        // Функция выхода из аккаунта
+        function logout() {
+            console.log('🚪 Выход из аккаунта');
+            
+            // Очищаем localStorage
+            localStorage.clear();
+            
+            // Перенаправляем на страницу авторизации
+            window.location.href = '/user/auth/1';
+        }
+
+        // Загрузка имени пользователя из localStorage
+        function loadUserName() {
+            const firstName = localStorage.getItem('user_first_name');
+            const lastName = localStorage.getItem('user_last_name');
+            const userId = localStorage.getItem('user_id');
+            const userPhone = localStorage.getItem('user_phone');
+            
+            console.log('🔍 Загружаем имя пользователя из localStorage:', {
+                firstName: firstName,
+                lastName: lastName,
+                user_id: userId,
+                user_phone: userPhone
+            });
+            
+            // Проверяем все данные пользователя
+            console.log('📋 Все данные в localStorage:', {
+                keys: Object.keys(localStorage),
+                values: Object.fromEntries(
+                    Object.entries(localStorage).filter(([key]) => key.startsWith('user_'))
+                )
+            });
+            
+                            // Если данных нет, но есть ID, попробуем загрузить из БД
+                if (!firstName && !lastName && userId) {
+                    console.log('🔄 Данные не найдены в localStorage, пробуем загрузить из БД...');
+                    loadUserDataFromDB(userId);
+                    return;
+                }
+                
+                if (firstName && lastName) {
+                    document.getElementById('userName').textContent = `${firstName} ${lastName}`;
+                    console.log('✅ Имя пользователя установлено:', `${firstName} ${lastName}`);
+                } else {
+                    // Если имя не найдено, показываем дефолтное
+                    document.getElementById('userName').textContent = 'Пользователь';
+                    console.log('⚠️ Имя не найдено, показываем дефолтное');
+                    
+                    // Показываем дополнительную информацию для отладки
+                    if (userId) {
+                        console.log('⚠️ ID пользователя есть, но имя отсутствует');
+                    }
+                    if (userPhone) {
+                        console.log('⚠️ Телефон есть, но имя отсутствует');
+                    }
+                }
+        }
+
         // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📱 Страница загружена, начинаем инициализацию...');
+            
+            // Загружаем имя пользователя
+            loadUserName();
             
             // Загружаем частые адреса
             loadFrequentAddresses();
@@ -4445,6 +4684,33 @@
                 document.body.classList.add('maps-error');
             };
             document.head.appendChild(script);
+        }
+        
+        // Загрузка данных пользователя из БД
+        async function loadUserDataFromDB(userId) {
+            try {
+                console.log('📡 Загружаем данные пользователя из БД для ID:', userId);
+                
+                const response = await fetch(`/api/user/profile/${userId}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    console.log('📥 Получены данные из БД:', userData);
+                    
+                    if (userData.first_name && userData.last_name) {
+                        // Сохраняем в localStorage
+                        localStorage.setItem('user_first_name', userData.first_name);
+                        localStorage.setItem('user_last_name', userData.last_name);
+                        
+                        // Обновляем отображение
+                        document.getElementById('userName').textContent = `${userData.first_name} ${userData.last_name}`;
+                        console.log('✅ Данные загружены из БД и установлены:', `${userData.first_name} ${userData.last_name}`);
+                    }
+                } else {
+                    console.log('❌ Не удалось загрузить данные из БД, статус:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Ошибка при загрузке данных из БД:', error);
+            }
         }
     </script>
 </body>

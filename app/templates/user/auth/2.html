@@ -8,6 +8,35 @@
             href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
         <link rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+        <style>
+            /* Убираем border-radius у кнопок */
+            .main__btn, button {
+                border-radius: 0px !important;
+            }
+            
+            /* Спиннер загрузки */
+            .spinner {
+                display: none;
+                width: 20px;
+                height: 20px;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-left: 10px;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .btn-with-spinner {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
     </head>
     <body>
         <header>
@@ -50,8 +79,10 @@
                                 </div>
                                 <p class="timer-sms">Код не пришел</p>
                                 <p class="invalid-text">Неверный код</p>
-                                <a class="resend-sms" href="#">Отправить код
-                                    повторно</a>
+                                <button class="resend-sms btn-with-spinner" type="button">
+                                    <span class="btn-text">Отправить код повторно</span>
+                                    <div class="spinner"></div>
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -157,25 +188,47 @@
                             success: function(response) {
                                 // Отладочный вывод всего ответа
                                 console.log('API ответ:', response);
+                                console.log('has_profile:', response.has_profile);
+                                console.log('📱 Текущий телефон из localStorage:', localStorage.getItem('user_phone'));
+                                console.log('📋 Состояние localStorage перед сохранением:', {
+                                    keys: Object.keys(localStorage),
+                                    user_phone: localStorage.getItem('user_phone')
+                                });
                                 
                                 // Сохраняем токен и данные в localStorage
                                 localStorage.setItem('user_access_token', response.access_token);
                                 localStorage.setItem('user_id', response.user_id);
+                                localStorage.setItem('user_phone', formattedPhone);
+                                
+                                console.log('Данные сохранены в localStorage:', {
+                                    user_access_token: response.access_token,
+                                    user_id: response.user_id,
+                                    user_phone: formattedPhone
+                                });
                                 
                                 console.log('Успешная верификация пользователя. Сохранены данные:', {
                                     user_id: response.user_id,
-                                    access_token: response.access_token
+                                    access_token: response.access_token,
+                                    has_profile: response.has_profile
                                 });
                                 
                                 // Проверяем, заполнена ли у пользователя анкета
-                                if (response.has_profile) {
+                                console.log('Тип has_profile:', typeof response.has_profile);
+                                console.log('Значение has_profile:', response.has_profile);
+                                
+                                // Дополнительная проверка на undefined/null
+                                if (response.has_profile === true) {
                                     console.log('Пользователь имеет заполненный профиль, перенаправляем на главную');
                                     // Если есть профиль, перенаправляем на главную страницу пользователя
                                     window.location.href = '/user/profile';
-                                } else {
+                                } else if (response.has_profile === false) {
                                     console.log('Пользователь не заполнил профиль, перенаправляем на заполнение данных');
                                     // Если нет, перенаправляем на заполнение профиля
-                                    window.location.href = '/user/auth/step3?phone=' + encodeURIComponent(phone);
+                                    window.location.href = '/user/auth/3';
+                                } else {
+                                    console.log('has_profile не определен, считаем что профиль не заполнен');
+                                    // Если не определен, считаем что профиль не заполнен
+                                    window.location.href = '/user/auth/3';
                                 }
                             },
                             error: function(xhr) {
@@ -196,6 +249,15 @@
                     e.preventDefault();
                     const phone = $('.active-phone-number').text() || localStorage.getItem('user_phone');
                     
+                    // Показываем спиннер
+                    const $btn = $(this);
+                    const $btnText = $btn.find('.btn-text');
+                    const $spinner = $btn.find('.spinner');
+                    
+                    $spinner.show();
+                    $btnText.text('Отправка...');
+                    $btn.prop('disabled', true);
+                    
                     // Отправляем запрос на повторную отправку кода
                     $.ajax({
                         url: '/api/user/login',
@@ -211,6 +273,14 @@
                             $smsInputs.first().focus();
                             invalidText.hide();
                             startTimer();
+                        },
+                        error: function(xhr) {
+                            console.error('Ошибка повторной отправки:', xhr);
+                            // Скрываем спиннер и восстанавливаем кнопку
+                            $spinner.hide();
+                            $btnText.text('Отправить код повторно');
+                            $btn.prop('disabled', false);
+                            alert('Ошибка при повторной отправке кода. Попробуйте еще раз.');
                         }
                     });
                 });

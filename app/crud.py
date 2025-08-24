@@ -329,37 +329,101 @@ def get_message(db: Session, message_id: int):
 
 def create_driver_user(db: Session, user):
     """Создает нового пользователя-водителя"""
+    print(f"CRUD: Создание пользователя с данными: {user}")
+    
     # Проверяем, является ли user словарем или объектом Pydantic
-    if hasattr(user, 'dict'):
+    if hasattr(user, 'model_dump'):
+        user_data = user.model_dump()
+    elif hasattr(user, 'dict'):
         user_data = user.dict()
     else:
         user_data = user  # Предполагаем, что это уже словарь
+    
+    print(f"CRUD: Данные для создания: {user_data}")
         
     db_user = models.DriverUser(**user_data)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
+    print(f"CRUD: Пользователь создан: id={db_user.id}, phone={db_user.phone}")
     return db_user
 
 def get_driver_user_by_phone(db: Session, phone: str):
     """Получает пользователя-водителя по номеру телефона"""
-    return db.query(models.DriverUser).filter(models.DriverUser.phone == phone).first()
+    print(f"CRUD: Поиск пользователя по телефону: {phone}")
+    
+    user = db.query(models.DriverUser).filter(models.DriverUser.phone == phone).first()
+    
+    if user:
+        print(f"CRUD: Найден пользователь: id={user.id}, phone={user.phone}, first_name='{user.first_name}', last_name='{user.last_name}'")
+    else:
+        print(f"CRUD: Пользователь с телефоном {phone} не найден")
+    
+    return user
 
 def get_driver_user(db: Session, user_id: int):
     """Получает пользователя-водителя по ID"""
-    return db.query(models.DriverUser).filter(models.DriverUser.id == user_id).first()
+    print(f"CRUD: Поиск пользователя по ID: {user_id}")
+    
+    user = db.query(models.DriverUser).filter(models.DriverUser.id == user_id).first()
+    
+    if user:
+        print(f"CRUD: Найден пользователь: id={user.id}, phone={user.phone}, first_name='{user.first_name}', last_name='{user.last_name}'")
+    else:
+        print(f"CRUD: Пользователь с ID {user_id} не найден")
+    
+    return user
 
 def update_driver_user(db: Session, user_id: int, user_data: schemas.DriverUserUpdate):
     """Обновляет данные пользователя-водителя"""
+    print(f"CRUD: Обновление пользователя {user_id} с данными: {user_data}")
+    
     db_user = db.query(models.DriverUser).filter(models.DriverUser.id == user_id).first()
     if not db_user:
+        print(f"CRUD: Пользователь {user_id} не найден")
         return None
     
-    for key, value in user_data.dict(exclude_unset=True).items():
+    print(f"CRUD: Найден пользователь: id={db_user.id}, phone={db_user.phone}")
+    
+    # Получаем данные для обновления
+    if hasattr(user_data, 'model_dump'):
+        update_data = user_data.model_dump(exclude_unset=False)  # Убираем exclude_unset=True
+        print(f"CRUD: Используем model_dump, exclude_unset=False")
+    else:
+        update_data = user_data.dict(exclude_unset=False)  # Убираем exclude_unset=True
+        print(f"CRUD: Используем dict, exclude_unset=False")
+    
+    print(f"CRUD: Данные для обновления: {update_data}")
+    print(f"CRUD: Тип update_data: {type(update_data)}")
+    
+    # Проверяем, что данные не пустые
+    if not update_data:
+        print(f"CRUD: ВНИМАНИЕ! update_data пустой!")
+        return None
+    
+    for key, value in update_data.items():
+        print(f"CRUD: Устанавливаем {key} = '{value}' (тип: {type(value)})")
+        # Убеждаемся, что строки не пустые
+        if isinstance(value, str) and value.strip() == '':
+            value = None
+            print(f"CRUD: Пустая строка заменена на None для {key}")
         setattr(db_user, key, value)
     
-    db.commit()
+    print(f"CRUD: Перед commit: first_name='{db_user.first_name}', last_name='{db_user.last_name}'")
+    
+    try:
+        db.commit()
+        print(f"CRUD: Commit успешен")
+    except Exception as e:
+        print(f"CRUD: Ошибка при commit: {e}")
+        db.rollback()
+        raise
+    
     db.refresh(db_user)
+    
+    print(f"CRUD: После refresh: first_name='{db_user.first_name}', last_name='{db_user.last_name}'")
+    print(f"CRUD: Пользователь обновлен: id={db_user.id}, first_name='{db_user.first_name}', last_name='{db_user.last_name}'")
     return db_user
 
 def update_last_login(db: Session, user_id: int):
@@ -368,6 +432,7 @@ def update_last_login(db: Session, user_id: int):
     if db_user:
         db_user.last_login = datetime.now()
         db.commit()
+        print(f"CRUD: Обновлено время последнего входа для пользователя {user_id}")
     return db_user
 
 # Функция для получения водителя по номеру телефона

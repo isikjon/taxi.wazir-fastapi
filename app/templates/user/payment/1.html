@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Способ оплаты - Wazir</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #ffffff;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #333;
+            cursor: pointer;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+            margin-right: 20px;
+        }
+
+        .back-btn:hover {
+            color: #666;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            text-align: center;
+            flex: 1;
+        }
+
+        .payment-options {
+            padding: 20px;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .payment-option:last-child {
+            border-bottom: none;
+        }
+
+        .radio-btn {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%;
+            margin-right: 15px;
+            position: relative;
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+
+        .radio-btn.selected {
+            background-color: #606060;
+            border-color: #606060;
+        }
+
+        .radio-btn.selected::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .payment-text {
+            font-size: 16px;
+            font-weight: 400;
+            color: #333;
+            flex: 1;
+        }
+
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            color: #333;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkmark.visible {
+            display: flex;
+        }
+
+        .checkmark.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Заголовок -->
+    <div class="header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1 class="header-title">Способ оплаты</h1>
+    </div>
+
+    <!-- Варианты оплаты -->
+    <div class="payment-options">
+        <div class="payment-option" onclick="selectPayment('cash')">
+            <div class="radio-btn" id="cashRadio"></div>
+            <span class="payment-text">Наличными</span>
+            <div class="checkmark visible" id="cashCheck">✓</div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем сохраненный способ оплаты
+            const savedPayment = localStorage.getItem('user_payment_method');
+            if (savedPayment) {
+                selectPayment(savedPayment);
+            } else {
+                // По умолчанию выбираем наличные
+                selectPayment('cash');
+            }
+        });
+
+        // Выбор способа оплаты
+        function selectPayment(method) {
+            // Убираем выделение со всех радио-кнопок
+            const allRadios = document.querySelectorAll('.radio-btn');
+            const allChecks = document.querySelectorAll('.checkmark');
+            
+            allRadios.forEach(radio => {
+                radio.classList.remove('selected');
+            });
+            
+            allChecks.forEach(check => {
+                check.classList.add('hidden');
+            });
+
+            // Выбираем нужный способ
+            if (method === 'cash') {
+                document.getElementById('cashRadio').classList.add('selected');
+                document.getElementById('cashCheck').classList.remove('hidden');
+                
+                // Сохраняем в localStorage
+                localStorage.setItem('user_payment_method', 'cash');
+                
+                console.log('✅ Выбран способ оплаты: наличными');
+            }
+        }
+
+        // Возврат назад
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

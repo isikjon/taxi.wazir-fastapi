@@ -63,6 +63,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Отладочная информация при запуске
+print("🚀 FastAPI приложение запускается...")
+print(f"📁 Текущая директория: {os.getcwd()}")
+print(f"📁 Существует ли папка templates: {os.path.exists('app/templates')}")
+print(f"📁 Существует ли папка user: {os.path.exists('app/templates/user')}")
+print(f"📁 Существует ли папка settings: {os.path.exists('app/templates/user/settings')}")
+print(f"📁 Существует ли файл 1.html: {os.path.exists('app/templates/user/settings/1.html')}")
+
 # Настройка CORS
 app.add_middleware(
     CORSMiddleware,
@@ -181,9 +189,9 @@ class CompleteOrderRequest(BaseModel):
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jose.jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -325,10 +333,94 @@ async def user_auth_step3_alt(request: Request):
 @app.get("/user/profile", response_class=HTMLResponse)
 async def user_profile(request: Request):
     """Главная страница пользователя с картой"""
-    return templates.TemplateResponse("user/main.html", {
-        "request": request,
-        "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API
-    })
+    print(f"🔍 Запрос на страницу профиля: {request.url}")
+    print(f"📁 Путь к шаблону: user/main.html")
+    try:
+        response = templates.TemplateResponse("user/main.html", {
+            "request": request,
+            "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API
+        })
+        print(f"✅ Шаблон профиля успешно загружен")
+        return response
+    except Exception as e:
+        print(f"❌ Ошибка при загрузке шаблона профиля: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка загрузки страницы: {e}")
+
+@app.get("/user/main", response_class=HTMLResponse)
+async def user_main(request: Request):
+    """Главная страница пользователя с картой"""
+    print(f"🔍 Запрос на страницу main: {request.url}")
+    print(f"📁 Путь к шаблону: user/main.html")
+    try:
+        response = templates.TemplateResponse("user/main.html", {
+            "request": request,
+            "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API
+        })
+        print(f"✅ Шаблон main успешно загружен")
+        return response
+    except Exception as e:
+        print(f"❌ Ошибка при загрузке шаблона main: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка загрузки страницы: {e}")
+
+@app.get("/user/settings", response_class=HTMLResponse)
+async def user_settings(request: Request):
+    """Страница настроек пользователя"""
+    print(f"🔍 Запрос на страницу настроек: {request.url}")
+    print(f"📁 Путь к шаблону: user/settings/1.html")
+    print(f"📂 Текущая директория: {os.getcwd()}")
+    print(f"📁 Существует ли шаблон: {os.path.exists('app/templates/user/settings/1.html')}")
+    print(f"📁 Все доступные роуты:")
+    for route in app.routes:
+        if hasattr(route, 'path'):
+            print(f"  - {route.methods} {route.path}")
+    
+    try:
+        response = templates.TemplateResponse("user/settings/1.html", {"request": request})
+        print(f"✅ Шаблон успешно загружен")
+        return response
+    except Exception as e:
+        print(f"❌ Ошибка при загрузке шаблона: {e}")
+        print(f"📋 Тип ошибки: {type(e)}")
+        print(f"📋 Детали ошибки: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ошибка загрузки страницы: {e}")
+
+@app.get("/user/payment", response_class=HTMLResponse)
+async def user_payment(request: Request):
+    """Страница способа оплаты пользователя"""
+    print(f"🔍 Запрос на страницу оплаты: {request.url}")
+    print(f"📁 Путь к шаблону: user/payment/1.html")
+    try:
+        response = templates.TemplateResponse("user/payment/1.html", {"request": request})
+        print(f"✅ Шаблон оплаты успешно загружен")
+        return response
+    except Exception as e:
+        print(f"❌ Ошибка при загрузке шаблона оплаты: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка загрузки страницы оплаты: {e}")
+
+@app.get("/test-settings")
+async def test_settings():
+    """Тестовый роут для проверки работы FastAPI"""
+    return {"message": "Тестовый роут работает!", "status": "ok"}
+
+@app.get("/api/user/profile/{user_id}")
+async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
+    """Получить профиль пользователя по ID"""
+    try:
+        user = crud.get_driver_user(db, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
+        
+        return {
+            "id": user.id,
+            "phone": user.phone,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_verified": user.is_verified,
+            "has_profile": user.first_name is not None and user.last_name is not None
+        }
+    except Exception as e:
+        print(f"Ошибка при получении профиля пользователя {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка сервера")
 
 # Маршруты для диспетчерской панели
 @app.get("/", response_class=HTMLResponse)
@@ -2229,13 +2321,18 @@ async def user_login(request: DriverLoginRequest, db: Session = Depends(get_db))
     """Отправка кода подтверждения на телефон пользователя"""
     # Форматируем номер телефона - удаляем все кроме цифр
     phone = ''.join(filter(str.isdigit, request.phone))
+    print(f"API: Вход пользователя с телефоном: {phone}")
     
     # Проверяем, существует ли уже пользователь с таким номером
     user = crud.get_driver_user_by_phone(db, phone)
     
     # Если пользователя нет, создаем его
     if not user:
+        print(f"API: Создаем нового пользователя с телефоном {phone}")
         user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=phone))
+        print(f"API: Пользователь создан с ID {user.id}")
+    else:
+        print(f"API: Найден существующий пользователь с ID {user.id}")
     
     # В реальном приложении здесь была бы отправка SMS
     # Для тестирования используем фиксированный код 1111
@@ -2279,9 +2376,13 @@ async def user_verify_code(request: VerifyCodeRequest, response: Response = None
     # Обновляем время последнего входа
     crud.update_last_login(db, user.id)
     
+    # Получаем обновленные данные пользователя
+    user = crud.get_driver_user(db, user.id)
+    
     # Проверяем, заполнен ли профиль пользователя (имя и фамилия)
     has_profile = user.first_name is not None and user.last_name is not None
     print(f"Проверка наличия профиля: has_profile={has_profile}")
+    print(f"Данные пользователя: id={user.id}, first_name='{user.first_name}', last_name='{user.last_name}'")
     
     # Создаем JWT токен
     access_token = create_access_token(
@@ -2290,7 +2391,7 @@ async def user_verify_code(request: VerifyCodeRequest, response: Response = None
     )
     
     # Возвращаем токен и информацию о пользователе
-    return TokenResponse(
+    response_data = TokenResponse(
         access_token=access_token,
         token_type="bearer",
         user_id=user.id,
@@ -2298,30 +2399,63 @@ async def user_verify_code(request: VerifyCodeRequest, response: Response = None
         driver_id=None,
         has_profile=has_profile
     )
+    
+    print(f"Отправляем ответ: {response_data}")
+    return response_data
 
 @app.post("/api/user/update-profile", response_model=dict)
-async def user_update_profile(request: dict, db: Session = Depends(get_db)):
+async def user_update_profile(request: Request, db: Session = Depends(get_db)):
     """Обновление профиля пользователя (имя и фамилия)"""
-    user_id = request.get("user_id")
-    first_name = request.get("first_name")
-    last_name = request.get("last_name")
-    
-    if not user_id or not first_name or not last_name:
-        raise HTTPException(status_code=400, detail="Все поля обязательны")
-    
-    # Получаем пользователя
-    user = crud.get_driver_user(db, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
-    
-    # Обновляем профиль
-    user_update = schemas.DriverUserUpdate(
-        first_name=first_name,
-        last_name=last_name
-    )
-    user = crud.update_driver_user(db, user.id, user_update)
-    
-    return {"success": True, "message": "Профиль пользователя обновлен успешно"}
+    try:
+        # Получаем данные из JSON body
+        body = await request.json()
+        user_id = body.get("user_id")
+        first_name = body.get("first_name")
+        last_name = body.get("last_name")
+        
+        print(f"Обновление профиля: user_id={user_id} (тип: {type(user_id)}), first_name='{first_name}', last_name='{last_name}'")
+        
+        # Убеждаемся, что user_id - это число
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            print(f"Ошибка: user_id не является числом: {user_id}")
+            raise HTTPException(status_code=400, detail="ID пользователя должен быть числом")
+        
+        if not first_name or not last_name:
+            print(f"Ошибка валидации: user_id={user_id}, first_name='{first_name}', last_name='{last_name}'")
+            raise HTTPException(status_code=400, detail="Имя и фамилия обязательны")
+        
+        # Получаем пользователя
+        user = crud.get_driver_user(db, user_id)
+        if not user:
+            print(f"Пользователь с ID {user_id} не найден")
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
+        
+        print(f"Найден пользователь: id={user.id}, phone={user.phone}")
+        
+        # Обновляем профиль
+        user_update = schemas.DriverUserUpdate(
+            first_name=first_name,
+            last_name=last_name
+        )
+        
+        print(f"Создаем схему обновления: {user_update}")
+        print(f"Тип схемы: {type(user_update)}")
+        
+        user = crud.update_driver_user(db, user.id, user_update)
+        
+        if user:
+            print(f"Профиль успешно обновлен для пользователя {user.id}")
+            print(f"Проверяем обновленные данные: first_name='{user.first_name}', last_name='{user.last_name}'")
+            return {"success": True, "message": "Профиль пользователя обновлен успешно"}
+        else:
+            print(f"Ошибка: crud.update_driver_user вернул None")
+            raise HTTPException(status_code=500, detail="Ошибка обновления профиля")
+    except Exception as e:
+        print(f"Ошибка при обновлении профиля пользователя: {str(e)}")
+        logger.error(f"Ошибка при обновлении профиля пользователя: {str(e)}")
+        raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
 
 @app.get("/api/user/{user_id}/frequent-addresses", response_model=dict)
 async def get_user_frequent_addresses(user_id: int, db: Session = Depends(get_db)):
@@ -6473,4 +6607,12 @@ async def get_order_progress(order_id: int, db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # Отладочная информация перед запуском
+    print("🚀 Запускаем uvicorn сервер...")
+    print(f"📁 Все зарегистрированные роуты:")
+    for route in app.routes:
+        if hasattr(route, 'path'):
+            print(f"  - {route.methods} {route.path}")
+    
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 

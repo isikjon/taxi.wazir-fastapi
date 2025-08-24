@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки - Wazir</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #ffffff;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        .back-btn:hover {
+            color: #333;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            text-align: center;
+            flex: 1;
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #606060;
+            cursor: pointer;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 400;
+        }
+
+        .edit-btn:hover {
+            color: #333;
+        }
+
+        .edit-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .profile-picture {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+
+        .picture-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .picture-icon {
+            font-size: 40px;
+            color: #ccc;
+        }
+
+        .info-fields {
+            padding: 0 20px 20px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 0;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            background-color: #ffffff;
+            color: #333;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-input:focus {
+            border-color: #606060;
+        }
+
+        .field-input:disabled {
+            background-color: #f8f9fa;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .field-input.phone-field {
+            background-color: #f8f9fa;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .phone-arrow {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+            font-size: 16px;
+        }
+
+        .field-container {
+            position: relative;
+        }
+
+        .save-cancel-buttons {
+            display: none;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .save-cancel-buttons.visible {
+            display: flex;
+        }
+
+        .save-btn, .cancel-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 0;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn {
+            background-color: #606060;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background-color: #555;
+        }
+
+        .save-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .cancel-btn {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .cancel-btn:hover {
+            background-color: #e8e8e8;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #606060;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-with-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message {
+            color: #4CAF50;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Заголовок -->
+    <div class="header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1 class="header-title">Профиль</h1>
+        <button class="edit-btn" id="editBtn" onclick="toggleEditMode()">Редактировать</button>
+    </div>
+
+    <!-- Фото профиля -->
+    <div class="profile-picture">
+        <div class="picture-placeholder">
+            <div class="picture-icon">👤</div>
+        </div>
+    </div>
+
+    <!-- Поля информации -->
+    <div class="info-fields">
+        <div class="field">
+            <label class="field-label">Имя</label>
+            <input type="text" class="field-input" id="firstName" value="Иван" disabled>
+        </div>
+
+        <div class="field">
+            <label class="field-label">Фамилия</label>
+            <input type="text" class="field-input" id="lastName" value="Петров" disabled>
+        </div>
+
+        <div class="field">
+            <label class="field-label">Телефон</label>
+            <div class="field-container">
+                <input type="tel" class="field-input phone-field" id="phone" value="+7 999 123 45 67" disabled>
+                <div class="phone-arrow">›</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки сохранения/отмены -->
+    <div class="save-cancel-buttons" id="saveCancelButtons">
+        <button class="cancel-btn" onclick="cancelEdit()">Отмена</button>
+        <button class="save-btn" id="saveBtn" onclick="saveChanges()">
+            <span class="btn-text">Сохранить</span>
+            <div class="spinner"></div>
+        </button>
+    </div>
+
+    <!-- Сообщения об ошибках и успехе -->
+    <div class="error-message" id="errorMessage"></div>
+    <div class="success-message" id="successMessage"></div>
+
+    <script>
+        let isEditMode = false;
+        let originalData = {};
+
+        // Загружаем данные пользователя при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+        });
+
+        // Загрузка данных пользователя из localStorage
+        function loadUserData() {
+            const firstName = localStorage.getItem('user_first_name');
+            const lastName = localStorage.getItem('user_last_name');
+            const phone = localStorage.getItem('user_phone');
+
+            if (firstName) {
+                document.getElementById('firstName').value = firstName;
+            }
+            if (lastName) {
+                document.getElementById('lastName').value = lastName;
+            }
+            if (phone) {
+                document.getElementById('phone').value = phone;
+            }
+
+            // Сохраняем оригинальные данные
+            originalData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value
+            };
+
+            console.log('📋 Данные пользователя загружены:', {
+                firstName: firstName,
+                lastName: lastName,
+                phone: phone
+            });
+        }
+
+        // Переключение режима редактирования
+        function toggleEditMode() {
+            if (isEditMode) {
+                return; // Уже в режиме редактирования
+            }
+
+            isEditMode = true;
+            
+            // Активируем поля для редактирования
+            document.getElementById('firstName').disabled = false;
+            document.getElementById('lastName').disabled = false;
+            
+            // Показываем кнопки сохранения/отмены
+            document.getElementById('saveCancelButtons').classList.add('visible');
+            
+            // Деактивируем кнопку редактирования
+            document.getElementById('editBtn').disabled = true;
+            document.getElementById('editBtn').textContent = 'Редактирование...';
+            
+            // Фокусируемся на первом поле
+            document.getElementById('firstName').focus();
+            
+            console.log('✏️ Режим редактирования активирован');
+        }
+
+        // Отмена редактирования
+        function cancelEdit() {
+            isEditMode = false;
+            
+            // Возвращаем оригинальные значения
+            document.getElementById('firstName').value = originalData.firstName;
+            document.getElementById('lastName').value = originalData.lastName;
+            
+            // Деактивируем поля
+            document.getElementById('firstName').disabled = true;
+            document.getElementById('lastName').disabled = true;
+            
+            // Скрываем кнопки сохранения/отмены
+            document.getElementById('saveCancelButtons').classList.remove('visible');
+            
+            // Активируем кнопку редактирования
+            document.getElementById('editBtn').disabled = false;
+            document.getElementById('editBtn').textContent = 'Редактировать';
+            
+            // Скрываем сообщения
+            hideMessages();
+            
+            console.log('❌ Редактирование отменено');
+        }
+
+        // Сохранение изменений
+        async function saveChanges() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            
+            // Валидация
+            if (!firstName || !lastName) {
+                showError('Имя и фамилия обязательны');
+                return;
+            }
+            
+            if (firstName.length < 2 || lastName.length < 2) {
+                showError('Имя и фамилия должны содержать минимум 2 символа');
+                return;
+            }
+            
+            if (firstName.length > 50 || lastName.length > 50) {
+                showError('Имя и фамилия не должны превышать 50 символов');
+                return;
+            }
+            
+            // Проверяем на специальные символы
+            const nameRegex = /^[а-яёa-z\s\-]+$/i;
+            if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+                showError('Имя и фамилия должны содержать только буквы, пробелы и дефисы');
+                return;
+            }
+
+            // Показываем спиннер
+            const saveBtn = document.getElementById('saveBtn');
+            const btnText = saveBtn.querySelector('.btn-text');
+            const spinner = saveBtn.querySelector('.spinner');
+            
+            btnText.textContent = 'Сохранение...';
+            spinner.style.display = 'block';
+            saveBtn.disabled = true;
+
+            try {
+                // Получаем ID пользователя
+                const userId = localStorage.getItem('user_id');
+                if (!userId) {
+                    throw new Error('ID пользователя не найден');
+                }
+
+                console.log('📤 Отправляем данные на сервер:', {
+                    first_name: firstName,
+                    last_name: lastName,
+                    user_id: parseInt(userId)
+                });
+
+                // Отправляем запрос на обновление профиля
+                const response = await fetch('/api/user/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        first_name: firstName,
+                        last_name: lastName,
+                        user_id: parseInt(userId)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Обновляем localStorage
+                    localStorage.setItem('user_first_name', firstName);
+                    localStorage.setItem('user_last_name', lastName);
+                    
+                    // Обновляем оригинальные данные
+                    originalData = { firstName, lastName };
+                    
+                    // Показываем сообщение об успехе
+                    showSuccess('Профиль успешно обновлен!');
+                    
+                    // Выходим из режима редактирования
+                    setTimeout(() => {
+                        exitEditMode();
+                    }, 1500);
+                    
+                    console.log('✅ Профиль успешно обновлен');
+                } else {
+                    throw new Error(data.message || 'Ошибка обновления профиля');
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка при сохранении:', error);
+                showError('Ошибка при сохранении: ' + error.message);
+                
+                // Восстанавливаем кнопку
+                btnText.textContent = 'Сохранить';
+                spinner.style.display = 'none';
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Выход из режима редактирования
+        function exitEditMode() {
+            isEditMode = false;
+            
+            // Деактивируем поля
+            document.getElementById('firstName').disabled = true;
+            document.getElementById('lastName').disabled = true;
+            
+            // Скрываем кнопки сохранения/отмены
+            document.getElementById('saveCancelButtons').classList.remove('visible');
+            
+            // Активируем кнопку редактирования
+            document.getElementById('editBtn').disabled = false;
+            document.getElementById('editBtn').textContent = 'Редактировать';
+            
+            // Скрываем сообщения
+            hideMessages();
+            
+            console.log('✅ Режим редактирования завершен');
+        }
+
+        // Показать сообщение об ошибке
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Скрываем сообщение об успехе
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Показать сообщение об успехе
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            
+            // Скрываем сообщение об ошибке
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Скрыть все сообщения
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Возврат назад
+        function goBack() {
+            if (isEditMode) {
+                // Если в режиме редактирования, сначала отменяем
+                cancelEdit();
+            } else {
+                // Иначе возвращаемся назад
+                window.history.back();
+            }
+        }
+
+        // Обработка нажатия Escape для отмены редактирования
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isEditMode) {
+                cancelEdit();
+            }
+        });
+    </script>
+</body>
+</html>

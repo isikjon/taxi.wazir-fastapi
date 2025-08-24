@@ -8,6 +8,35 @@
             href="{{ url_for('static', path='/driver/assets/scss/main.css') }}">
         <link rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+        <style>
+            /* Убираем border-radius у кнопок */
+            .main__btn, button {
+                border-radius: 0px !important;
+            }
+            
+            /* Спиннер загрузки */
+            .spinner {
+                display: none;
+                width: 20px;
+                height: 20px;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-left: 10px;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .btn-with-spinner {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
     </head>
     <body>
         <header>
@@ -43,7 +72,10 @@
                                     name="last_name" placeholder="Фамилия"
                                     required>
                                 <button type="submit"
-                                    class="main__btn">Продолжить</button>
+                                    class="main__btn btn-with-spinner">
+                                    <span class="btn-text">Продолжить</span>
+                                    <div class="spinner"></div>
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -67,16 +99,133 @@
                         $submitBtn.removeClass('main__btn-active');
                     }
                 });
+                
+                // Проверяем поля при загрузке страницы
+                const $form = $('.register__auth form');
+                const $inputs = $form.find('input');
+                const $submitBtn = $form.find('.main__btn');
+                
+                // Загружаем данные из localStorage, если они есть
+                const savedFirstName = localStorage.getItem('user_first_name');
+                const savedLastName = localStorage.getItem('user_last_name');
+                
+                if (savedFirstName) {
+                    $('#firstName').val(savedFirstName);
+                }
+                if (savedLastName) {
+                    $('#lastName').val(savedLastName);
+                }
+                
+                // Проверяем, есть ли ID пользователя
+                const userId = localStorage.getItem('user_id');
+                if (!userId) {
+                    showError('Ошибка: ID пользователя не найден. Попробуйте войти заново.');
+                    // Делаем форму неактивной
+                    $inputs.prop('disabled', true);
+                    $submitBtn.prop('disabled', true);
+                    
+                    // Добавляем кнопку для возврата к авторизации
+                    const $backBtn = $('<button>')
+                        .attr('type', 'button')
+                        .addClass('main__btn')
+                        .text('Вернуться к авторизации')
+                        .css('margin-top', '15px')
+                        .on('click', function() {
+                            window.location.href = '/user/auth/1';
+                        });
+                    
+                    $form.append($backBtn);
+                } else {
+                    console.log('ID пользователя найден:', userId);
+                    
+                    // Проверяем, есть ли уже сохраненные данные
+                    if (savedFirstName && savedLastName) {
+                        console.log('Найдены сохраненные данные:', { firstName: savedFirstName, lastName: savedLastName });
+                    }
+                    
+                    // Добавляем отладочную информацию
+                    console.log('🔍 Данные пользователя из localStorage:', {
+                        user_id: userId,
+                        user_first_name: savedFirstName,
+                        user_last_name: savedLastName,
+                        user_phone: localStorage.getItem('user_phone')
+                    });
+                    
+                    console.log('📋 Все ключи в localStorage:', Object.keys(localStorage));
+                    console.log('📋 Все значения user_* в localStorage:', {
+                        user_id: localStorage.getItem('user_id'),
+                        user_phone: localStorage.getItem('user_phone'),
+                        user_first_name: localStorage.getItem('user_first_name'),
+                        user_last_name: localStorage.getItem('user_last_name'),
+                        user_access_token: localStorage.getItem('user_access_token')
+                    });
+                    
+                    // Если данных нет, но есть ID, попробуем загрузить из БД
+                    if (!savedFirstName && !savedLastName) {
+                        console.log('🔄 Данные не найдены в localStorage, пробуем загрузить из БД...');
+                        loadUserDataFromDB(userId);
+                    }
+                }
+                
+                const allFilled = Array.from($inputs).every(input => input.value.trim() !== '');
+                if (allFilled) {
+                    $submitBtn.addClass('main__btn-active');
+                }
+                
+                // Логируем состояние формы
+                console.log('Состояние формы при загрузке:', {
+                    firstName: $('#firstName').val(),
+                    lastName: $('#lastName').val(),
+                    allFilled: allFilled,
+                    submitBtnActive: $submitBtn.hasClass('main__btn-active')
+                });
 
                 // Отправка формы
                 document.getElementById('nameForm').addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    const firstName = document.getElementById('firstName').value;
-                    const lastName = document.getElementById('lastName').value;
+                    // Предотвращаем повторную отправку
+                    const submitBtn = document.querySelector('.main__btn');
+                    if (submitBtn.disabled) {
+                        return;
+                    }
                     
-                    if (!firstName || !lastName) {
+                    // Показываем спиннер
+                    const $spinner = $(submitBtn).find('.spinner');
+                    const $btnText = $(submitBtn).find('.btn-text');
+                    
+                    $spinner.show();
+                    $btnText.text('Отправка...');
+                    submitBtn.disabled = true;
+                    
+                    let firstName = document.getElementById('firstName').value;
+                    let lastName = document.getElementById('lastName').value;
+                    
+                    // Убираем лишние пробелы
+                    firstName = firstName.trim();
+                    lastName = lastName.trim();
+                    
+                    if (!firstName || !lastName || firstName === '' || lastName === '') {
                         showError('Пожалуйста, введите имя и фамилию');
+                        return;
+                    }
+                    
+                    // Проверяем минимальную длину
+                    if (firstName.length < 2 || lastName.length < 2) {
+                        showError('Имя и фамилия должны содержать минимум 2 символа');
+                        return;
+                    }
+                    
+                    // Проверяем максимальную длину
+                    if (firstName.length > 50 || lastName.length > 50) {
+                        showError('Имя и фамилия не должны превышать 50 символов');
+                        return;
+                    }
+                    
+                    // Проверяем на специальные символы (только буквы, пробелы и дефисы)
+                    const nameRegex = /^[а-яёa-z\s\-]+$/i;
+                    if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+                        showError('Имя и фамилия должны содержать только буквы, пробелы и дефисы');
                         return;
                     }
                     
@@ -84,39 +233,117 @@
                     localStorage.setItem('user_first_name', firstName);
                     localStorage.setItem('user_last_name', lastName);
                     
+                    console.log('💾 Данные сохранены в localStorage:', {
+                        user_first_name: firstName,
+                        user_last_name: lastName,
+                        user_id: localStorage.getItem('user_id'),
+                        user_phone: localStorage.getItem('user_phone')
+                    });
+                    
+                    // Проверяем, что данные действительно сохранились
+                    setTimeout(() => {
+                        const savedFirstName = localStorage.getItem('user_first_name');
+                        const savedLastName = localStorage.getItem('user_last_name');
+                        console.log('🔍 Проверяем сохраненные данные:', {
+                            savedFirstName: savedFirstName,
+                            savedLastName: savedLastName
+                        });
+                    }, 100);
+                    
                     // Получаем ID пользователя из localStorage
                     const userId = localStorage.getItem('user_id');
                     
+                    console.log('ID пользователя из localStorage:', userId);
+                    console.log('Тип ID пользователя:', typeof userId);
+                    
+                    if (!userId) {
+                        showError('Ошибка: ID пользователя не найден. Попробуйте войти заново.');
+                        return;
+                    }
+                    
+                    // Убеждаемся, что ID - это число
+                    const userIdNum = parseInt(userId);
+                    if (isNaN(userIdNum)) {
+                        showError('Ошибка: Неверный формат ID пользователя. Попробуйте войти заново.');
+                        return;
+                    }
+                    
                     // Отправляем запрос на сервер для обновления профиля
+                    const requestData = {
+                        first_name: firstName,
+                        last_name: lastName,
+                        user_id: userIdNum
+                    };
+                    
+                    console.log('📤 Отправляем данные на сервер:', requestData);
+                    console.log('📋 JSON строка:', JSON.stringify(requestData));
+                    
                     fetch('/api/user/update-profile', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            first_name: firstName,
-                            last_name: lastName,
-                            user_id: userId
-                        })
+                        body: JSON.stringify(requestData)
                     })
                     .then(response => {
+                        console.log('Ответ сервера:', response);
+                        console.log('Статус ответа:', response.status);
+                        console.log('OK статус:', response.ok);
+                        
                         if (!response.ok) {
-                            throw new Error('Не удалось обновить профиль');
+                            throw new Error(`Не удалось обновить профиль. Статус: ${response.status}`);
                         }
                         return response.json();
                     })
                     .then(data => {
                         console.log('Профиль пользователя успешно обновлен:', data);
+                        console.log('Тип данных:', typeof data);
                         console.log('Сохранено в localStorage:', {
                             user_first_name: firstName,
                             user_last_name: lastName
                         });
                         
-                        // После успешного обновления переходим на главную страницу пользователя
-                        window.location.href = '/user/profile';
+                        // Проверяем успешность операции
+                        if (data.success) {
+                            // Показываем сообщение об успехе
+                            showSuccess('Профиль успешно обновлен! Перенаправляем...');
+                            
+                            // После успешного обновления переходим на главную страницу пользователя
+                            console.log('🚀 Перенаправляем на главную страницу /user/profile');
+                            console.log('📋 Финальное состояние localStorage:', {
+                                user_first_name: localStorage.getItem('user_first_name'),
+                                user_last_name: localStorage.getItem('user_last_name'),
+                                user_id: localStorage.getItem('user_id')
+                            });
+                            
+                            setTimeout(() => {
+                                window.location.href = '/user/profile';
+                            }, 1000);
+                        } else {
+                            throw new Error(data.message || 'Неизвестная ошибка при обновлении профиля');
+                        }
                     })
                     .catch(error => {
-                        showError(error.message);
+                        console.error('Ошибка при обновлении профиля:', error);
+                        console.error('Тип ошибки:', typeof error);
+                        console.error('Стек ошибки:', error.stack);
+                        
+                        let errorMessage = 'Произошла ошибка при обновлении профиля';
+                        if (error.message) {
+                            errorMessage = error.message;
+                        }
+                        
+                        showError(errorMessage);
+                    })
+                    .finally(() => {
+                        // Восстанавливаем кнопку
+                        const submitBtn = document.querySelector('.main__btn');
+                        const $spinner = $(submitBtn).find('.spinner');
+                        const $btnText = $(submitBtn).find('.btn-text');
+                        
+                        submitBtn.disabled = false;
+                        $spinner.hide();
+                        $btnText.text('Продолжить');
                     });
                 });
 
@@ -140,6 +367,57 @@
                     setTimeout(() => {
                         $('#error-message').hide();
                     }, 3000);
+                }
+                
+                // Функция для отображения успешных сообщений
+                function showSuccess(message) {
+                    // Создаем элемент с успехом, если его нет
+                    if (!$('#success-message').length) {
+                        $('<div>').attr('id', 'success-message')
+                            .css({
+                                'color': 'green',
+                                'margin-bottom': '15px',
+                                'text-align': 'center'
+                            })
+                            .insertBefore($('#nameForm'));
+                    }
+                    
+                    // Показываем сообщение об успехе
+                    $('#success-message').text(message).show();
+                    
+                    // Скрываем сообщение через 3 секунды
+                    setTimeout(() => {
+                        $('#success-message').hide();
+                    }, 3000);
+                }
+                
+                // Загрузка данных пользователя из БД
+                async function loadUserDataFromDB(userId) {
+                    try {
+                        console.log('📡 Загружаем данные пользователя из БД для ID:', userId);
+                        
+                        const response = await fetch(`/api/user/profile/${userId}`);
+                        if (response.ok) {
+                            const userData = await response.json();
+                            console.log('📥 Получены данные из БД:', userData);
+                            
+                            if (userData.first_name && userData.last_name) {
+                                // Сохраняем в localStorage
+                                localStorage.setItem('user_first_name', userData.first_name);
+                                localStorage.setItem('user_last_name', userData.last_name);
+                                
+                                // Обновляем поля формы
+                                $('#firstName').val(userData.first_name);
+                                $('#lastName').val(userData.last_name);
+                                
+                                console.log('✅ Данные загружены из БД и установлены в форму:', `${userData.first_name} ${userData.last_name}`);
+                            }
+                        } else {
+                            console.log('❌ Не удалось загрузить данных из БД, статус:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('❌ Ошибка при загрузке данных из БД:', error);
+                    }
                 }
             });
         </script>
