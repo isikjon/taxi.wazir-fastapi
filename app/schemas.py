@@ -166,4 +166,13 @@ class DriverUser(DriverUserBase):
     driver_id: Optional[int] = None
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
+
+
+# Schema for completing order with progress
+class CompleteOrderRequest(BaseModel):
+    order_id: int
+    driver_id: int
+    completion_type: str  # "full" или "partial"
+    final_latitude: Optional[float] = None
+    final_longitude: Optional[float] = None 

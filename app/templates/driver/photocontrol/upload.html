@@ -262,6 +262,27 @@
                                 <input type="file" accept="image/*"
                                     id="license_back" name="license_back">
                             </div>
+
+                            <div class="photo-upload-item">
+                                <div class="photo-preview"
+                                    id="driver_with_license_preview"></div>
+                                <div class="photo-placeholder"
+                                    id="driver_with_license_placeholder">
+                                    <img
+                                        src="{{ url_for('static', path='/driver/assets/img/ico/image-placeholder.svg') }}"
+                                        alt="Загрузить">
+                                    <p>Водитель с ВУ в руках</p>
+                                </div>
+                                <div class="upload-progress"
+                                    id="driver_with_license_progress">
+                                    <div class="upload-progress-bar"
+                                        id="driver_with_license_progress_bar"></div>
+                                </div>
+                                <div class="upload-status"
+                                    id="driver_with_license_status"></div>
+                                <input type="file" accept="image/*"
+                                    id="driver_with_license" name="driver_with_license">
+                            </div>
                         </div>
                     </div>
 
@@ -417,7 +438,7 @@
             const form = document.getElementById('photoUploadForm');
             const submitButton = document.getElementById('submitButton');
             const photoInputs = form.querySelectorAll('input[type="file"]');
-            const requiredPhotos = ['passport_front', 'passport_back', 'license_front', 'license_back'];
+            const requiredPhotos = ['passport_front', 'passport_back', 'license_front', 'license_back', 'driver_with_license'];
             const uploadedFiles = {};
             
             // Функция для отображения предпросмотра фото
@@ -493,9 +514,13 @@
                 const formData = new FormData();
                 
                 // Добавляем все файлы в FormData
+                console.log('🔍 Проверяем загружаемые файлы:');
                 photoInputs.forEach(input => {
                     if (input.files && input.files[0]) {
+                        console.log(`  ${input.name}: ${input.files[0].name}`);
                         formData.append(input.name, input.files[0]);
+                    } else {
+                        console.log(`  ${input.name}: НЕ ВЫБРАН`);
                     }
                 });
                 

@@ -87,6 +87,122 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # Настраиваем шаблоны Jinja2
 templates = Jinja2Templates(directory="app/templates")
 
+# ВАЖНО: Определяем кастомные endpoints ДО подключения роутеров
+# чтобы они имели приоритет над {order_id} роутами
+
+# ЗАКОММЕНТИРОВАНО: Эти эндпоинты перенесены в роутер orders
+# @app.get("/api/orders/test", response_class=JSONResponse)
+# async def test_orders_api():
+#     """Тестовый endpoint для проверки API orders"""
+#     return JSONResponse(
+#         status_code=200,
+#         content={"success": True, "message": "API orders работает!"}
+#     )
+
+# ЗАКОММЕНТИРОВАНО: Этот эндпоинт перенесен в роутер orders с улучшенной логикой
+# @app.post("/api/orders/complete-with-progress", response_class=JSONResponse) 
+# async def complete_order_with_progress(request: Request, db: Session = Depends(get_db)):
+#     """Завершение поездки с прогрессом"""
+#     try:
+#         data = await request.json()
+#         order_id = data.get("order_id")
+#         driver_id = data.get("driver_id")
+#         completion_type = data.get("completion_type", "full")
+#         
+#         print(f"🏁 Завершение поездки: order_id={order_id}, driver_id={driver_id}, type={completion_type}")
+#         
+#         if not all([order_id, driver_id]):
+#             return JSONResponse(
+#                 status_code=400,
+#                 content={"success": False, "error": "Не указаны order_id или driver_id"}
+#             )
+#         
+#         # Находим заказ
+#         order = db.query(models.Order).filter(
+#             models.Order.id == order_id,
+#             models.Order.driver_id == driver_id
+#         ).first()
+#         
+#         if not order:
+#             return JSONResponse(
+#                 status_code=404,
+#                 content={"success": False, "error": "Заказ не найден или не принадлежит водителю"}
+#             )
+#         
+#         # Проверяем статус
+#         if order.status in ["Завершен", "Отменен"]:
+#             return JSONResponse(
+#                 status_code=400,
+#                 content={"success": False, "error": f"Заказ уже {order.status.lower()}"}
+#             )
+#         
+#         # Получаем водителя
+#         driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+#         if not driver:
+#             return JSONResponse(
+#                 status_code=404,
+#                 content={"success": False, "error": "Водитель не найден"}
+#             )
+#         
+#         # Рассчитываем оплату
+#         actual_payment = order.price or 0.0
+#         progress_percentage = 0.0 if completion_type == "partial" else 100.0
+#         
+#         # Обновляем заказ
+#         order.status = "Завершен"
+#         order.progress_percentage = progress_percentage
+#         order.actual_price = actual_payment
+#         order.completed_at = datetime.now()
+#         
+#         # Обновляем баланс водителя
+#         driver.balance = (driver.balance or 0.0) + actual_payment
+#         
+#         # Создаем транзакцию
+#         transaction = models.BalanceTransaction(
+#             driver_id=int(driver_id),
+#             amount=float(actual_payment),
+#             type="deposit",
+#             status="completed",
+#             description=f"Оплата за заказ #{order.order_number}"
+#         )
+#         db.add(transaction)
+#         
+#         # Увеличиваем активность
+#         driver.activity = min(100, (getattr(driver, 'activity', 50) or 50) + 2)
+#         
+#         # Сохраняем изменения
+#         db.commit()
+#         db.refresh(order)
+#         db.refresh(driver)
+#         
+#         print(f"✅ Заказ #{order.order_number} завершен. Оплата: {actual_payment} сом")
+#         
+#         return JSONResponse(
+#             status_code=200,
+#             content={
+#                 "success": True,
+#                 "message": f"Заказ #{order.order_number} успешно завершен",
+#                 "order_id": order.id,
+#                 "progress_percentage": progress_percentage,
+#                 "actual_payment": actual_payment,
+#                 "driver_balance": driver.balance,
+#                 "completion_type": completion_type
+#             }
+#         )
+#         
+#     except Exception as e:
+#         print(f"❌ Ошибка завершения поездки: {str(e)}")
+#         import traceback
+#         print(f"❌ Полная ошибка: {traceback.format_exc()}")
+#         db.rollback()
+#         return JSONResponse(
+#             status_code=500,
+#             content={
+#                 "success": False,
+#                 "error": f"Ошибка завершения поездки: {str(e)}"
+#             }
+#         )
+
 # Подключаем API роутеры
 app.include_router(drivers.router, prefix="/api")
 app.include_router(cars.router, prefix="/api")
@@ -115,7 +231,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             '/api/user/',
             '/api/user-orders/',  # Добавляем endpoint для создания заказов пользователем
             '/api/available-tariffs',  # Добавляем endpoint для тарифов
-            '/api/orders/',  # Добавляем endpoints для заказов
+            '/api/orders/',  # Добавляем endpoints для заказов (включая complete-with-progress)
             '/test'  # Тестовый endpoint
         ]
         
@@ -124,6 +240,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
         
         # Проверяем, начинается ли путь с любого из исключенных путей
         is_excluded = any(request.url.path.startswith(path) for path in excluded_paths)
+        
+        # Подробное логирование для отладки
+        if request.url.path.startswith('/api/orders/'):
+            logger.info(f"🔍 AuthMiddleware: Это API orders запрос!")
+            logger.info(f"🔍 AuthMiddleware: Точный путь: {request.url.path}")
+            logger.info(f"🔍 AuthMiddleware: Метод: {request.method}")
         
         logger.info(f"🔍 AuthMiddleware: путь {'исключен' if is_excluded else 'НЕ исключен'}")
         
@@ -892,8 +1014,8 @@ async def disp_drivers(
         status = status.lower()
         filtered_drivers = [
             d for d in filtered_drivers if 
-            (status == 'занят' and getattr(d, 'is_busy', True)) or
-            (status == 'свободен' and not getattr(d, 'is_busy', True))
+            (status == 'занят' and getattr(d, 'is_busy', False)) or
+            (status == 'свободен' and not getattr(d, 'is_busy', False))
         ]
     
     if state:
@@ -909,7 +1031,7 @@ async def disp_drivers(
     # Подсчет метрик для отфильтрованных данных
     total_drivers = len(filtered_drivers)
     total_balance = sum(driver.balance for driver in filtered_drivers) if filtered_drivers else 0
-    available_drivers = len([d for d in filtered_drivers if getattr(d, 'is_busy', False) == False])
+    available_drivers = len([d for d in filtered_drivers if not getattr(d, 'is_busy', False)])
     busy_drivers = total_drivers - available_drivers
     
     # Пагинация
@@ -934,9 +1056,9 @@ async def disp_drivers(
             "page": page,
             "total_pages": total_pages,
             "is_filtered": is_filtered,
-            "search": search,
-            "status": status,
-            "state": state
+            "search": search if search else "",
+            "status": status if status else "",
+            "state": state if state else ""
         }
     )
 
@@ -1082,12 +1204,35 @@ async def get_driver_details(driver_id: int, db: Session = Depends(get_db)):
         # Получаем автомобиль водителя
         car = db.query(models.Car).filter(models.Car.driver_id == driver_id).first()
         
+        # Получаем документы водителя
+        driver_docs = db.query(models.DriverDocuments).filter(
+            models.DriverDocuments.driver_id == driver_id
+        ).first()
+        
+        print(f"🔍 get_driver_details для водителя {driver_id}")
+        print(f"📋 DriverDocuments найдены: {driver_docs is not None}")
+        if driver_docs:
+            print(f"  passport_front: {driver_docs.passport_front}")
+            print(f"  passport_back: {driver_docs.passport_back}")
+            print(f"  license_front: {driver_docs.license_front}")
+            print(f"  license_back: {driver_docs.license_back}")
+            print(f"  driver_with_license: {driver_docs.driver_with_license}")
+        
+        # Получаем последнюю верификацию
+        verification = db.query(models.DriverVerification).filter(
+            models.DriverVerification.driver_id == driver_id,
+            models.DriverVerification.verification_type == "photo_control"
+        ).order_by(models.DriverVerification.created_at.desc()).first()
+        
+        print(f"🔍 Верификация найдена: {verification.status if verification else 'None'}")
+        
         # Формируем пути к фотографиям
         photo_paths = {
-            "passport_front": f"/uploads/drivers/{driver_id}/passport_front.jpg" if hasattr(driver, "passport_front_path") and driver.passport_front_path else None,
-            "passport_back": f"/uploads/drivers/{driver_id}/passport_back.jpg" if hasattr(driver, "passport_back_path") and driver.passport_back_path else None,
-            "license_front": f"/uploads/drivers/{driver_id}/license_front.jpg" if hasattr(driver, "license_front_path") and driver.license_front_path else None,
-            "license_back": f"/uploads/drivers/{driver_id}/license_back.jpg" if hasattr(driver, "license_back_path") and driver.license_back_path else None
+            "passport_front": driver_docs.passport_front if driver_docs and driver_docs.passport_front else None,
+            "passport_back": driver_docs.passport_back if driver_docs and driver_docs.passport_back else None,
+            "license_front": driver_docs.license_front if driver_docs and driver_docs.license_front else None,
+            "license_back": driver_docs.license_back if driver_docs and driver_docs.license_back else None,
+            "driver_with_license": driver_docs.driver_with_license if driver_docs and driver_docs.driver_with_license else None
         }
         
         # Добавляем фото автомобиля, если есть
@@ -1158,7 +1303,13 @@ async def get_driver_details(driver_id: int, db: Session = Depends(get_db)):
             "taxi_park": getattr(driver, "taxi_park", ""),
             "status": getattr(driver, "status", "pending"),
             "photos": photo_paths,
-            "is_disp_created": is_disp_created
+            "is_disp_created": is_disp_created,
+            "verification": {
+                "status": verification.status if verification else None,
+                "comment": verification.comment if verification else None,
+                "created_at": verification.created_at.isoformat() if verification and verification.created_at else None,
+                "verified_at": verification.verified_at.isoformat() if verification and verification.verified_at else None
+            }
         }
         
         # Добавляем дату регистрации, если она доступна
@@ -1183,6 +1334,7 @@ async def get_driver_details(driver_id: int, db: Session = Depends(get_db)):
             }
             driver_data["car"] = car_data
         
+        print(f"📤 Возвращаем данные photos: {driver_data['photos']}")
         return driver_data
     except Exception as e:
         import traceback
@@ -1438,24 +1590,45 @@ async def add_balance(request: BalanceAddRequest, db: Session = Depends(get_db))
 @app.get("/api/drivers/{driver_id}/photos")
 async def get_driver_photos(driver_id: int, db: Session = Depends(get_db)):
     """API для получения фотографий водителя"""
+    print(f"🔍 Получение фотографий для водителя {driver_id}")
+    
     driver = crud.get_driver(db, driver_id=driver_id)
     if not driver:
         return JSONResponse(status_code=404, content={"detail": "Водитель не найден"})
     
+    # Получаем документы водителя
+    driver_docs = db.query(models.DriverDocuments).filter(
+        models.DriverDocuments.driver_id == driver_id
+    ).first()
+    
+    print(f"📋 DriverDocuments найдены: {driver_docs is not None}")
+    if driver_docs:
+        print(f"passport_front: {driver_docs.passport_front}")
+        print(f"passport_back: {driver_docs.passport_back}")
+        print(f"license_front: {driver_docs.license_front}")
+        print(f"license_back: {driver_docs.license_back}")
+        print(f"driver_with_license: {driver_docs.driver_with_license}")
+    
+    # Получаем автомобиль водителя
+    car = driver.cars[0] if driver.cars else None
+    print(f"🚗 Car найден: {car is not None}")
+    
     # Формируем пути к фотографиям
     photo_paths = {
-        "passport_front": f"/uploads/drivers/{driver_id}/passport_front.jpg" if hasattr(driver, "passport_front_path") and driver.passport_front_path else None,
-        "passport_back": f"/uploads/drivers/{driver_id}/passport_back.jpg" if hasattr(driver, "passport_back_path") and driver.passport_back_path else None,
-        "license_front": f"/uploads/drivers/{driver_id}/license_front.jpg" if hasattr(driver, "license_front_path") and driver.license_front_path else None,
-        "license_back": f"/uploads/drivers/{driver_id}/license_back.jpg" if hasattr(driver, "license_back_path") and driver.license_back_path else None,
-        "car_front": f"/uploads/cars/{driver.car_id}/front.jpg" if hasattr(driver, "car_id") and driver.car_id else None,
-        "car_back": f"/uploads/cars/{driver.car_id}/back.jpg" if hasattr(driver, "car_id") and driver.car_id else None,
-        "car_right": f"/uploads/cars/{driver.car_id}/right.jpg" if hasattr(driver, "car_id") and driver.car_id else None,
-        "car_left": f"/uploads/cars/{driver.car_id}/left.jpg" if hasattr(driver, "car_id") and driver.car_id else None,
-        "car_interior_front": f"/uploads/cars/{driver.car_id}/interior_front.jpg" if hasattr(driver, "car_id") and driver.car_id else None,
-        "car_interior_back": f"/uploads/cars/{driver.car_id}/interior_back.jpg" if hasattr(driver, "car_id") and driver.car_id else None,
+        "passport_front": driver_docs.passport_front if driver_docs and driver_docs.passport_front else None,
+        "passport_back": driver_docs.passport_back if driver_docs and driver_docs.passport_back else None,
+        "license_front": driver_docs.license_front if driver_docs and driver_docs.license_front else None,
+        "license_back": driver_docs.license_back if driver_docs and driver_docs.license_back else None,
+        "driver_with_license": driver_docs.driver_with_license if driver_docs and driver_docs.driver_with_license else None,
+        "car_front": car.photo_front if car and car.photo_front else None,
+        "car_back": car.photo_rear if car and car.photo_rear else None,
+        "car_right": car.photo_right if car and car.photo_right else None,
+        "car_left": car.photo_left if car and car.photo_left else None,
+        "car_interior_front": car.photo_interior_front if car and car.photo_interior_front else None,
+        "car_interior_back": car.photo_interior_rear if car and car.photo_interior_rear else None,
     }
     
+    print(f"📸 Возвращаемые пути: {photo_paths}")
     return photo_paths
 
 # API для фильтрации водителей
@@ -2155,25 +2328,74 @@ async def login(request: Request, username: str = Form(...), password: str = For
 # Добавляем API роутеры для водительского приложения
 @app.post("/api/driver/login", response_model=dict)
 async def driver_login(request: DriverLoginRequest, db: Session = Depends(get_db)):
-    """Отправка кода подтверждения на телефон водителя"""
-    # Форматируем номер телефона - удаляем все кроме цифр
-    phone = ''.join(filter(str.isdigit, request.phone))
+    """ВРЕМЕННО: Отключена логика авторизации - любой номер телефона перенаправляет на профиль 9961111111111"""
     
-    # Проверяем, существует ли уже пользователь с таким номером
-    user = crud.get_driver_user_by_phone(db, phone)
+    # ВРЕМЕННО: Ищем пользователя с номером 9961111111111
+    target_phone = "9961111111111"
+    target_user = crud.get_driver_user_by_phone(db, target_phone)
     
-    # Если пользователя нет, создаем его
+    if not target_user:
+        # Если пользователя нет, создаем его
+        target_user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=target_phone))
+    
+    # ВРЕМЕННО: Возвращаем успех для любого номера телефона
+    return {"success": True, "message": "Временный режим: авторизация отключена", "target_user_id": target_user.id}
+
+# ВРЕМЕННЫЙ endpoint для проверки пользователя 9961111111111
+@app.get("/api/driver/check-target-user")
+async def check_target_user(db: Session = Depends(get_db)):
+    """ВРЕМЕННЫЙ: Проверка существования пользователя с номером 9961111111111"""
+    target_phone = "9961111111111"
+    target_user = crud.get_driver_user_by_phone(db, target_phone)
+    
+    if target_user:
+        return {
+            "exists": True,
+            "user_id": target_user.id,
+            "phone": target_user.phone,
+            "driver_id": target_user.driver_id,
+            "is_verified": target_user.is_verified
+        }
+    else:
+        return {"exists": False, "message": "Пользователь не найден"}
+
+# ВРЕМЕННЫЙ тестовый endpoint для проверки временного режима
+@app.get("/api/driver/test-temp-mode")
+async def test_temp_mode(db: Session = Depends(get_db)):
+    """ВРЕМЕННЫЙ: Тестовый endpoint для проверки временного режима"""
+    target_phone = "9961111111111"
+    
+    # Проверяем пользователя
+    user = crud.get_driver_user_by_phone(db, target_phone)
     if not user:
-        user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=phone))
+        user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=target_phone))
     
-    # В реальном приложении здесь была бы отправка SMS
-    # Для тестирования используем фиксированный код 1111
-    verification_code = "1111"
+    # Проверяем водителя
+    driver = None
+    if user.driver_id:
+        driver = db.query(models.Driver).filter(models.Driver.id == user.driver_id).first()
     
-    # В реальном приложении код нужно сохранить в кеше или БД
-    # и связать с номером телефона для последующей проверки
+    if not driver:
+        driver = db.query(models.Driver).filter(models.Driver.phone == target_phone).first()
+        if driver:
+            user.driver_id = driver.id
+            db.commit()
     
-    return {"success": True, "message": "Код подтверждения отправлен"}
+    return {
+        "temp_mode": "enabled",
+        "message": "Временный режим активен - авторизация отключена",
+        "target_phone": target_phone,
+        "user": {
+            "id": user.id,
+            "phone": user.phone,
+            "driver_id": user.driver_id
+        },
+        "driver": {
+            "id": driver.id if driver else None,
+            "name": driver.full_name if driver else None,
+            "phone": driver.phone if driver else None
+        } if driver else None
+    }
 
 
 @app.post("/api/driver/verify-code", response_model=TokenResponse)
@@ -2555,123 +2777,125 @@ async def driver_survey_step10(request: Request):
 
 @app.get("/driver/profile", response_class=HTMLResponse)
 async def driver_profile(request: Request, db: Session = Depends(get_db), token: Optional[str] = Cookie(None)):
-    """Страница профиля водителя"""
-    if not token:
-        print("Токен отсутствует, перенаправление на страницу авторизации")
-        return RedirectResponse(url="/driver/auth/step1")
+    """ВРЕМЕННО: Страница профиля водителя - авторизация отключена"""
     
-    try:
-        # Декодируем токен и получаем данные пользователя
-        print(f"Декодирование токена: {token[:20]}...")
-        payload = jose.jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        print(f"Токен декодирован, user_id={user_id}")
-        
-        # Получаем пользователя из БД
-        user = db.query(models.DriverUser).filter(models.DriverUser.id == user_id).first()
-        if not user:
-            print(f"Пользователь с id={user_id} не найден, перенаправление на страницу авторизации")
-            return RedirectResponse(url="/driver/auth/step1")
-        
-        print(f"Найден пользователь: id={user.id}, first_name={user.first_name}, driver_id={user.driver_id}")
-        
-        # Получаем данные водителя
-        driver = None
-        if user.driver_id:
-            driver = db.query(models.Driver).filter(models.Driver.id == user.driver_id).first()
-            print(f"Найден водитель: id={driver.id if driver else 'None'}, name={driver.full_name if driver else 'None'}")
-        
-        if not driver:
-            # Если водитель не найден или не привязан к пользователю, 
-            # перенаправляем на страницу регистрации
+    # ВРЕМЕННО: Ищем пользователя с номером 9961111111111 (нормализованный)
+    target_phone = "9961111111111"
+    user = crud.get_driver_user_by_phone(db, target_phone)
+    
+    if not user:
+        # Если пользователя нет, создаем его с нормализованным номером
+        user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=target_phone))
+        print(f"Создан новый пользователь с номером {target_phone}, id={user.id}")
+    
+    print(f"Временный режим: используем пользователя id={user.id}, phone={user.phone}")
+    
+    # Получаем данные водителя
+    driver = None
+    if user.driver_id:
+        driver = db.query(models.Driver).filter(models.Driver.id == user.driver_id).first()
+        print(f"Найден водитель: id={driver.id if driver else 'None'}, name={driver.full_name if driver else 'None'}")
+    
+    if not driver:
+        # Если водитель не найден, ищем по нормализованному номеру телефона в таблице drivers
+        driver = db.query(models.Driver).filter(models.Driver.phone == target_phone).first()
+        if driver:
+            # Связываем пользователя с водителем
+            user.driver_id = driver.id
+            db.commit()
+            print(f"Связали пользователя {user.id} с водителем {driver.id}")
+        else:
             print("Водитель не найден, перенаправление на анкету")
             return RedirectResponse(url="/driver/survey/1")
+    
+    # Обновляем время последнего входа
+    user.last_login = datetime.now()
+    db.commit()
+    
+    # Получаем текущую дату
+    current_date = datetime.now()
+    
+    car_info = ""
+    if driver.cars and len(driver.cars) > 0:
+        car = driver.cars[0]
+        car_info = f"{car.brand} {car.model}, {car.license_plate}"
+    
+    # Счетчик проблем - подсчитываем количество проблем, которые отображаются на странице диагностики
+    issues_count = 0
+    
+    # 1. Проверка наличия тарифа
+    has_tariff = driver.tariff is not None and driver.tariff.strip() != ""
+    if not has_tariff:
+        issues_count += 1
+    
+    # 2. и 3. Проверка фотоконтроля
+    # Получаем фотографии документов
+    photos = await get_driver_photos(driver.id, db)
+    
+    # Проверка фотоконтроля через верификацию
+    photo_verification = db.query(models.DriverVerification).filter(
+        models.DriverVerification.driver_id == driver.id,
+        models.DriverVerification.verification_type == "photo_control",
+        models.DriverVerification.status == "accepted"
+    ).first()
+    
+    car = driver.car
+    # Если есть верификация со статусом accepted, значит фотоконтроль пройден
+    sts_photo_passed = photo_verification is not None
+    
+    # Если нет верификации со статусом accepted, проверяем наличие СТС у автомобиля
+    if not sts_photo_passed:
+        sts_photo_passed = car is not None and hasattr(car, "sts") and car.sts is not None
         
-        # Обновляем время последнего входа
-        user.last_login = datetime.now()
-        db.commit()
-        
-        # Получаем текущую дату
-        current_date = datetime.now()
-        
-        car_info = ""
-        if driver.cars and len(driver.cars) > 0:
-            car = driver.cars[0]
-            car_info = f"{car.brand} {car.model}, {car.license_plate}"
-        
-        # Счетчик проблем - подсчитываем количество проблем, которые отображаются на странице диагностики
-        issues_count = 0
-        
-        # 1. Проверка наличия тарифа
-        has_tariff = driver.tariff is not None and driver.tariff.strip() != ""
-        if not has_tariff:
-            issues_count += 1
-        
-        # 2. и 3. Проверка фотоконтроля
-        # Получаем фотографии документов
-        photos = await get_driver_photos(driver.id, db)
-        
-        # Проверка фотоконтроля через верификацию
-        photo_verification = db.query(models.DriverVerification).filter(
-            models.DriverVerification.driver_id == driver.id,
-            models.DriverVerification.verification_type == "photo_control",
-            models.DriverVerification.status == "accepted"
-        ).first()
-        
-        car = driver.car
-        # Если есть верификация со статусом accepted, значит фотоконтроль пройден
-        sts_photo_passed = photo_verification is not None
-        
-        # Если нет верификации со статусом accepted, проверяем наличие СТС у автомобиля
-        if not sts_photo_passed:
-            sts_photo_passed = car is not None and hasattr(car, "sts") and car.sts is not None
-            
-        # Проверка фотоконтроля ВУ через ту же запись в DriverVerification
-        license_photo_passed = photo_verification is not None
-        
-        # Если нет верификации со статусом accepted, проверяем наличие фотографий водительского удостоверения
-        if not license_photo_passed:
-            license_photo_passed = photos.get("license_front") is not None and photos.get("license_back") is not None
-        
-        if not sts_photo_passed:
-            issues_count += 1
-        
-        if not license_photo_passed:
-            issues_count += 1
-        
-        # 4. Проверка баланса
-        min_balance = 10
-        balance = driver.balance or 0
-        
-        if balance < min_balance:
-            issues_count += 1
-        
-        # 5. Проверка наличия других ограничений
-        has_limitations = False  # Здесь должна быть логика проверки других ограничений
-        if has_limitations:
-            issues_count += 1
-        
-        template_data = {
-            "request": request,
-            "user": user,
-            "driver": driver,
-            "driver_id": str(driver.id),
-            "current_date": current_date,
-            "tariff": driver.tariff,
-            "driver_name": f"{user.first_name} {user.last_name}",
-            "car_info": car_info,
-            "issues_count": issues_count  # Передаем количество проблем в шаблон
-        }
-        
-        print(f"Отрисовка профиля для водителя id={driver.id}")
-        return templates.TemplateResponse("driver/profile/1.html", template_data)
-    except jose.jwt.JWTError as e:
-        # Если токен недействителен, перенаправляем на страницу авторизации
-        print(f"Ошибка проверки JWT: {str(e)}")
-        return RedirectResponse(url="/driver/auth/step1")
-    except Exception as e:
-        print(f"Ошибка при загрузке профиля: {str(e)}")
-        return HTMLResponse(content=f"Произошла ошибка: {str(e)}", status_code=500)
+    # Проверка фотоконтроля ВУ через ту же запись в DriverVerification
+    license_photo_passed = photo_verification is not None
+    
+    # Если нет верификации со статусом accepted, проверяем наличие фотографий водительского удостоверения
+    if not license_photo_passed:
+        license_photo_passed = photos.get("license_front") is not None and photos.get("license_back") is not None
+    
+    if not sts_photo_passed:
+        issues_count += 1
+    
+    if not license_photo_passed:
+        issues_count += 1
+    
+    # 4. Проверка баланса
+    min_balance = 10
+    balance = driver.balance or 0
+    
+    if balance < min_balance:
+        issues_count += 1
+    
+    # 5. Проверка наличия других ограничений
+    has_limitations = False  # Здесь должна быть логика проверки других ограничений
+    if has_limitations:
+        issues_count += 1
+    
+    # Формируем имя водителя, используя данные пользователя или водителя
+    driver_name = None
+    if user.first_name and user.last_name:
+        driver_name = f"{user.first_name} {user.last_name}"
+    elif driver.full_name:
+        driver_name = driver.full_name
+    else:
+        driver_name = "Водитель"
+    
+    template_data = {
+        "request": request,
+        "user": user,
+        "driver": driver,
+        "driver_id": str(driver.id),
+        "current_date": current_date,
+        "tariff": driver.tariff,
+        "driver_name": driver_name,
+        "car_info": car_info,
+        "issues_count": issues_count  # Передаем количество проблем в шаблон
+    }
+    
+    print(f"Временный режим: отрисовка профиля для водителя id={driver.id}")
+    print(f"Данные пользователя: phone={user.phone}, first_name='{user.first_name}', last_name='{user.last_name}'")
+    return templates.TemplateResponse("driver/profile/1.html", template_data)
 
 @app.post("/api/driver/complete-registration")
 async def complete_driver_registration(request: Request, db: Session = Depends(get_db)):
@@ -2956,7 +3180,7 @@ async def get_driver_profile(driver_id: int, db: Session = Depends(get_db)):
             )
         
         # Получаем данные об автомобиле
-        car = driver.car if hasattr(driver, 'car') and driver.car else None
+        car = db.query(models.Car).filter(models.Car.driver_id == driver_id).first()
         car_data = None
         
         if car:
@@ -2966,6 +3190,38 @@ async def get_driver_profile(driver_id: int, db: Session = Depends(get_db)):
                 "number": car.license_plate,
                 "sts": car.sts if hasattr(car, 'sts') else None
             }
+        
+        # Получаем документы водителя
+        driver_docs = db.query(models.DriverDocuments).filter(
+            models.DriverDocuments.driver_id == driver_id
+        ).first()
+        
+        print(f"📋 Документы водителя для профиля: {driver_docs is not None}")
+        if driver_docs:
+            print(f"  passport_front: {driver_docs.passport_front}")
+            print(f"  passport_back: {driver_docs.passport_back}")
+            print(f"  license_front: {driver_docs.license_front}")
+            print(f"  license_back: {driver_docs.license_back}")
+        
+        # Формируем пути к документам
+        documents = {
+            "passport_front": driver_docs.passport_front if driver_docs and driver_docs.passport_front else None,
+            "passport_back": driver_docs.passport_back if driver_docs and driver_docs.passport_back else None,
+            "license_front": driver_docs.license_front if driver_docs and driver_docs.license_front else None,
+            "license_back": driver_docs.license_back if driver_docs and driver_docs.license_back else None,
+            "driver_with_license": driver_docs.driver_with_license if driver_docs and driver_docs.driver_with_license else None
+        }
+        
+        # Добавляем фото автомобиля в documents
+        if car:
+            documents.update({
+                "car_front": car.photo_front,
+                "car_back": car.photo_rear,
+                "car_right": car.photo_right,
+                "car_left": car.photo_left,
+                "car_interior_front": car.photo_interior_front,
+                "car_interior_back": car.photo_interior_rear
+            })
         
         # Получаем данные о парке такси
         park_name = "ООО Тумар Такси"  # Пример, в реальности должно быть из БД
@@ -2994,7 +3250,8 @@ async def get_driver_profile(driver_id: int, db: Session = Depends(get_db)):
                 "park": park_name,
                 "rating": rating,
                 "activity": activity,
-                "balance": getattr(driver, 'balance', 0) or 0
+                "balance": getattr(driver, 'balance', 0) or 0,
+                "documents": documents
             }
         )
     except Exception as e:
@@ -3545,134 +3802,143 @@ async def sync_driver_balance(driver_id: int, db: Session = Depends(get_db)):
 
 @app.get("/driver/balance", response_class=HTMLResponse)
 async def driver_balance_page(request: Request, db: Session = Depends(get_db), token: Optional[str] = Cookie(None)):
-    """Страница баланса и истории транзакций водителя"""
-    if not token:
-        print("Токен отсутствует, перенаправление на страницу авторизации")
-        return RedirectResponse(url="/driver/auth/step1")
+    """ВРЕМЕННО: Страница баланса и истории транзакций водителя - авторизация отключена"""
     
-    try:
-        # Декодируем токен и получаем данные пользователя
-        print(f"Декодирование токена: {token[:20]}...")
-        payload = jose.jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        print(f"Токен декодирован, user_id={user_id}")
-        
-        # Получаем пользователя из БД
-        user = db.query(models.DriverUser).filter(models.DriverUser.id == user_id).first()
-        if not user:
-            print(f"Пользователь с id={user_id} не найден, перенаправление на страницу авторизации")
-            return RedirectResponse(url="/driver/auth/step1")
-        
-        # Проверяем связан ли пользователь с водителем
-        if not user.driver_id:
-            print(f"Пользователь id={user.id} не связан с водителем, перенаправление на анкету")
-            return RedirectResponse(url="/driver/survey/1")
-        
-        # Получаем данные водителя
+    # ВРЕМЕННО: Ищем пользователя с номером 9961111111111
+    target_phone = "9961111111111"
+    user = crud.get_driver_user_by_phone(db, target_phone)
+    
+    if not user:
+        # Если пользователя нет, создаем его
+        user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=target_phone))
+        print(f"Создан новый пользователь с номером {target_phone}, id={user.id}")
+    
+    print(f"Временный режим: используем пользователя id={user.id}, phone={user.phone}")
+    
+    # Получаем данные водителя
+    driver = None
+    if user.driver_id:
         driver = db.query(models.Driver).filter(models.Driver.id == user.driver_id).first()
-        if not driver:
-            print(f"Водитель с id={user.driver_id} не найден, перенаправление на анкету")
+        print(f"Найден водитель: id={driver.id if driver else 'None'}, name={driver.full_name if driver else 'None'}")
+    
+    if not driver:
+        # Если водитель не найден, ищем по номеру телефона в таблице drivers
+        driver = db.query(models.Driver).filter(models.Driver.phone == target_phone).first()
+        if driver:
+            # Связываем пользователя с водителем
+            user.driver_id = driver.id
+            db.commit()
+            print(f"Связали пользователя {user.id} с водителем {driver.id}")
+        else:
+            print("Водитель не найден, перенаправление на анкету")
             return RedirectResponse(url="/driver/survey/1")
-        
-        # Получаем историю транзакций
-        transactions = db.query(models.BalanceTransaction).filter(
-            models.BalanceTransaction.driver_id == driver.id
-        ).order_by(models.BalanceTransaction.created_at.desc()).all()
-        
-        # Преобразуем транзакции для отображения
-        transaction_list = []
-        for tx in transactions:
-            # Определяем тип операции для отображения
-            operation_type = "Пополнение"
-            if tx.type == "withdrawal":
-                operation_type = "Вывод средств"
-            elif tx.type == "commission":
-                operation_type = "Комиссия"
-            elif tx.type == "correction":
-                operation_type = "Корректировка"
-                
-            # Определяем класс для стилизации (положительные/отрицательные суммы)
-            amount_class = "positive" if tx.amount >= 0 else "negative"
+    
+    # Получаем историю транзакций
+    transactions = db.query(models.BalanceTransaction).filter(
+        models.BalanceTransaction.driver_id == driver.id
+    ).order_by(models.BalanceTransaction.created_at.desc()).all()
+    
+    # Преобразуем транзакции для отображения
+    transaction_list = []
+    for tx in transactions:
+        # Определяем тип операции для отображения
+        operation_type = "Пополнение"
+        if tx.type == "withdrawal":
+            operation_type = "Вывод средств"
+        elif tx.type == "commission":
+            operation_type = "Комиссия"
+        elif tx.type == "correction":
+            operation_type = "Корректировка"
             
-            # Форматируем дату
-            tx_date = tx.created_at.strftime("%d.%m.%Y %H:%M") if tx.created_at else "Нет даты"
-            
-            transaction_list.append({
-                "id": tx.id,
-                "date": tx_date,
-                "type": operation_type,
-                "amount": tx.amount,
-                "amount_formatted": f"{'+' if tx.amount >= 0 else ''}{tx.amount:.2f}",
-                "description": tx.description or "",
-                "amount_class": amount_class
-            })
+        # Определяем класс для стилизации (положительные/отрицательные суммы)
+        amount_class = "positive" if tx.amount >= 0 else "negative"
         
-        # Формируем данные для шаблона
-        template_data = {
-            "request": request,
-            "user": user,
-            "driver": driver,
-            "balance": driver.balance,
-            "balance_formatted": f"{driver.balance:.2f}",
-            "transactions": transaction_list,
-            "driver_name": f"{user.first_name} {user.last_name}",
-            "driver_id": driver.id
-        }
+        # Форматируем дату
+        tx_date = tx.created_at.strftime("%d.%m.%Y %H:%M") if tx.created_at else "Нет даты"
         
-        return templates.TemplateResponse("driver/profile/balance.html", template_data)
-        
-    except jose.jwt.JWTError as e:
-        print(f"Ошибка проверки JWT: {str(e)}")
-        return RedirectResponse(url="/driver/auth/step1")
-    except Exception as e:
-        print(f"Ошибка при загрузке страницы баланса: {str(e)}")
-        return HTMLResponse(content=f"Произошла ошибка: {str(e)}", status_code=500)
+        transaction_list.append({
+            "id": tx.id,
+            "date": tx_date,
+            "type": operation_type,
+            "amount": tx.amount,
+            "amount_formatted": f"{'+' if tx.amount >= 0 else ''}{tx.amount:.2f}",
+            "description": tx.description or "",
+            "amount_class": amount_class
+        })
+    
+    # Формируем имя водителя, используя данные пользователя или водителя
+    driver_name = None
+    if user.first_name and user.last_name:
+        driver_name = f"{user.first_name} {user.last_name}"
+    elif driver.full_name:
+        driver_name = driver.full_name
+    else:
+        driver_name = "Водитель"
+    
+    # Формируем данные для шаблона
+    template_data = {
+        "request": request,
+        "user": user,
+        "driver": driver,
+        "balance": driver.balance,
+        "balance_formatted": f"{driver.balance:.2f}",
+        "transactions": transaction_list,
+        "driver_name": driver_name,
+        "driver_id": driver.id
+    }
+    
+    print(f"Временный режим: отрисовка баланса для водителя id={driver.id}")
+    print(f"Данные пользователя: phone={user.phone}, first_name='{user.first_name}', last_name='{user.last_name}'")
+    return templates.TemplateResponse("driver/profile/balance.html", template_data)
 
 @app.get("/driver/balance/top-up", response_class=HTMLResponse)
 async def driver_balance_top_up(request: Request, db: Session = Depends(get_db), token: Optional[str] = Cookie(None)):
-    """Страница пополнения баланса водителя"""
-    if not token:
-        print("Токен отсутствует, перенаправление на страницу авторизации")
-        return RedirectResponse(url="/driver/auth/step1")
+    """ВРЕМЕННО: Страница пополнения баланса водителя - авторизация отключена"""
     
-    try:
-        # Декодируем токен и получаем данные пользователя
-        payload = jose.jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        
-        # Получаем пользователя из БД
-        user = db.query(models.DriverUser).filter(models.DriverUser.id == user_id).first()
-        if not user:
-            return RedirectResponse(url="/driver/auth/step1")
-        
-        # Проверяем связан ли пользователь с водителем
-        if not user.driver_id:
-            return RedirectResponse(url="/driver/survey/1")
-        
-        # Получаем данные водителя
+    # ВРЕМЕННО: Ищем пользователя с номером 9961111111111
+    target_phone = "9961111111111"
+    user = crud.get_driver_user_by_phone(db, target_phone)
+    
+    if not user:
+        # Если пользователя нет, создаем его
+        user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=target_phone))
+        print(f"Создан новый пользователь с номером {target_phone}, id={user.id}")
+    
+    print(f"Временный режим: используем пользователя id={user.id}, phone={user.phone}")
+    
+    # Получаем данные водителя
+    driver = None
+    if user.driver_id:
         driver = db.query(models.Driver).filter(models.Driver.id == user.driver_id).first()
-        if not driver:
+        print(f"Найден водитель: id={driver.id if driver else 'None'}, name={driver.full_name if driver else 'None'}")
+    
+    if not driver:
+        # Если водитель не найден, ищем по номеру телефона в таблице drivers
+        driver = db.query(models.Driver).filter(models.Driver.phone == target_phone).first()
+        if driver:
+            # Связываем пользователя с водителем
+            user.driver_id = driver.id
+            db.commit()
+            print(f"Связали пользователя {user.id} с водителем {driver.id}")
+        else:
+            print("Водитель не найден, перенаправление на анкету")
             return RedirectResponse(url="/driver/survey/1")
-        
-        # Форматируем баланс
-        balance_formatted = f"{driver.balance:.2f}"
-        
-        # Формируем данные для шаблона
-        template_data = {
-            "request": request,
-            "user": user,
-            "driver": driver,
-            "balance": driver.balance,
-            "balance_formatted": balance_formatted
-        }
-        
-        return templates.TemplateResponse("driver/profile/top-up.html", template_data)
-        
-    except jose.jwt.JWTError:
-        return RedirectResponse(url="/driver/auth/step1")
-    except Exception as e:
-        print(f"Ошибка при загрузке страницы пополнения баланса: {str(e)}")
-        return HTMLResponse(content=f"Произошла ошибка: {str(e)}", status_code=500)
+    
+    # Форматируем баланс
+    balance_formatted = f"{driver.balance:.2f}"
+    
+    # Формируем данные для шаблона
+    template_data = {
+        "request": request,
+        "user": user,
+        "driver": driver,
+        "balance": driver.balance,
+        "balance_formatted": balance_formatted
+    }
+    
+    print(f"Временный режим: отрисовка пополнения баланса для водителя id={driver.id}")
+    print(f"Данные пользователя: phone={user.phone}, first_name='{user.first_name}', last_name='{user.last_name}'")
+    return templates.TemplateResponse("driver/profile/top-up.html", template_data)
 
 @app.post("/api/driver/balance/top-up", response_model=dict)
 async def api_driver_balance_top_up(request: Request, db: Session = Depends(get_db)):
@@ -3870,14 +4136,23 @@ async def driver_data_page(request: Request, db: Session = Depends(get_db), toke
             db.commit()
             print(f"Обновлен тариф автомобиля: {car.tariff}")
         
-        # Получаем пути к фотографиям документов
-        driver_id_str = str(driver.id)
-        base_uploads_path = "/uploads/drivers"
+        # Получаем документы водителя из таблицы DriverDocuments
+        driver_docs = db.query(models.DriverDocuments).filter(
+            models.DriverDocuments.driver_id == driver.id
+        ).first()
+        
+        print(f"📋 Документы для водительского приложения: {driver_docs is not None}")
+        if driver_docs:
+            print(f"  passport_front: {driver_docs.passport_front}")
+            print(f"  license_front: {driver_docs.license_front}")
+        
+        # Формируем пути к документам из БД
         docs_photos = {
-            "passport_front": f"{base_uploads_path}/{driver_id_str}/passport_front.jpg" if hasattr(driver, "passport_front_path") and driver.passport_front_path else None,
-            "passport_back": f"{base_uploads_path}/{driver_id_str}/passport_back.jpg" if hasattr(driver, "passport_back_path") and driver.passport_back_path else None,
-            "license_front": f"{base_uploads_path}/{driver_id_str}/license_front.jpg" if hasattr(driver, "license_front_path") and driver.license_front_path else None,
-            "license_back": f"{base_uploads_path}/{driver_id_str}/license_back.jpg" if hasattr(driver, "license_back_path") and driver.license_back_path else None
+            "passport_front": driver_docs.passport_front if driver_docs and driver_docs.passport_front else None,
+            "passport_back": driver_docs.passport_back if driver_docs and driver_docs.passport_back else None,
+            "license_front": driver_docs.license_front if driver_docs and driver_docs.license_front else None,
+            "license_back": driver_docs.license_back if driver_docs and driver_docs.license_back else None,
+            "driver_with_license": driver_docs.driver_with_license if driver_docs and driver_docs.driver_with_license else None
         }
         
         # Получаем пути к фотографиям автомобиля
@@ -5071,11 +5346,11 @@ async def driver_photocontrol_page(request: Request, db: Session = Depends(get_d
         
         print(f"Найден водитель: id={driver.id}, name={driver.full_name}")
         
-        # Получаем информацию о статусе верификации 
+        # Получаем информацию о статусе верификации (самую последнюю)
         verification = db.query(models.DriverVerification).filter(
             models.DriverVerification.driver_id == driver.id,
             models.DriverVerification.verification_type == "photo_control"
-        ).first()
+        ).order_by(models.DriverVerification.created_at.desc()).first()
         
         return templates.TemplateResponse(
             "driver/photocontrol/1.html",
@@ -5242,6 +5517,7 @@ async def upload_driver_photos(
     passport_back: Optional[UploadFile] = File(None),
     license_front: Optional[UploadFile] = File(None),
     license_back: Optional[UploadFile] = File(None),
+    driver_with_license: Optional[UploadFile] = File(None),
     car_front: Optional[UploadFile] = File(None),
     car_back: Optional[UploadFile] = File(None),
     car_right: Optional[UploadFile] = File(None),
@@ -5251,6 +5527,13 @@ async def upload_driver_photos(
 ):
     """API для загрузки фотографий водителя и автомобиля"""
     try:
+        print(f"🚀 Начинаем загрузку фотографий")
+        print(f"passport_front: {passport_front.filename if passport_front else 'None'}")
+        print(f"passport_back: {passport_back.filename if passport_back else 'None'}")
+        print(f"license_front: {license_front.filename if license_front else 'None'}")
+        print(f"license_back: {license_back.filename if license_back else 'None'}")
+        print(f"driver_with_license: {driver_with_license.filename if driver_with_license else 'None'}")
+        
         # Получаем token из cookie
         token = request.cookies.get("token")
         if not token:
@@ -5270,18 +5553,36 @@ async def upload_driver_photos(
         if not driver:
             return {"success": False, "detail": "Данные водителя не найдены"}
         
-        # Проверяем, есть ли уже запись верификации в статусе "pending"
+        # Проверяем текущий статус верификации
         existing_verification = db.query(models.DriverVerification).filter(
             models.DriverVerification.driver_id == driver_id,
-            models.DriverVerification.verification_type == "photo_control",
-            models.DriverVerification.status == "pending"
-        ).first()
+            models.DriverVerification.verification_type == "photo_control"
+        ).order_by(models.DriverVerification.created_at.desc()).first()
         
-        if existing_verification:
+        # Блокируем повторную загрузку только если статус "pending"
+        if existing_verification and existing_verification.status == "pending":
             return {
                 "success": False, 
                 "detail": "Фотографии уже загружены и ожидают проверки. Пожалуйста, дождитесь решения администратора."
             }
+        
+        # Если статус "rejected", то обновляем существующую запись, иначе создаем новую
+        if existing_verification and existing_verification.status == "rejected":
+            verification = existing_verification
+            verification.status = "pending"
+            verification.comment = "Повторная загрузка после отклонения"
+            verification.created_at = datetime.now()
+            verification.verified_at = None
+        else:
+            # Создаем новую запись в DriverVerification
+            verification = models.DriverVerification(
+                driver_id=driver_id,
+                status="pending",
+                verification_type="photo_control",
+                comment="Ожидает проверки фотографий",
+                created_at=datetime.now()
+            )
+            db.add(verification)
         
         # Создаем папки для сохранения фотографий
         driver_photos_dir = Path(f"uploads/drivers/{driver_id}")
@@ -5293,28 +5594,67 @@ async def upload_driver_photos(
         # Функция для сохранения файла
         async def save_file(file: UploadFile, filepath: Path):
             if file:
+                print(f"💾 Сохраняем файл: {file.filename} -> {filepath}")
                 content = await file.read()
                 with open(filepath, "wb") as f:
                     f.write(content)
+                print(f"✅ Файл сохранен: {filepath} ({len(content)} bytes)")
                 return str(filepath)
             return None
         
-        # Сохраняем фотографии документов и обновляем атрибуты водителя
+        # Получаем или создаем запись документов для водителя
+        driver_docs = db.query(models.DriverDocuments).filter(
+            models.DriverDocuments.driver_id == driver_id
+        ).first()
+        
+        if not driver_docs:
+            print(f"📋 Создаем новую запись DriverDocuments для водителя {driver_id}")
+            driver_docs = models.DriverDocuments(driver_id=driver_id)
+            db.add(driver_docs)
+            db.commit()
+            db.refresh(driver_docs)
+            print(f"✅ Создана запись DriverDocuments с ID: {driver_docs.id}")
+        else:
+            print(f"📋 Используем существующую запись DriverDocuments ID: {driver_docs.id}")
+        
+        # Сохраняем фотографии документов
+        print(f"🔍 Сохранение документов для водителя {driver_id}")
+        print(f"passport_front: {passport_front is not None}")
+        print(f"passport_back: {passport_back is not None}")
+        print(f"license_front: {license_front is not None}")
+        print(f"license_back: {license_back is not None}")
+        print(f"driver_with_license: {driver_with_license is not None}")
+        
         if passport_front:
-            passport_front_path = await save_file(passport_front, driver_photos_dir / "passport_front.jpg")
-            driver.passport_front_path = f"/uploads/drivers/{driver_id}/passport_front.jpg"
+            await save_file(passport_front, driver_photos_dir / "passport_front.jpg")
+            driver_docs.passport_front = f"/uploads/drivers/{driver_id}/passport_front.jpg"
+            print(f"✅ Сохранен passport_front: {driver_docs.passport_front}")
         
         if passport_back:
-            passport_back_path = await save_file(passport_back, driver_photos_dir / "passport_back.jpg")
-            driver.passport_back_path = f"/uploads/drivers/{driver_id}/passport_back.jpg"
+            await save_file(passport_back, driver_photos_dir / "passport_back.jpg")
+            driver_docs.passport_back = f"/uploads/drivers/{driver_id}/passport_back.jpg"
+            print(f"✅ Сохранен passport_back: {driver_docs.passport_back}")
         
         if license_front:
-            license_front_path = await save_file(license_front, driver_photos_dir / "license_front.jpg")
-            driver.license_front_path = f"/uploads/drivers/{driver_id}/license_front.jpg"
+            await save_file(license_front, driver_photos_dir / "license_front.jpg")
+            driver_docs.license_front = f"/uploads/drivers/{driver_id}/license_front.jpg"
+            print(f"✅ Сохранен license_front: {driver_docs.license_front}")
         
         if license_back:
-            license_back_path = await save_file(license_back, driver_photos_dir / "license_back.jpg")
-            driver.license_back_path = f"/uploads/drivers/{driver_id}/license_back.jpg"
+            await save_file(license_back, driver_photos_dir / "license_back.jpg")
+            driver_docs.license_back = f"/uploads/drivers/{driver_id}/license_back.jpg"
+            print(f"✅ Сохранен license_back: {driver_docs.license_back}")
+        
+        if driver_with_license:
+            await save_file(driver_with_license, driver_photos_dir / "driver_with_license.jpg")
+            driver_docs.driver_with_license = f"/uploads/drivers/{driver_id}/driver_with_license.jpg"
+            print(f"✅ Сохранен driver_with_license: {driver_docs.driver_with_license}")
+        
+        # Коммитим изменения документов
+        print(f"💾 Коммит документов в БД...")
+        db.commit()
+        db.refresh(driver_docs)
+        print(f"✅ Документы сохранены в БД")
         
         # Сохраняем фотографии автомобиля
         car_photos = {}
@@ -5367,18 +5707,23 @@ async def upload_driver_photos(
                 if interior_back and hasattr(driver_car, "interior_back_photo"):
                     driver_car.interior_back_photo = f"/uploads/cars/{driver_id}/interior_back.jpg"
         
-        # Создаем запись в DriverVerification
-        verification = models.DriverVerification(
-            driver_id=driver_id,
-            status="pending",
-            verification_type="photo_control",
-            comment="Ожидает проверки фотографий",
-            created_at=datetime.now()
-        )
-        db.add(verification)
-        
         # Сохраняем изменения в БД
+        print(f"💾 Финальный коммит всех изменений...")
         db.commit()
+        
+        # Проверяем что документы действительно сохранились
+        saved_docs = db.query(models.DriverDocuments).filter(
+            models.DriverDocuments.driver_id == driver_id
+        ).first()
+        print(f"🔍 Проверка сохранения:")
+        if saved_docs:
+            print(f"  passport_front: {saved_docs.passport_front}")
+            print(f"  passport_back: {saved_docs.passport_back}")
+            print(f"  license_front: {saved_docs.license_front}")
+            print(f"  license_back: {saved_docs.license_back}")
+            print(f"  driver_with_license: {saved_docs.driver_with_license}")
+        else:
+            print(f"❌ ОШИБКА: Документы НЕ найдены после сохранения!")
         
         return {
             "success": True, 
@@ -6412,10 +6757,157 @@ async def get_order_status(order_id: int, db: Session = Depends(get_db)):
         )
         
     except Exception as e:
-        logger.error(f"❌ Ошибка получения статуса заказа: {str(e)}")
+        print(f"❌ Ошибка получения статуса заказа: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
+        )
+
+@app.get("/api/orders/test", response_class=JSONResponse)
+async def test_orders_api():
+    """Тестовый endpoint для проверки API orders"""
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "API orders работает!"}
+    )
+
+@app.post("/api/orders/complete-with-progress")
+async def complete_order_with_progress(request: Request, db: Session = Depends(get_db)):
+    """Завершение поездки с прогрессом"""
+    print("🎯 ENDPOINT ВЫЗВАН! /api/orders/complete-with-progress")
+    try:
+        data = await request.json()
+        order_id = data.get("order_id")
+        driver_id = data.get("driver_id")
+        completion_type = data.get("completion_type", "full")  # full or partial
+        final_latitude = data.get("final_latitude")
+        final_longitude = data.get("final_longitude")
+        
+        print(f"🏁 Завершение поездки: order_id={order_id}, driver_id={driver_id}, type={completion_type}")
+        print(f"📍 Координаты: lat={final_latitude}, lng={final_longitude}")
+        print(f"📋 Тип данных: order_id={type(order_id)}, driver_id={type(driver_id)}")
+        
+        # Проверяем обязательные параметры
+        if not all([order_id, driver_id]):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Не указаны order_id или driver_id"}
+            )
+        
+        # Находим заказ
+        print(f"🔍 Ищем заказ: order_id={order_id}, driver_id={driver_id}")
+        order = db.query(models.Order).filter(
+            models.Order.id == order_id,
+            models.Order.driver_id == driver_id
+        ).first()
+        
+        if not order:
+            print(f"❌ Заказ не найден: order_id={order_id}, driver_id={driver_id}")
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Заказ не найден или не принадлежит водителю"}
+            )
+        
+        print(f"✅ Заказ найден: #{order.order_number}, статус={order.status}, цена={order.price}")
+        
+        # Проверяем статус заказа
+        if order.status in ["Завершен", "Отменен"]:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": f"Заказ уже {order.status.lower()}"}
+            )
+        
+        # Получаем водителя
+        print(f"🔍 Ищем водителя: driver_id={driver_id}")
+        driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+        if not driver:
+            print(f"❌ Водитель не найден: driver_id={driver_id}")
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Водитель не найден"}
+            )
+        
+        print(f"✅ Водитель найден: {driver.full_name}, баланс={driver.balance}")
+        
+        # Рассчитываем прогресс и оплату
+        if completion_type == "partial":
+            # Досрочное завершение - базовая оплата независимо от прогресса
+            progress_percentage = 0.0  # Досрочное завершение
+            actual_payment = order.price or 0.0  # Полная оплата даже при досрочном завершении
+        else:
+            # Полное завершение
+            progress_percentage = 100.0
+            actual_payment = order.price or 0.0
+        
+        # Обновляем заказ
+        order.status = "Завершен"
+        order.progress_percentage = progress_percentage
+        order.actual_price = actual_payment
+        order.completed_at = datetime.now()
+        
+        # Обновляем баланс водителя
+        driver.balance = (driver.balance or 0.0) + actual_payment
+        
+        # Создаем транзакцию
+        order_number = getattr(order, 'order_number', str(order.id)) if order else str(order_id)
+        print(f"💳 Создаем транзакцию: водитель={driver_id}, сумма={actual_payment}, заказ={order_number}")
+        
+        transaction = models.BalanceTransaction(
+            driver_id=int(driver_id),
+            amount=float(actual_payment),
+            type="deposit",
+            status="completed",
+            description=f"Оплата за заказ #{order_number}"
+        )
+        db.add(transaction)
+        print(f"✅ Транзакция добавлена в сессию")
+        
+        # Увеличиваем активность водителя
+        current_activity = getattr(driver, 'activity', 50) or 50
+        new_activity = min(100, current_activity + 2)  # +2 балла за завершение
+        driver.activity = new_activity
+        
+        # Сохраняем изменения
+        print(f"💾 Сохраняем изменения в БД...")
+        try:
+            db.commit()
+            print(f"✅ Commit успешен")
+            db.refresh(order)
+            db.refresh(driver)
+            print(f"✅ Refresh объектов успешен")
+        except Exception as commit_error:
+            print(f"❌ Ошибка при commit: {str(commit_error)}")
+            db.rollback()
+            raise commit_error
+        
+        print(f"✅ Заказ #{order.order_number} завершен. Оплата: {actual_payment} сом")
+        print(f"💰 Баланс водителя обновлен: {driver.balance} сом")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"Заказ #{order.order_number} успешно завершен",
+                "order_id": order.id,
+                "progress_percentage": progress_percentage,
+                "actual_payment": actual_payment,
+                "driver_balance": driver.balance,
+                "completion_type": completion_type,
+                "completed_at": order.completed_at.isoformat() if order.completed_at else None
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Ошибка завершения поездки: {str(e)}")
+        import traceback
+        print(f"❌ Полная ошибка: {traceback.format_exc()}")
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": f"Ошибка завершения поездки: {str(e)}"
+            }
         )
 
 # API для обновления позиции водителя
@@ -6484,81 +6976,7 @@ async def update_driver_location(request: UpdateDriverLocationRequest, db: Sessi
             content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
         )
 
-# API для завершения заказа с учетом прогресса
-@app.post("/api/order/complete-with-progress", response_class=JSONResponse)
-async def complete_order_with_progress(request: CompleteOrderRequest, db: Session = Depends(get_db)):
-    """Завершение заказа с расчетом фактической оплаты по прогрессу"""
-    try:
-        # Находим заказ
-        order = db.query(models.Order).filter(
-            models.Order.id == request.order_id,
-            models.Order.driver_id == request.driver_id
-        ).first()
-        
-        if not order:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "error": "Заказ не найден"}
-            )
-        
-        # Находим водителя
-        driver = db.query(models.Driver).filter(models.Driver.id == request.driver_id).first()
-        if not driver:
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "error": "Водитель не найден"}
-            )
-        
-        # Обновляем позицию если указана
-        if request.final_latitude and request.final_longitude:
-            driver.current_lat = request.final_latitude
-            driver.current_lng = request.final_longitude
-            driver.last_location_update = datetime.now()
-            
-            # Рассчитываем финальный прогресс
-            progress_data = calculate_order_progress(order, request.final_latitude, request.final_longitude)
-            order.completed_distance = progress_data["completed_distance"]
-            order.progress_percentage = progress_data["progress"]
-        
-        # Рассчитываем фактическую оплату
-        if order.price:
-            if request.completion_type == "full":
-                # Полное завершение - 100% оплаты
-                order.actual_price = order.price
-                order.progress_percentage = 100.0
-            else:
-                # Частичное завершение - оплата по прогрессу
-                actual_payment = calculate_actual_payment(order.price, order.progress_percentage or 0.0)
-                order.actual_price = actual_payment
-        
-        # Обновляем статус заказа
-        order.status = "Завершен"
-        order.completed_at = datetime.now()
-        
-        # Обновляем баланс водителя
-        if order.actual_price:
-            driver.balance += order.actual_price
-        
-        db.commit()
-        
-        return JSONResponse(content={
-            "success": True,
-            "order_id": order.id,
-            "completion_type": request.completion_type,
-            "progress_percentage": order.progress_percentage,
-            "base_price": order.price,
-            "actual_payment": order.actual_price,
-            "driver_balance": driver.balance,
-            "message": f"Заказ завершен на {order.progress_percentage:.1f}%. Получено: {order.actual_price:.2f} сом"
-        })
-        
-    except Exception as e:
-        logger.error(f"❌ Ошибка завершения заказа: {str(e)}")
-        db.rollback()
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": f"Ошибка сервера: {str(e)}"}
-        )
+# Endpoint перенесен в app/routers/orders.py
 
 # API для получения прогресса заказа
 @app.get("/api/order/{order_id}/progress", response_class=JSONResponse)

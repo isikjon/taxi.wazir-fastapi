@@ -539,8 +539,8 @@
             }
             
             .speed-indicator {
-                top: 70px;
-                left: 16px;
+                top: 140px;
+                left: 20px;
                 padding: 12px;
                 min-width: 70px;
             }
@@ -550,8 +550,8 @@
             }
             
             .gps-status {
-                top: 70px;
-                right: 16px;
+                top: 140px;
+                right: 20px;
                 width: 36px;
                 height: 36px;
             }
@@ -1928,16 +1928,6 @@
         function completeTripEarly() {
             console.log('🏁 Досрочное завершение поездки на', Math.round(routeProgress) + '%');
             
-            // Рассчитываем итоговую сумму
-            const fullPrice = parseInt(currentTrip.price) || 433;
-            const finalPrice = Math.round(fullPrice * (routeProgress / 100));
-            
-            showTripResult(finalPrice, routeProgress);
-        }
-
-        function completeTripEarly() {
-            console.log('🏁 Досрочное завершение поездки на', Math.round(routeProgress) + '%');
-            
             if (!currentTrip || !currentLocation) {
                 console.error('❌ Нет данных для завершения поездки');
                 return;
@@ -1954,14 +1944,22 @@
             
             console.log('📤 Отправляем завершение поездки:', requestData);
             
-            fetch('/api/order/complete-with-progress', {
+            fetch('/api/orders/complete-with-progress', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(requestData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error('❌ Ошибка сервера:', response.status, text);
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     console.log('✅ Поездка завершена:', data);
@@ -1979,7 +1977,7 @@
             })
             .catch(error => {
                 console.error('❌ Ошибка запроса завершения поездки:', error);
-                alert('Ошибка сети при завершении поездки: ' + error.message);
+                alert('Ошибка при завершении поездки: ' + error.message);
             });
         }
 
@@ -2002,14 +2000,22 @@
             
             console.log('📤 Отправляем автоматическое завершение поездки:', requestData);
             
-            fetch('/api/order/complete-with-progress', {
+            fetch('/api/orders/complete-with-progress', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(requestData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error('❌ Ошибка сервера:', response.status, text);
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     console.log('✅ Поездка автоматически завершена:', data);
@@ -2027,7 +2033,7 @@
             })
             .catch(error => {
                 console.error('❌ Ошибка запроса автоматического завершения поездки:', error);
-                alert('Ошибка сети при завершении поездки: ' + error.message);
+                alert('Ошибка при завершении поездки: ' + error.message);
             });
         }
 

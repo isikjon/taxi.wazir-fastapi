@@ -3,7 +3,7 @@
 {% block title %}Пополнение баланса - taxi.wazir.kg{% endblock %}
 
 {% block header_right %}
-<div class="main__header-search">
+<!-- <div class="main__header-search">
     <div class="main__header-search-item">
         <form action="#">
             <input type="search" id="driver-search" placeholder="Поиск">
@@ -24,16 +24,16 @@
                     alt="profile"></a>
         </div>
     </div>
-</div>
+</div> -->
 {% endblock %}
 
 {% block subheader %}
 <div class="main__subheader main__subheader-paybalance">
     <div class="main__subheader-add">
-        <button id="filter-active" class="active">Активные</button>
+        <!-- <button id="filter-active" class="active">Активные</button>
         <button id="filter-blocked">Заблокированные</button>
         <button id="filter-waiting">В ожидании</button>
-        <button id="filter-cancelled">Отмененные</button>
+        <button id="filter-cancelled">Отмененные</button> -->
     </div>
     <div class="main__subheader-balance">
         <img src="{{ url_for('static', path='/assets/img/ico/balance.png') }}"
@@ -56,11 +56,11 @@
                     <th>Позывной</th>
                     <th>Телефон</th>
                     <th>Автомобиль</th>
-                    <th>Марка</th>
+                    <!-- <th>Марка</th> -->
                     <th>Гос.номер</th>
                     <th>Тариф</th>
                     <th>Баланс</th>
-                    <th>Статус</th>
+                    <!-- <th>Статус</th> -->
                     <th>Пополнение</th>
                     <th>Действие</th>
                 </tr>
@@ -74,11 +74,11 @@
                     <td><a href="tel:{{ driver.phone }}">{{ driver.phone
                             }}</a></td>
                     <td>{{ driver.car.model }}</td>
-                    <td>{{ driver.car.make }}</td>
+                    <!-- <td>{{ driver.car.make }}</td> -->
                     <td>{{ driver.car.license_plate }}</td>
                     <td>{{ driver.tariff }}</td>
                     <td class="driver-balance">{{ driver.balance }}</td>
-                    <td>
+                    <!-- <td>
                         {% if driver.status == 'active' %}
                         <span class="status-free">Активирован</span>
                         {% elif driver.status == 'blocked' %}
@@ -88,7 +88,7 @@
                         {% else %}
                         <span class="status-busy">Отменен</span>
                         {% endif %}
-                    </td>
+                    </td> -->
                     <td>
                         <form class="main__paybalance-table-td">
                             <img

@@ -116,7 +116,7 @@
 {% block header_title %}{% endblock %}
 
 {% block header_right %}
-<div class="main__header-search">
+<!-- <div class="main__header-search">
     <div class="main__header-search-item">
         <form action="#">
             <input type="search" placeholder="Поиск" id="header-search"
@@ -138,12 +138,12 @@
                     alt="profile"></a>
         </div>
     </div>
-</div>
+</div> -->
 {% endblock %}
 
 {% block subheader %}
 <div class="main__subheader">
-    <div class="main__subheader-filter">
+    <!-- <div class="main__subheader-filter">
         <a href="#"><img
                 src="{{ url_for('static', path='/assets/img/ico/burger.png') }}"
                 alt="burger"></a>
@@ -153,8 +153,8 @@
         <a href="#"><img
                 src="{{ url_for('static', path='/assets/img/ico/earth.png') }}"
                 alt="earth"></a>
-    </div>
-    <div class="main__subheader-filing">
+    </div> -->
+    <!-- <div class="main__subheader-filing">
         <form action="#">
             <select name="filing-date" id="date-filter">
                 <option value="all" {% if not date_filter %}selected{% endif
@@ -165,7 +165,7 @@
                 {% endfor %}
             </select>
         </form>
-    </div>
+    </div> -->
     <div class="main__subheader-date">
         <div class="date-range-selector">
             <input type="text" id="date-range-display" readonly

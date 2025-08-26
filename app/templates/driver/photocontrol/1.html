@@ -82,7 +82,7 @@
                     {% if verification and verification.status == 'accepted' %}
                     <div class="photo-item-wrapper">
                         {% else %}
-                        <a href="/driver/photocontrol/2">
+                        <a href="/driver/photocontrol/upload">
                             {% endif %}
                             <div class="settings-item">
                                 <div class="settings-item__left">
@@ -92,6 +92,9 @@
                                         verification.status == 'accepted' %}
                                         <p
                                             class="verified-text">Верифицировано</p>
+                                        {% elif verification and
+                                        verification.status == 'pending' %}
+                                        <p style="color: #f39c12;">В процессе</p>
                                         {% else %}
                                         <p class="not-verified-text">Не
                                             пройдено</p>
@@ -114,7 +117,7 @@
                     {% if verification and verification.status == 'accepted' %}
                     <div class="photo-item-wrapper">
                         {% else %}
-                        <a href="/driver/photocontrol/3">
+                        <a href="/driver/photocontrol/upload">
                             {% endif %}
                             <div class="settings-item">
                                 <div class="settings-item__left">
@@ -124,6 +127,9 @@
                                         verification.status == 'accepted' %}
                                         <p
                                             class="verified-text">Верифицировано</p>
+                                        {% elif verification and
+                                        verification.status == 'pending' %}
+                                        <p style="color: #f39c12;">В процессе</p>
                                         {% else %}
                                         <p class="not-verified-text">Не
                                             пройдено</p>
@@ -148,7 +154,7 @@
                     {% if verification and verification.status == 'accepted' %}
                     <div class="photo-item-wrapper">
                         {% else %}
-                        <a href="/driver/photocontrol/4">
+                        <a href="/driver/photocontrol/upload">
                             {% endif %}
                             <div class="settings-item">
                                 <div class="settings-item__left">
@@ -158,6 +164,9 @@
                                         verification.status == 'accepted' %}
                                         <p
                                             class="verified-text">Верифицировано</p>
+                                        {% elif verification and
+                                        verification.status == 'pending' %}
+                                        <p style="color: #f39c12;">В процессе</p>
                                         {% else %}
                                         <p class="not-verified-text">Не
                                             пройдено</p>

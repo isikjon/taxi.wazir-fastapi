@@ -264,6 +264,10 @@
                         <h4>Водительское удостоверение (обратная сторона)</h4>
                         <div class="photo-container" id="license-back"></div>
                     </div>
+                    <div class="photo-item">
+                        <h4>Водитель с водительским удостоверением</h4>
+                        <div class="photo-container" id="driver-with-license"></div>
+                    </div>
                 </div>
             </div>
 
@@ -730,10 +734,22 @@ document.addEventListener("DOMContentLoaded", function() {
                 
                 let statusText = 'Ожидает проверки';
                 try {
-                    if (data.status === 'accepted') {
-                        statusText = 'Принят';
-                    } else if (data.status === 'rejected') {
-                        statusText = 'Отклонен';
+                    // Проверяем статус верификации фотографий
+                    if (data.verification && data.verification.status) {
+                        if (data.verification.status === 'accepted') {
+                            statusText = 'Фотографии приняты';
+                        } else if (data.verification.status === 'pending') {
+                            statusText = 'Фотографии на проверке';
+                        } else if (data.verification.status === 'rejected') {
+                            statusText = 'Фотографии отклонены';
+                        }
+                    } else {
+                        // Fallback на общий статус водителя
+                        if (data.status === 'accepted') {
+                            statusText = 'Принят';
+                        } else if (data.status === 'rejected') {
+                            statusText = 'Отклонен';
+                        }
                     }
                 } catch (e) {
                     console.log('Ошибка при определении статуса', e);
@@ -754,10 +770,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 } else {
                     modalActions.style.display = 'flex';
                     
+                    // Показываем/скрываем кнопки на основе статуса верификации
+                    const verificationStatus = data.verification ? data.verification.status : null;
                     document.getElementById('accept-modal-btn').style.display = 
-                        data.status === 'accepted' ? 'none' : 'block';
+                        verificationStatus === 'accepted' ? 'none' : 'block';
                     document.getElementById('reject-modal-btn').style.display = 
-                        data.status === 'rejected' ? 'none' : 'block';
+                        verificationStatus === 'rejected' ? 'none' : 'block';
                 }
                 
                 clearAllPhotoContainers();
@@ -774,6 +792,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                     if (data.photos.license_back) {
                         handleImageDisplay('license-back', data.photos.license_back);
+                    }
+                    if (data.photos.driver_with_license) {
+                        handleImageDisplay('driver-with-license', data.photos.driver_with_license);
                     }
                     if (data.photos.car_front) {
                         handleImageDisplay('car-front', data.photos.car_front);
@@ -803,7 +824,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     function clearAllPhotoContainers() {
         const containers = [
-            'passport-front', 'passport-back', 'license-front', 'license-back',
+            'passport-front', 'passport-back', 'license-front', 'license-back', 'driver-with-license',
             'car-front', 'car-back', 'car-right', 'car-left', 'car-interior-front', 'car-interior-back'
         ];
         
