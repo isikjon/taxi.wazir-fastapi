@@ -6020,6 +6020,10 @@ async def create_order_from_form(
         
         logger.info(f"📍 Итоговые координаты: origin=({final_origin_lat},{final_origin_lng}), destination=({final_destination_lat},{final_destination_lng})")
 
+        print(f"🔧 DEBUG: Создаём OrderCreate с координатами:")
+        print(f"🔧 DEBUG: final_origin_lat={final_origin_lat}, final_origin_lng={final_origin_lng}")
+        print(f"🔧 DEBUG: final_destination_lat={final_destination_lat}, final_destination_lng={final_destination_lng}")
+
         # Создаём объект заказа
         order_data = schemas.OrderCreate(
             order_number=order_number,
@@ -6039,9 +6043,18 @@ async def create_order_from_form(
         )
         
         # Создаём заказ в БД
-        new_order = crud.create_order(db=db, order=order_data)
-        logger.info(f"✅ Заказ {order_number} создан успешно с ID: {new_order.id}")
-        logger.info(f"📋 Статус заказа: {order_status}, Водитель: {final_driver_id or 'не назначен'}")
+        print(f"🔧 DEBUG: Вызываем crud.create_order...")
+        try:
+            new_order = crud.create_order(db=db, order=order_data)
+            print(f"🔧 DEBUG: create_order выполнен успешно, new_order.id={new_order.id}")
+            print(f"🔧 DEBUG: Сохранённые координаты: origin_lat={new_order.origin_lat}, origin_lng={new_order.origin_lng}")
+            print(f"🔧 DEBUG: Сохранённые координаты: destination_lat={new_order.destination_lat}, destination_lng={new_order.destination_lng}")
+            logger.info(f"✅ Заказ {order_number} создан успешно с ID: {new_order.id}")
+            logger.info(f"📋 Статус заказа: {order_status}, Водитель: {final_driver_id or 'не назначен'}")
+        except Exception as e:
+            print(f"🔧 DEBUG: Ошибка в crud.create_order: {e}")
+            print(f"🔧 DEBUG: Тип ошибки: {type(e)}")
+            raise
         
         return JSONResponse(
             status_code=201,
