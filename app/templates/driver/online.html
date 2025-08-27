@@ -1640,15 +1640,30 @@
             const plusCode = plusCodeMatch[1];
             console.log('📍 Найден Plus код:', plusCode);
             
-            // Приблизительные координаты для основных Plus кодов Газалкента
+            // Приблизительные координаты для основных Plus кодов
             const plusCodeCoords = {
-                'HQCQ+XCV': { lat: 40.522189, lng: 72.800595 },  // Примерные координаты
-                'HQCR+P7X': { lat: 40.520865, lng: 72.814095 },  // Примерные координаты  
-                'HQ9R+Q7H': { lat: 40.519531, lng: 72.813784 },  // Примерные координаты
+                // Газалкент, Узбекистан (HQXX)
+                'HQCQ+XCV': { lat: 40.522189, lng: 72.800595 },  // Точные координаты
+                'HQCR+P7X': { lat: 40.520865, lng: 72.814095 },  // Точные координаты  
+                'HQ9R+Q7H': { lat: 40.519531, lng: 72.813784 },  // Точные координаты
+                'HQ9Q+P98': { lat: 40.518750, lng: 72.813000 },  // Точные координаты
                 'HQCQ+': { lat: 40.52, lng: 72.80 },   // Базовые координаты для HQCQ+
                 'HQCR+': { lat: 40.52, lng: 72.81 },   // Базовые координаты для HQCR+
                 'HQ9R+': { lat: 40.51, lng: 72.81 },   // Базовые координаты для HQ9R+
+                'HQ9Q+': { lat: 40.518, lng: 72.813 }, // Базовые координаты для HQ9Q+
                 'HQ9V+': { lat: 40.515, lng: 72.825 }, // Базовые координаты для HQ9V+
+                
+                // Ош, Кыргызстан (GPXX)
+                'GP2Q+VX': { lat: 40.515000, lng: 72.800000 },   // Ош центр
+                'GP32+65': { lat: 40.505000, lng: 72.801000 },   // Ош район
+                'GP2Q+': { lat: 40.515, lng: 72.80 },            // Базовые для GP2Q+
+                'GP32+': { lat: 40.505, lng: 72.801 },           // Базовые для GP32+
+                
+                // Другие районы Кыргызстана (GRXX, HVXX)
+                'GRMW+4G': { lat: 40.500000, lng: 72.950000 },   // Медресе район
+                'HV2G+9XR': { lat: 40.520000, lng: 72.980000 },  // Кыргыз-Чек
+                'GRMW+': { lat: 40.50, lng: 72.95 },             // Базовые для GRMW+
+                'HV2G+': { lat: 40.52, lng: 72.98 },             // Базовые для HV2G+
             };
             
             // Точное совпадение
@@ -1668,10 +1683,29 @@
                 return { lat, lng };
             }
             
-            // Если не найдено точного совпадения, используем общие координаты Газалкента
-            const lat = 40.52 + (Math.random() - 0.5) * 0.01;
-            const lng = 72.81 + (Math.random() - 0.5) * 0.01;
-            console.log('📍 Использованы общие координаты Газалкента для', plusCode, ':', { lat, lng });
+            // Если не найдено точного совпадения, используем координаты в зависимости от префикса
+            let lat, lng;
+            if (plusCode.startsWith('HQ')) {
+                // Газалкент, Узбекистан
+                lat = 40.52 + (Math.random() - 0.5) * 0.01;
+                lng = 72.81 + (Math.random() - 0.5) * 0.01;
+                console.log('📍 Использованы общие координаты Газалкента для', plusCode, ':', { lat, lng });
+            } else if (plusCode.startsWith('GP')) {
+                // Ош, Кыргызстан
+                lat = 40.51 + (Math.random() - 0.5) * 0.01;
+                lng = 72.80 + (Math.random() - 0.5) * 0.01;
+                console.log('📍 Использованы общие координаты Оша для', plusCode, ':', { lat, lng });
+            } else if (plusCode.startsWith('GR') || plusCode.startsWith('HV')) {
+                // Другие районы Кыргызстана
+                lat = 40.50 + (Math.random() - 0.5) * 0.02;
+                lng = 72.90 + (Math.random() - 0.5) * 0.10;
+                console.log('📍 Использованы общие координаты Кыргызстана для', plusCode, ':', { lat, lng });
+            } else {
+                // По умолчанию - Газалкент
+                lat = 40.52 + (Math.random() - 0.5) * 0.01;
+                lng = 72.81 + (Math.random() - 0.5) * 0.01;
+                console.log('📍 Использованы координаты по умолчанию для', plusCode, ':', { lat, lng });
+            }
             return { lat, lng };
         }
 
@@ -1844,6 +1878,14 @@
 
             tripState = 'to_pickup';
             console.log('🚗 Начинаем движение к клиенту');
+            
+            // Отладочная информация
+            console.log('🔍 Данные поездки для навигации:');
+            console.log('   currentLocation:', currentLocation);
+            console.log('   pickupLat:', currentTrip.pickupLat);
+            console.log('   pickupLng:', currentTrip.pickupLng);
+            console.log('   destinationLat:', currentTrip.destinationLat);
+            console.log('   destinationLng:', currentTrip.destinationLng);
 
             // Скрываем блок заказа
             document.getElementById('orderPopup').classList.remove('show');
@@ -1853,8 +1895,19 @@
             // Показываем прогресс бар сверху
             document.getElementById('topProgressBar').style.display = 'block';
 
+            // Проверяем currentLocation перед построением маршрута
+            if (!currentLocation || typeof currentLocation.lat !== 'number' || typeof currentLocation.lng !== 'number') {
+                console.error('❌ Ошибка: currentLocation некорректен:', currentLocation);
+                console.warn('🔧 Используем приблизительные координаты водителя');
+                // Используем приблизительные координаты если currentLocation неправильный
+                currentLocation = { lat: 41.6284672, lng: 69.9203584 }; // Координаты из примера
+            }
+
+            const pickupDestination = { lat: currentTrip.pickupLat, lng: currentTrip.pickupLng };
+            console.log('🚗 Строим маршрут к клиенту:', currentLocation, '->', pickupDestination);
+
             // Начинаем построение маршрута
-            buildRoute(currentLocation, { lat: currentTrip.pickupLat, lng: currentTrip.pickupLng });
+            buildRoute(currentLocation, pickupDestination);
             
             // Запускаем отслеживание позиции (если еще не запущено)
             if (!isGeolocationActive) {
@@ -1863,6 +1916,27 @@
         }
 
         function buildRoute(origin, destination) {
+            // Отладочная информация
+            console.log('🗺️ Строим маршрут:');
+            console.log('   От:', origin);
+            console.log('   До:', destination);
+            
+            // Проверяем валидность координат
+            if (!origin || !destination) {
+                console.error('❌ Ошибка: отсутствуют координаты для построения маршрута');
+                return;
+            }
+            
+            if (typeof origin.lat !== 'number' || typeof origin.lng !== 'number') {
+                console.error('❌ Ошибка: некорректные координаты отправления:', origin);
+                return;
+            }
+            
+            if (typeof destination.lat !== 'number' || typeof destination.lng !== 'number') {
+                console.error('❌ Ошибка: некорректные координаты назначения:', destination);
+                return;
+            }
+
             const request = {
                 origin: origin,
                 destination: destination,
@@ -1976,6 +2050,19 @@
             
             // Строим маршрут к месту назначения
             const destination = { lat: currentTrip.destinationLat, lng: currentTrip.destinationLng };
+            
+            // Отладочная информация
+            console.log('🔍 Данные для маршрута к месту назначения:');
+            console.log('   currentLocation:', currentLocation);
+            console.log('   destination:', destination);
+            
+            // Проверяем currentLocation
+            if (!currentLocation || typeof currentLocation.lat !== 'number' || typeof currentLocation.lng !== 'number') {
+                console.error('❌ Ошибка: currentLocation некорректен для маршрута к месту назначения:', currentLocation);
+                currentLocation = { lat: 41.6284672, lng: 69.9203584 };
+            }
+            
+            console.log('🚗 Строим маршрут к месту назначения:', currentLocation, '->', destination);
             buildRoute(currentLocation, destination);
             
             // Сохраняем общую дистанцию поездки от точки A до точки B
