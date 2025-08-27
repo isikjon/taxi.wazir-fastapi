@@ -102,9 +102,15 @@
                 <div class="main__order-details">
                     <div class="main__order-details-item main__order-details-where">
                         <input type="text" id="origin-address" name="origin" placeholder="Откуда (адрес отправления)" class="main__btn" style="width: 100%;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"/>
+                        <!-- Скрытые поля для координат точки отправления -->
+                        <input type="hidden" id="origin-lat" name="origin_lat" value="">
+                        <input type="hidden" id="origin-lng" name="origin_lng" value="">
                     </div>
                     <div class="main__order-details-item main__order-details-whither">
                         <input type="text" id="destination-address" name="destination" placeholder="Куда (адрес назначения)" class="main__btn" style="width: 100%;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"/>
+                        <!-- Скрытые поля для координат точки назначения -->
+                        <input type="hidden" id="destination-lat" name="destination_lat" value="">
+                        <input type="hidden" id="destination-lng" name="destination_lng" value="">
                     </div>
                 </div>
                 <div class="main__order-notes">
@@ -634,6 +640,17 @@
                             }
                             
                             input.value = place.formatted_address || pred.description;
+                            
+                            // Сохраняем координаты в скрытые поля
+                            if (inputId === 'origin-address') {
+                                document.getElementById('origin-lat').value = coords.lat;
+                                document.getElementById('origin-lng').value = coords.lng;
+                                console.log('📍 Сохранены координаты отправления:', coords.lat, coords.lng);
+                            } else if (inputId === 'destination-address') {
+                                document.getElementById('destination-lat').value = coords.lat;
+                                document.getElementById('destination-lng').value = coords.lng;
+                                console.log('📍 Сохранены координаты назначения:', coords.lat, coords.lng);
+                            }
                                 
                             // очищаем временные маркеры
                             markers.forEach(m => m.setMap(null));
@@ -840,6 +857,10 @@
             
             $('#origin-address').val('');
             $('#destination-address').val('');
+            $('#origin-lat').val('');
+            $('#origin-lng').val('');
+            $('#destination-lat').val('');
+            $('#destination-lng').val('');
             $('#distance').val('Расстояние: 0 км');
             $('#duration').val('Время в пути: 0 мин');
             $('#price').val('Стоимость: 0 сом');
@@ -904,6 +925,10 @@
             const paymentMethod = $('#payment-method').val();
             const origin = $('#origin-address').val();
             const destination = $('#destination-address').val();
+            const originLat = $('#origin-lat').val();
+            const originLng = $('#origin-lng').val();
+            const destinationLat = $('#destination-lat').val();
+            const destinationLng = $('#destination-lng').val();
             const orderNumber = $('#order-number').val();
             const orderDate = $('#order-date').val();
             const orderTime = $('#order-time').val();
@@ -960,6 +985,10 @@
             formData.append('payment_method', paymentMethod || '');
             formData.append('origin', origin.trim());
             formData.append('destination', destination.trim());
+            formData.append('origin_lat', originLat || '');
+            formData.append('origin_lng', originLng || '');
+            formData.append('destination_lat', destinationLat || '');
+            formData.append('destination_lng', destinationLng || '');
             formData.append('notes', notes || '');
             formData.append('price', calculatedPrice || '0');
             
@@ -970,6 +999,8 @@
                 tariff: tariff,
                 origin: origin,
                 destination: destination,
+                origin_coords: `${originLat || 'НЕТ'},${originLng || 'НЕТ'}`,
+                destination_coords: `${destinationLat || 'НЕТ'},${destinationLng || 'НЕТ'}`,
                 price: calculatedPrice || '0'
             });
             

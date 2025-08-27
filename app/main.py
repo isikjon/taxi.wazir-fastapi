@@ -5872,6 +5872,10 @@ async def create_order_from_form(
     payment_method: str = Form(...),
     origin: str = Form(...),
     destination: str = Form(...),
+    origin_lat: Optional[float] = Form(None),
+    origin_lng: Optional[float] = Form(None),
+    destination_lat: Optional[float] = Form(None),
+    destination_lng: Optional[float] = Form(None),
     notes: Optional[str] = Form(None),
     price: Optional[str] = Form(None)
 ):
@@ -5880,6 +5884,7 @@ async def create_order_from_form(
         logger.info(f"📝 Создание заказа: {order_number}")
         logger.info(f"📊 Данные заказа: driver_id={driver_id}, tariff={tariff}, price={price}")
         logger.info(f"📊 Все данные: order_date={order_date}, order_time={order_time}, origin={origin}, destination={destination}")
+        logger.info(f"📍 Координаты: origin=({origin_lat},{origin_lng}), destination=({destination_lat},{destination_lng})")
         
         # Проверяем существование водителя если он выбран
         if driver_id and driver_id != '':
@@ -5910,6 +5915,10 @@ async def create_order_from_form(
             time=order_time,
             origin=origin,
             destination=destination,
+            origin_lat=origin_lat,
+            origin_lng=origin_lng,
+            destination_lat=destination_lat,
+            destination_lng=destination_lng,
             driver_id=final_driver_id,
             status=order_status,
             price=order_price,
