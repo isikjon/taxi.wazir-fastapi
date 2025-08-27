@@ -301,23 +301,7 @@ def get_orders(db: Session, skip: int = 0, limit: int = 100):
 def get_driver_orders(db: Session, driver_id: int):
     return db.query(models.Order).filter(models.Order.driver_id == driver_id).all()
 
-def create_order(db: Session, order: schemas.OrderCreate):
-    db_order = models.Order(
-        order_number=order.order_number,
-        time=order.time,
-        origin=order.origin,
-        destination=order.destination,
-        driver_id=order.driver_id,
-        status=order.status,
-        price=order.price,
-        tariff=order.tariff,
-        notes=order.notes,
-        payment_method=order.payment_method
-    )
-    db.add(db_order)
-    db.commit()
-    db.refresh(db_order)
-    return db_order
+# Функция create_order уже определена выше в строках 15-50 с поддержкой координат
 
 def update_order(db: Session, order_id: int, order_data: schemas.OrderCreate):
     db_order = get_order(db, order_id)
