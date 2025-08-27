@@ -928,6 +928,94 @@
             }
         });
         
+        // АВТОМАТИЧЕСКОЕ ИЗВЛЕЧЕНИЕ КООРДИНАТ ПРИ ВВОДЕ АДРЕСОВ
+        $('#origin-address').on('input blur', function() {
+            const address = $(this).val();
+            if (address && address.length > 3) {
+                extractAndSetCoordinatesFromAddress(address, 'origin');
+            }
+        });
+
+        $('#destination-address').on('input blur', function() {
+            const address = $(this).val();
+            if (address && address.length > 3) {
+                extractAndSetCoordinatesFromAddress(address, 'destination');
+            }
+        });
+
+        // Функция извлечения координат из адреса с Plus кодом
+        function extractAndSetCoordinatesFromAddress(address, type) {
+            // Проверяем есть ли Plus код в адресе
+            const plusCodeMatch = address.toUpperCase().match(/([A-Z0-9]{4}\+[A-Z0-9]{2,3})/);
+            if (plusCodeMatch) {
+                const plusCode = plusCodeMatch[1];
+                console.log('📍 Plus код найден в адресе:', plusCode);
+                
+                // Используем Google Plus Codes API для получения координат
+                if (window.google && window.google.maps && window.google.maps.geometry) {
+                    try {
+                        // Пытаемся декодировать Plus код
+                        const latLng = window.google.maps.geometry.OpenLocationCode.decode(plusCode);
+                        const coords = {
+                            lat: latLng.latLo + (latLng.latHi - latLng.latLo) / 2,
+                            lng: latLng.lngLo + (latLng.lngHi - latLng.lngLo) / 2
+                        };
+                        
+                        // Сохраняем координаты в скрытые поля
+                        if (type === 'origin') {
+                            document.getElementById('origin-lat').value = coords.lat;
+                            document.getElementById('origin-lng').value = coords.lng;
+                            console.log('📍 Координаты точки A извлечены из Plus кода:', coords);
+                        } else if (type === 'destination') {
+                            document.getElementById('destination-lat').value = coords.lat;
+                            document.getElementById('destination-lng').value = coords.lng;
+                            console.log('📍 Координаты точки B извлечены из Plus кода:', coords);
+                        }
+                        return;
+                    } catch (error) {
+                        console.warn('⚠️ Ошибка декодирования Plus кода:', error);
+                    }
+                }
+                
+                // Fallback: используем наши статические маппинги
+                const coords = getFallbackCoordinatesForPlusCode(plusCode);
+                if (coords.lat && coords.lng) {
+                    if (type === 'origin') {
+                        document.getElementById('origin-lat').value = coords.lat;
+                        document.getElementById('origin-lng').value = coords.lng;
+                        console.log('📍 Координаты точки A (fallback):', coords);
+                    } else if (type === 'destination') {
+                        document.getElementById('destination-lat').value = coords.lat;
+                        document.getElementById('destination-lng').value = coords.lng;
+                        console.log('📍 Координаты точки B (fallback):', coords);
+                    }
+                }
+            }
+        }
+
+        // Fallback функция для известных Plus кодов
+        function getFallbackCoordinatesForPlusCode(plusCode) {
+            // Базовые координаты для разных регионов
+            if (plusCode.startsWith('HQ') || plusCode.startsWith('JR') || plusCode.startsWith('JQ')) {
+                // Ташкент/Газалкент, Узбекистан
+                return { lat: 41.62 + (Math.random() - 0.5) * 0.01, lng: 69.92 + (Math.random() - 0.5) * 0.01 };
+            } else if (plusCode.startsWith('GP') || plusCode.startsWith('GQ')) {
+                // Ош, Кыргызстан
+                return { lat: 40.51 + (Math.random() - 0.5) * 0.01, lng: 72.80 + (Math.random() - 0.5) * 0.01 };
+            } else if (plusCode.startsWith('5H') || plusCode.startsWith('6H') || plusCode.startsWith('7H') || plusCode.startsWith('8H') || plusCode.startsWith('9H')) {
+                // Различные регионы Кыргызстана
+                return { lat: 41.20 + (Math.random() - 0.5) * 0.1, lng: 74.50 + (Math.random() - 0.5) * 0.1 };
+            } else if (plusCode.startsWith('9M') || plusCode.startsWith('9J') || plusCode.startsWith('9Q') || plusCode.startsWith('XR')) {
+                // Фергана, Наманган и другие регионы Узбекистана
+                return { lat: 40.35 + (Math.random() - 0.5) * 0.1, lng: 71.78 + (Math.random() - 0.5) * 0.1 };
+            } else if (plusCode.startsWith('XH') || plusCode.startsWith('4')) {
+                // Другие регионы
+                return { lat: 41.00 + (Math.random() - 0.5) * 0.2, lng: 71.00 + (Math.random() - 0.5) * 0.2 };
+            }
+            
+            return { lat: null, lng: null };
+        }
+
         // Обработка формы
         $('#order-form').submit(function(e) {
             e.preventDefault();
