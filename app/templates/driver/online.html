@@ -1424,28 +1424,36 @@
                     if (data.success && data.trip) {
                         console.log('🔄 Восстанавливаем активную поездку:', data.trip);
                         
-                        // Восстанавливаем состояние поездки
+                        // Восстанавливаем состояние поездки - ИСПОЛЬЗУЕМ ТОЛЬКО КООРДИНАТЫ ИЗ БД!
                         currentTrip = {
                             orderId: data.trip.id,
                             orderNumber: data.trip.order_number,
                             price: data.trip.price,
-                            pickupLat: data.trip.pickup_lat,
-                            pickupLng: data.trip.pickup_lng,
-                            destinationLat: data.trip.destination_lat,
-                            destinationLng: data.trip.destination_lng
+                            pickupLat: parseFloat(data.trip.pickup_lat),
+                            pickupLng: parseFloat(data.trip.pickup_lng),
+                            destinationLat: parseFloat(data.trip.destination_lat),
+                            destinationLng: parseFloat(data.trip.destination_lng)
                         };
                         
-                        // Проверяем наличие координат
-                        if (!currentTrip.destinationLat || !currentTrip.destinationLng) {
-                            console.error('❌ Координаты точки назначения не найдены!');
+                        console.log('🔧 DEBUG: Восстановленная поездка:');
+                        console.log('🔧 DEBUG: pickupLat =', currentTrip.pickupLat, 'typeof =', typeof currentTrip.pickupLat);
+                        console.log('🔧 DEBUG: pickupLng =', currentTrip.pickupLng, 'typeof =', typeof currentTrip.pickupLng);
+                        console.log('🔧 DEBUG: destinationLat =', currentTrip.destinationLat, 'typeof =', typeof currentTrip.destinationLat);
+                        console.log('🔧 DEBUG: destinationLng =', currentTrip.destinationLng, 'typeof =', typeof currentTrip.destinationLng);
+                        
+                        // Проверяем наличие координат - ТОЛЬКО если они действительно отсутствуют!
+                        if (!currentTrip.destinationLat || !currentTrip.destinationLng || isNaN(currentTrip.destinationLat) || isNaN(currentTrip.destinationLng)) {
+                            console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Координаты точки назначения отсутствуют при восстановлении поездки!');
+                            console.error('❌ destinationLat:', currentTrip.destinationLat, 'destinationLng:', currentTrip.destinationLng);
                             console.error('🔍 Данные с сервера:', data.trip);
                             console.error('🔍 Destination:', data.trip.destination);
                         } else {
                             console.log('✅ Координаты точки назначения:', currentTrip.destinationLat, currentTrip.destinationLng);
                         }
                         
-                        if (!currentTrip.pickupLat || !currentTrip.pickupLng) {
-                            console.error('❌ Координаты точки подачи не найдены!');
+                        if (!currentTrip.pickupLat || !currentTrip.pickupLng || isNaN(currentTrip.pickupLat) || isNaN(currentTrip.pickupLng)) {
+                            console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Координаты точки подачи отсутствуют при восстановлении поездки!');
+                            console.error('❌ pickupLat:', currentTrip.pickupLat, 'pickupLng:', currentTrip.pickupLng);
                             console.error('🔍 Данные с сервера:', data.trip);
                             console.error('🔍 Origin:', data.trip.origin);
                         } else {
@@ -1750,46 +1758,69 @@
                 console.log('📝 Заказ добавлен в обработанные:', currentOrder.id);
             }
             
-            // Создаем объект поездки с координатами (пока используем примерные)
+            // Создаем объект поездки с координатами - ИСПОЛЬЗУЕМ ТОЛЬКО КООРДИНАТЫ ИЗ БД!
             currentTrip = {
                 orderId: currentOrder.id,
                 orderNumber: currentOrder.order_number,
                 price: currentOrder.price || 433,
-                pickupLat: currentOrder.origin_lat,
-                pickupLng: currentOrder.origin_lng,
-                destinationLat: currentOrder.destination_lat,
-                destinationLng: currentOrder.destination_lng
+                pickupLat: parseFloat(currentOrder.origin_lat),
+                pickupLng: parseFloat(currentOrder.origin_lng),
+                destinationLat: parseFloat(currentOrder.destination_lat),
+                destinationLng: parseFloat(currentOrder.destination_lng)
             };
             
-            // Проверяем наличие координат - если нет, пытаемся извлечь из Plus кодов
-            if (!currentTrip.pickupLat || !currentTrip.pickupLng) {
-                console.warn('⚠️ Координаты точки подачи не найдены, пытаемся извлечь из адреса');
+            console.log('🔧 DEBUG: Координаты из БД:');
+            console.log('🔧 DEBUG: origin_lat =', currentOrder.origin_lat, 'typeof =', typeof currentOrder.origin_lat);
+            console.log('🔧 DEBUG: origin_lng =', currentOrder.origin_lng, 'typeof =', typeof currentOrder.origin_lng);
+            console.log('🔧 DEBUG: destination_lat =', currentOrder.destination_lat, 'typeof =', typeof currentOrder.destination_lat);
+            console.log('🔧 DEBUG: destination_lng =', currentOrder.destination_lng, 'typeof =', typeof currentOrder.destination_lng);
+            
+            console.log('🔧 DEBUG: Результат в currentTrip:');
+            console.log('🔧 DEBUG: pickupLat =', currentTrip.pickupLat, 'typeof =', typeof currentTrip.pickupLat);
+            console.log('🔧 DEBUG: pickupLng =', currentTrip.pickupLng, 'typeof =', typeof currentTrip.pickupLng);
+            console.log('🔧 DEBUG: destinationLat =', currentTrip.destinationLat, 'typeof =', typeof currentTrip.destinationLat);
+            console.log('🔧 DEBUG: destinationLng =', currentTrip.destinationLng, 'typeof =', typeof currentTrip.destinationLng);
+            
+            // ИСПОЛЬЗУЕМ КООРДИНАТЫ ИЗ БД! НЕ ПЕРЕЗАПИСЫВАЕМ ИХ PLUS КОДАМИ!
+            // Проверяем ТОЛЬКО если координаты действительно null/undefined или NaN
+            if (!currentTrip.pickupLat || !currentTrip.pickupLng || isNaN(currentTrip.pickupLat) || isNaN(currentTrip.pickupLng)) {
+                console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Координаты точки подачи отсутствуют или невалидны!');
+                console.error('❌ pickupLat:', currentTrip.pickupLat, 'pickupLng:', currentTrip.pickupLng);
+                
+                // ТОЛЬКО В КРАЙНЕМ СЛУЧАЕ пытаемся извлечь из Plus кодов
                 const extractedCoords = extractCoordinatesFromPlusCode(currentOrder.origin);
                 if (extractedCoords.lat && extractedCoords.lng) {
                     currentTrip.pickupLat = extractedCoords.lat;
                     currentTrip.pickupLng = extractedCoords.lng;
-                    console.log('📍 Извлечены координаты подачи из Plus кода:', extractedCoords);
+                    console.warn('⚠️ Извлечены координаты подачи из Plus кода (FALLBACK):', extractedCoords);
                 } else {
                     // Используем приблизительные координаты для Газалкента (близко к Ташкенту!)
                     currentTrip.pickupLat = 41.62 + (Math.random() - 0.5) * 0.01;
                     currentTrip.pickupLng = 69.92 + (Math.random() - 0.5) * 0.01;
-                    console.warn('🔍 Использованы общие координаты для точки подачи');
+                    console.error('🚨 КРИТИЧНО: Использованы случайные координаты для точки подачи!');
                 }
+            } else {
+                console.log('✅ Координаты точки подачи из БД успешно использованы:', {lat: currentTrip.pickupLat, lng: currentTrip.pickupLng});
             }
             
-            if (!currentTrip.destinationLat || !currentTrip.destinationLng) {
-                console.warn('⚠️ Координаты точки назначения не найдены, пытаемся извлечь из адреса');
+            if (!currentTrip.destinationLat || !currentTrip.destinationLng || isNaN(currentTrip.destinationLat) || isNaN(currentTrip.destinationLng)) {
+                console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Координаты точки назначения отсутствуют или невалидны!');
+                console.error('❌ destinationLat:', currentTrip.destinationLat, 'destinationLng:', currentTrip.destinationLng);
+                
+                // ТОЛЬКО В КРАЙНЕМ СЛУЧАЕ пытаемся извлечь из Plus кодов
                 const extractedCoords = extractCoordinatesFromPlusCode(currentOrder.destination);
                 if (extractedCoords.lat && extractedCoords.lng) {
                     currentTrip.destinationLat = extractedCoords.lat;
                     currentTrip.destinationLng = extractedCoords.lng;
-                    console.log('📍 Извлечены координаты назначения из Plus кода:', extractedCoords);
+                    console.warn('⚠️ Извлечены координаты назначения из Plus кода (FALLBACK):', extractedCoords);
                 } else {
                     // Используем приблизительные координаты для Газалкента (близко к Ташкенту!)
                     currentTrip.destinationLat = 41.62 + (Math.random() - 0.5) * 0.01;
                     currentTrip.destinationLng = 69.92 + (Math.random() - 0.5) * 0.01;
-                    console.warn('🔍 Использованы общие координаты для точки назначения');
+                    console.error('🚨 КРИТИЧНО: Использованы случайные координаты для точки назначения!');
                 }
+            } else {
+                console.log('✅ Координаты точки назначения из БД успешно использованы:', {lat: currentTrip.destinationLat, lng: currentTrip.destinationLng});
             }
             
             console.log('🚗 Создана поездка:', currentTrip);
