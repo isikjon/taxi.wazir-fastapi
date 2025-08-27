@@ -5884,6 +5884,27 @@ async def create_order_from_form(
         logger.info(f"📝 Создание заказа: {order_number}")
         logger.info(f"📊 Данные заказа: driver_id={driver_id}, tariff={tariff}, price={price}")
         logger.info(f"📊 Все данные: order_date={order_date}, order_time={order_time}, origin={origin}, destination={destination}")
+        # Обрабатываем пустые строки координат - конвертируем в None или float
+        try:
+            origin_lat = float(origin_lat) if origin_lat and str(origin_lat).strip() else None
+        except (ValueError, TypeError):
+            origin_lat = None
+            
+        try:
+            origin_lng = float(origin_lng) if origin_lng and str(origin_lng).strip() else None
+        except (ValueError, TypeError):
+            origin_lng = None
+            
+        try:
+            destination_lat = float(destination_lat) if destination_lat and str(destination_lat).strip() else None
+        except (ValueError, TypeError):
+            destination_lat = None
+            
+        try:
+            destination_lng = float(destination_lng) if destination_lng and str(destination_lng).strip() else None
+        except (ValueError, TypeError):
+            destination_lng = None
+        
         logger.info(f"📍 Координаты: origin=({origin_lat},{origin_lng}), destination=({destination_lat},{destination_lng})")
         
         # Проверяем существование водителя если он выбран

@@ -101,13 +101,19 @@
                 </div>
                 <div class="main__order-details">
                     <div class="main__order-details-item main__order-details-where">
-                        <input type="text" id="origin-address" name="origin" placeholder="Откуда (адрес отправления)" class="main__btn" style="width: 100%;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"/>
+                        <div style="position: relative;">
+                            <input type="text" id="origin-address" name="origin" placeholder="Откуда (адрес отправления) - выберите из списка" class="main__btn" style="width: 100%;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"/>
+                            <span id="origin-coords-indicator" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #ccc;">📍</span>
+                        </div>
                         <!-- Скрытые поля для координат точки отправления -->
                         <input type="hidden" id="origin-lat" name="origin_lat" value="">
                         <input type="hidden" id="origin-lng" name="origin_lng" value="">
                     </div>
                     <div class="main__order-details-item main__order-details-whither">
-                        <input type="text" id="destination-address" name="destination" placeholder="Куда (адрес назначения)" class="main__btn" style="width: 100%;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"/>
+                        <div style="position: relative;">
+                            <input type="text" id="destination-address" name="destination" placeholder="Куда (адрес назначения) - выберите из списка" class="main__btn" style="width: 100%;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"/>
+                            <span id="destination-coords-indicator" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #ccc;">📍</span>
+                        </div>
                         <!-- Скрытые поля для координат точки назначения -->
                         <input type="hidden" id="destination-lat" name="destination_lat" value="">
                         <input type="hidden" id="destination-lng" name="destination_lng" value="">
@@ -525,6 +531,28 @@
 
             input.addEventListener('input', function() {
                 const query = input.value.trim();
+                
+                // Сбрасываем индикаторы координат при ручном вводе
+                if (inputId === 'origin-address') {
+                    document.getElementById('origin-lat').value = '';
+                    document.getElementById('origin-lng').value = '';
+                    const indicator = document.getElementById('origin-coords-indicator');
+                    if (indicator) {
+                        indicator.style.color = '#ccc';
+                        indicator.textContent = '📍';
+                        indicator.title = '';
+                    }
+                } else if (inputId === 'destination-address') {
+                    document.getElementById('destination-lat').value = '';
+                    document.getElementById('destination-lng').value = '';
+                    const indicator = document.getElementById('destination-coords-indicator');
+                    if (indicator) {
+                        indicator.style.color = '#ccc';
+                        indicator.textContent = '📍';
+                        indicator.title = '';
+                    }
+                }
+                
                 if (query.length < 2) {
                     dropdown.style.display = 'none';
                     dropdown.innerHTML = '';
@@ -645,10 +673,24 @@
                             if (inputId === 'origin-address') {
                                 document.getElementById('origin-lat').value = coords.lat;
                                 document.getElementById('origin-lng').value = coords.lng;
+                                // Обновляем индикатор
+                                const indicator = document.getElementById('origin-coords-indicator');
+                                if (indicator) {
+                                    indicator.style.color = '#28a745';
+                                    indicator.textContent = '✅';
+                                    indicator.title = `Координаты: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+                                }
                                 console.log('📍 Сохранены координаты отправления:', coords.lat, coords.lng);
                             } else if (inputId === 'destination-address') {
                                 document.getElementById('destination-lat').value = coords.lat;
                                 document.getElementById('destination-lng').value = coords.lng;
+                                // Обновляем индикатор
+                                const indicator = document.getElementById('destination-coords-indicator');
+                                if (indicator) {
+                                    indicator.style.color = '#28a745';
+                                    indicator.textContent = '✅';
+                                    indicator.title = `Координаты: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+                                }
                                 console.log('📍 Сохранены координаты назначения:', coords.lat, coords.lng);
                             }
                                 
@@ -861,6 +903,21 @@
             $('#origin-lng').val('');
             $('#destination-lat').val('');
             $('#destination-lng').val('');
+            
+            // Сбрасываем индикаторы координат
+            const originIndicator = document.getElementById('origin-coords-indicator');
+            const destIndicator = document.getElementById('destination-coords-indicator');
+            if (originIndicator) {
+                originIndicator.style.color = '#ccc';
+                originIndicator.textContent = '📍';
+                originIndicator.title = '';
+            }
+            if (destIndicator) {
+                destIndicator.style.color = '#ccc';
+                destIndicator.textContent = '📍';
+                destIndicator.title = '';
+            }
+            
             $('#distance').val('Расстояние: 0 км');
             $('#duration').val('Время в пути: 0 мин');
             $('#price').val('Стоимость: 0 сом');
