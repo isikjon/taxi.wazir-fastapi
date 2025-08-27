@@ -5872,10 +5872,10 @@ async def create_order_from_form(
     payment_method: str = Form(...),
     origin: str = Form(...),
     destination: str = Form(...),
-    origin_lat: Optional[float] = Form(None),
-    origin_lng: Optional[float] = Form(None),
-    destination_lat: Optional[float] = Form(None),
-    destination_lng: Optional[float] = Form(None),
+    origin_lat: Optional[str] = Form(""),
+    origin_lng: Optional[str] = Form(""),
+    destination_lat: Optional[str] = Form(""),
+    destination_lng: Optional[str] = Form(""),
     notes: Optional[str] = Form(None),
     price: Optional[str] = Form(None)
 ):
@@ -5884,28 +5884,7 @@ async def create_order_from_form(
         logger.info(f"📝 Создание заказа: {order_number}")
         logger.info(f"📊 Данные заказа: driver_id={driver_id}, tariff={tariff}, price={price}")
         logger.info(f"📊 Все данные: order_date={order_date}, order_time={order_time}, origin={origin}, destination={destination}")
-        # Обрабатываем пустые строки координат - конвертируем в None или float
-        try:
-            origin_lat = float(origin_lat) if origin_lat and str(origin_lat).strip() else None
-        except (ValueError, TypeError):
-            origin_lat = None
-            
-        try:
-            origin_lng = float(origin_lng) if origin_lng and str(origin_lng).strip() else None
-        except (ValueError, TypeError):
-            origin_lng = None
-            
-        try:
-            destination_lat = float(destination_lat) if destination_lat and str(destination_lat).strip() else None
-        except (ValueError, TypeError):
-            destination_lat = None
-            
-        try:
-            destination_lng = float(destination_lng) if destination_lng and str(destination_lng).strip() else None
-        except (ValueError, TypeError):
-            destination_lng = None
-        
-        logger.info(f"📍 Координаты: origin=({origin_lat},{origin_lng}), destination=({destination_lat},{destination_lng})")
+        logger.info(f"📍 Полученные координаты: origin=({origin_lat},{origin_lng}), destination=({destination_lat},{destination_lng})")
         
         # Проверяем существование водителя если он выбран
         if driver_id and driver_id != '':
@@ -5930,16 +5909,37 @@ async def create_order_from_form(
             except ValueError:
                 logger.warning(f"⚠️ Некорректная цена: {price}")
         
+        # Конвертируем координаты в числа (если указаны)
+        final_origin_lat = None
+        final_origin_lng = None
+        final_destination_lat = None
+        final_destination_lng = None
+        
+        try:
+            if origin_lat and origin_lat.strip():
+                final_origin_lat = float(origin_lat.strip())
+            if origin_lng and origin_lng.strip():
+                final_origin_lng = float(origin_lng.strip())
+            if destination_lat and destination_lat.strip():
+                final_destination_lat = float(destination_lat.strip())
+            if destination_lng and destination_lng.strip():
+                final_destination_lng = float(destination_lng.strip())
+        except ValueError as e:
+            logger.warning(f"⚠️ Ошибка преобразования координат: {e}")
+            # Не прерываем выполнение, просто оставляем координаты как None
+        
+        logger.info(f"📍 Итоговые координаты: origin=({final_origin_lat},{final_origin_lng}), destination=({final_destination_lat},{final_destination_lng})")
+
         # Создаём объект заказа
         order_data = schemas.OrderCreate(
             order_number=order_number,
             time=order_time,
             origin=origin,
             destination=destination,
-            origin_lat=origin_lat,
-            origin_lng=origin_lng,
-            destination_lat=destination_lat,
-            destination_lng=destination_lng,
+            origin_lat=final_origin_lat,
+            origin_lng=final_origin_lng,
+            destination_lat=final_destination_lat,
+            destination_lng=final_destination_lng,
             driver_id=final_driver_id,
             status=order_status,
             price=order_price,
