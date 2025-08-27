@@ -441,12 +441,24 @@
                         if (originMarker) originMarker.setMap(null);
                         originMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF3B30', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
                         selecting = 'b';
+                        
+                        // СОХРАНЯЕМ КООРДИНАТЫ ТОЧКИ A В СКРЫТЫЕ ПОЛЯ
+                        document.getElementById('origin-lat').value = coords.lat;
+                        document.getElementById('origin-lng').value = coords.lng;
+                        console.log('📍 Точка A установлена:', coords);
+                        
                         getAddressByCoordinates(coords.lat, coords.lng, 'origin');
                     } else if (selecting === 'b') {
                         secondPoint = coords;
                         if (destinationMarker) destinationMarker.setMap(null);
                         destinationMarker = new google.maps.Marker({ position: coords, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#34C759', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2 } });
                         selecting = 'end';
+                        
+                        // СОХРАНЯЕМ КООРДИНАТЫ ТОЧКИ B В СКРЫТЫЕ ПОЛЯ
+                        document.getElementById('destination-lat').value = coords.lat;
+                        document.getElementById('destination-lng').value = coords.lng;
+                        console.log('📍 Точка B установлена:', coords);
+                        
                         getAddressByCoordinates(coords.lat, coords.lng, 'destination');
                     }
 
