@@ -11,6 +11,44 @@ def generate_unique_id():
     """Generate a random 20-character uppercase ID"""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=20))
 
+# Order CRUD operations
+def create_order(db: Session, order: schemas.OrderCreate):
+    """Создает новый заказ в БД"""
+    try:
+        # Создаем объект заказа с ВСЕМИ полями включая координаты
+        db_order = models.Order(
+            order_number=order.order_number,
+            time=order.time,
+            origin=order.origin,
+            destination=order.destination,
+            origin_lat=order.origin_lat,        # ВАЖНО! 
+            origin_lng=order.origin_lng,        # ВАЖНО!
+            destination_lat=order.destination_lat,  # ВАЖНО!
+            destination_lng=order.destination_lng,  # ВАЖНО!
+            driver_id=order.driver_id,
+            status=order.status or "Ожидает водителя",
+            price=order.price,
+            tariff=order.tariff,
+            notes=order.notes,
+            payment_method=order.payment_method,
+            created_at=datetime.now()
+        )
+        
+        # Сохраняем в БД
+        db.add(db_order)
+        db.commit()
+        db.refresh(db_order)
+        
+        print(f"✅ ЗАКАЗ СОЗДАН: ID={db_order.id}, origin_lat={db_order.origin_lat}, origin_lng={db_order.origin_lng}")
+        print(f"✅ КООРДИНАТЫ: destination_lat={db_order.destination_lat}, destination_lng={db_order.destination_lng}")
+        
+        return db_order
+        
+    except Exception as e:
+        db.rollback()
+        print(f"❌ ОШИБКА создания заказа: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка создания заказа: {str(e)}")
+
 # Driver CRUD operations
 def get_driver(db: Session, driver_id: int):
     return db.query(models.Driver).filter(models.Driver.id == driver_id).first()
