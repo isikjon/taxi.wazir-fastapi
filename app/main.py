@@ -6305,16 +6305,20 @@ async def get_new_orders_for_driver(driver_id: int, db: Session = Depends(get_db
                 "success": True,
                 "orders": [
                     {
-                    "id": order.id,
+                        "id": order.id,
                         "order_number": order.order_number,
-                    "origin": order.origin,
-                    "destination": order.destination,
-                    "status": order.status,
+                        "origin": order.origin,
+                        "destination": order.destination,
+                        "status": order.status,
                         "price": order.price,
                         "tariff": order.tariff,
                         "notes": order.notes,
                         "time": order.time,
-                        "created_at": order.created_at.isoformat() if order.created_at else None
+                        "created_at": order.created_at.isoformat() if order.created_at else None,
+                        "origin_lat": order.origin_lat,
+                        "origin_lng": order.origin_lng,
+                        "destination_lat": order.destination_lat,
+                        "destination_lng": order.destination_lng
                     }
                     for order in new_orders
                 ]
@@ -6402,10 +6406,10 @@ async def get_active_trip(driver_id: int, db: Session = Depends(get_db)):
                     "price": active_order.price,
                     "origin": active_order.origin,
                     "destination": active_order.destination,
-                    "pickup_lat": None,  # TODO: добавить координаты в модель
-                    "pickup_lng": None,
-                    "destination_lat": None,
-                    "destination_lng": None
+                    "pickup_lat": active_order.origin_lat,
+                    "pickup_lng": active_order.origin_lng,
+                    "destination_lat": active_order.destination_lat,
+                    "destination_lng": active_order.destination_lng
                 }
             }
         )

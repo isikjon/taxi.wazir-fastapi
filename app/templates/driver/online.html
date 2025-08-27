@@ -699,6 +699,29 @@
         <button class="btn-complete" id="btnComplete" onclick="arrivedAtPickup()">Прибыл к клиенту</button>
     </div>
 
+    <!-- Панель результата поездки -->
+    <div id="tripResult" class="navigation-panel" style="display: none;">
+        <div class="instruction-main">🎉 Поездка завершена!</div>
+        <div class="instruction-sub">Спасибо за отличную работу</div>
+        
+        <div class="trip-info">
+            <div class="trip-info-item">
+                <div class="trip-info-label">Получено</div>
+                <div class="trip-info-value" id="resultPrice">0 СОМ</div>
+            </div>
+            <div class="trip-info-item">
+                <div class="trip-info-label">Выполнено</div>
+                <div class="trip-info-value" id="resultProgress">0%</div>
+            </div>
+            <div class="trip-info-item">
+                <div class="trip-info-label">Активность</div>
+                <div class="trip-info-value" id="resultActivity">+0</div>
+            </div>
+        </div>
+        
+        <button class="btn-complete" onclick="finishTrip()" style="background: #28a745; border-color: #28a745;">Готов к новым заказам</button>
+    </div>
+
     <script>
         let map;
         let driverMarker;
@@ -1406,11 +1429,28 @@
                             orderId: data.trip.id,
                             orderNumber: data.trip.order_number,
                             price: data.trip.price,
-                            pickupLat: data.trip.pickup_lat || (40.5138 + (Math.random() - 0.5) * 0.01),
-                            pickupLng: data.trip.pickup_lng || (72.8008 + (Math.random() - 0.5) * 0.01),
-                            destinationLat: data.trip.destination_lat || (40.5200 + (Math.random() - 0.5) * 0.01),
-                            destinationLng: data.trip.destination_lng || (72.8100 + (Math.random() - 0.5) * 0.01)
+                            pickupLat: data.trip.pickup_lat,
+                            pickupLng: data.trip.pickup_lng,
+                            destinationLat: data.trip.destination_lat,
+                            destinationLng: data.trip.destination_lng
                         };
+                        
+                        // Проверяем наличие координат
+                        if (!currentTrip.destinationLat || !currentTrip.destinationLng) {
+                            console.error('❌ Координаты точки назначения не найдены!');
+                            console.error('🔍 Данные с сервера:', data.trip);
+                            console.error('🔍 Destination:', data.trip.destination);
+                        } else {
+                            console.log('✅ Координаты точки назначения:', currentTrip.destinationLat, currentTrip.destinationLng);
+                        }
+                        
+                        if (!currentTrip.pickupLat || !currentTrip.pickupLng) {
+                            console.error('❌ Координаты точки подачи не найдены!');
+                            console.error('🔍 Данные с сервера:', data.trip);
+                            console.error('🔍 Origin:', data.trip.origin);
+                        } else {
+                            console.log('✅ Координаты точки подачи:', currentTrip.pickupLat, currentTrip.pickupLng);
+                        }
                         
                         // Определяем этап поездки по статусу
                         if (data.trip.status === 'Принят') {
@@ -1455,8 +1495,14 @@
                         );
                         
                         if (availableOrders.length > 0) {
-                            console.log('📱 Новый заказ:', availableOrders[0]);
-                            showNewOrder(availableOrders[0]);
+                            const newOrder = availableOrders[0];
+                            console.log('📱 Новый заказ:', newOrder);
+                            console.log('🔍 Проверяем координаты заказа:');
+                            console.log('   origin_lat:', newOrder.origin_lat);
+                            console.log('   origin_lng:', newOrder.origin_lng);
+                            console.log('   destination_lat:', newOrder.destination_lat);
+                            console.log('   destination_lng:', newOrder.destination_lng);
+                            showNewOrder(newOrder);
                         } else {
                             console.log('ℹ️ Все доступные заказы уже обработаны');
                         }
@@ -1630,11 +1676,26 @@
                 orderId: currentOrder.id,
                 orderNumber: currentOrder.order_number,
                 price: currentOrder.price || 433,
-                pickupLat: 40.5138 + (Math.random() - 0.5) * 0.01, // Примерные координаты
-                pickupLng: 72.8008 + (Math.random() - 0.5) * 0.01,
-                destinationLat: 40.5200 + (Math.random() - 0.5) * 0.01,
-                destinationLng: 72.8100 + (Math.random() - 0.5) * 0.01
+                pickupLat: currentOrder.origin_lat,
+                pickupLng: currentOrder.origin_lng,
+                destinationLat: currentOrder.destination_lat,
+                destinationLng: currentOrder.destination_lng
             };
+            
+            // Проверяем наличие координат
+            if (!currentTrip.pickupLat || !currentTrip.pickupLng) {
+                console.error('❌ Координаты точки подачи не найдены в заказе!');
+                console.error('🔍 Заказ:', currentOrder);
+                alert('Ошибка: Не указаны координаты точки подачи. Обратитесь к диспетчеру.');
+                return; // Прерываем выполнение
+            }
+            
+            if (!currentTrip.destinationLat || !currentTrip.destinationLng) {
+                console.error('❌ Координаты точки назначения не найдены в заказе!');
+                console.error('🔍 Заказ:', currentOrder);
+                alert('Ошибка: Не указаны координаты точки назначения. Обратитесь к диспетчеру.');
+                return; // Прерываем выполнение
+            }
             
             console.log('🚗 Создана поездка:', currentTrip);
             
@@ -2038,84 +2099,74 @@
         }
 
         function showTripResult(finalPrice, completionPercentage, data = null) {
+            console.log('📊 Показываем результат поездки:', { finalPrice, completionPercentage });
+            
             // Останавливаем отслеживание позиции
             if (watchPositionId) {
                 navigator.geolocation.clearWatch(watchPositionId);
                 watchPositionId = null;
             }
             
-            // Отправляем результат на сервер
-            console.log('📤 Отправляем завершение поездки:', currentTrip.orderId);
-            fetch(`/api/driver/${driverId}/complete-trip/${currentTrip.orderId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    completion_percentage: completionPercentage,
-                    rating: 5
-                })
-            })
-            .then(response => {
-                console.log('📨 Ответ сервера:', response.status, response.statusText);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    console.log('✅ Поездка завершена на сервере:', data);
-                    
-                    // Обновляем локальные данные из ответа сервера
-                    driverActivity = data.new_activity || driverActivity;
-                    driverBalance = data.new_balance || driverBalance;
-                    
-                    // Обновляем баланс в верхней панели
-                    updateStatusBar();
-                } else {
-                    console.error('❌ Ошибка завершения поездки:', data.error);
-                    alert('Ошибка завершения поездки: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('❌ Ошибка запроса завершения поездки:', error);
-                alert('Ошибка сети при завершении поездки: ' + error.message);
-            });
-            
             // Скрываем навигацию
-            document.getElementById('navigationPanel').classList.remove('show');
-            document.getElementById('topProgressBar').style.display = 'none';
-            
-            // Показываем результат
-            document.getElementById('tripResult').classList.add('show');
-            
-            // Обновляем данные результата
-            document.getElementById('resultPrice').textContent = finalPrice + ' СОМ';
-            document.getElementById('resultIncome').textContent = finalPrice + ' СОМ';
-            
-            // Обновляем активность из ответа сервера
-            let activityGain = 4;
-            let newActivity = driverActivity;
-            
-            if (data && data.activity_gain !== undefined) {
-                activityGain = data.activity_gain;
-                newActivity = data.new_activity;
-                driverActivity = newActivity; // обновляем глобальную переменную
+            const navigationPanel = document.getElementById('navigationPanel');
+            if (navigationPanel) {
+                navigationPanel.classList.remove('show');
             }
             
-            document.getElementById('resultActivity').innerHTML = `+${activityGain}<br>${newActivity}/100`;
+            const topProgressBar = document.getElementById('topProgressBar');
+            if (topProgressBar) {
+                topProgressBar.style.display = 'none';
+            }
+            
+            // Показываем результат
+            const tripResult = document.getElementById('tripResult');
+            if (tripResult) {
+                tripResult.style.display = 'block';
+                tripResult.classList.add('show');
+                
+                // Обновляем данные результата
+                const resultPrice = document.getElementById('resultPrice');
+                if (resultPrice) resultPrice.textContent = finalPrice + ' СОМ';
+                
+                const resultProgress = document.getElementById('resultProgress');
+                if (resultProgress) resultProgress.textContent = Math.round(completionPercentage) + '%';
+                
+                // Обновляем активность из ответа сервера
+                let activityGain = 2; // По умолчанию +2 за поездку
+                let newActivity = driverActivity + activityGain;
+                
+                if (data && data.activity_gain !== undefined) {
+                    activityGain = data.activity_gain;
+                    newActivity = data.new_activity || (driverActivity + activityGain);
+                    driverActivity = newActivity; // обновляем глобальную переменную
+                }
+                
+                const resultActivity = document.getElementById('resultActivity');
+                if (resultActivity) resultActivity.textContent = `+${activityGain}`;
+            } else {
+                // Если нет UI для результата, показываем простое уведомление
+                alert(`Поездка завершена!\nПолучено: ${finalPrice} сом\nВыполнено: ${Math.round(completionPercentage)}%`);
+            }
             
             tripState = 'completed';
             
             console.log('💰 Поездка завершена: ' + finalPrice + ' СОМ (' + Math.round(completionPercentage) + '%)');
+            
+            // Очищаем состояние после небольшой задержки
+            setTimeout(() => {
+                finishTrip();
+            }, 3000);
         }
 
 
 
         function finishTrip() {
             // Скрываем результат
-            document.getElementById('tripResult').classList.remove('show');
+            const tripResult = document.getElementById('tripResult');
+            if (tripResult) {
+                tripResult.classList.remove('show');
+                tripResult.style.display = 'none';
+            }
             
             // Очищаем состояние поездки
             currentTrip = null;
@@ -2125,8 +2176,15 @@
             completedDistance = 0;
             
             // Скрываем навигационные элементы
-            document.getElementById('navigationPanel').classList.remove('show');
-            document.getElementById('topProgressBar').style.display = 'none';
+            const navigationPanel = document.getElementById('navigationPanel');
+            if (navigationPanel) {
+                navigationPanel.classList.remove('show');
+            }
+            
+            const topProgressBar = document.getElementById('topProgressBar');
+            if (topProgressBar) {
+                topProgressBar.style.display = 'none';
+            }
             
             // Очищаем маршрут
             if (directionsRenderer) {
