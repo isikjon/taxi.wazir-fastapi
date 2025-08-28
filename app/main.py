@@ -40,7 +40,7 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 # Импорт модулей проекта
 from . import crud, models, schemas
 from .database import engine, SessionLocal, get_db, Base
-from .routers import drivers, cars, orders, messages
+from .routers import drivers, cars, orders, messages, driver_auth
 from .models import TokenResponse
 from .api import twogis
 from .config import settings
@@ -204,6 +204,7 @@ templates = Jinja2Templates(directory="app/templates")
 #         )
 
 # Подключаем API роутеры
+app.include_router(driver_auth.router, prefix="/api")  # Роутер для авторизации водителей
 app.include_router(drivers.router, prefix="/api")
 app.include_router(cars.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
@@ -271,7 +272,7 @@ SECRET_KEY = "wazir_secret_key_change_in_production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 дней
 
-# Модель запроса для входа водителя
+# Модель запроса для входа водителя/пользователя
 class DriverLoginRequest(BaseModel):
     phone: str
 
@@ -279,6 +280,8 @@ class DriverLoginRequest(BaseModel):
 class VerifyCodeRequest(BaseModel):
     phone: str
     code: str
+
+
 
 # Модель запроса для обновления профиля
 class UpdateProfileRequest(BaseModel):
@@ -2325,21 +2328,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
     else:
         return RedirectResponse(url="/disp/login?error=1", status_code=303)
 
-# Добавляем API роутеры для водительского приложения
-@app.post("/api/driver/login", response_model=dict)
-async def driver_login(request: DriverLoginRequest, db: Session = Depends(get_db)):
-    """ВРЕМЕННО: Отключена логика авторизации - любой номер телефона перенаправляет на профиль 9961111111111"""
-    
-    # ВРЕМЕННО: Ищем пользователя с номером 9961111111111
-    target_phone = "9961111111111"
-    target_user = crud.get_driver_user_by_phone(db, target_phone)
-    
-    if not target_user:
-        # Если пользователя нет, создаем его
-        target_user = crud.create_driver_user(db, schemas.DriverUserCreate(phone=target_phone))
-    
-    # ВРЕМЕННО: Возвращаем успех для любого номера телефона
-    return {"success": True, "message": "Временный режим: авторизация отключена", "target_user_id": target_user.id}
+# API роутеры для водительского приложения перенесены в отдельный роутер driver_auth.py
 
 # ВРЕМЕННЫЙ endpoint для проверки пользователя 9961111111111
 @app.get("/api/driver/check-target-user")
@@ -2398,115 +2387,7 @@ async def test_temp_mode(db: Session = Depends(get_db)):
     }
 
 
-@app.post("/api/driver/verify-code", response_model=TokenResponse)
-async def verify_code(request: VerifyCodeRequest, response: Response = None, db: Session = Depends(get_db)):
-    """
-    Проверка кода подтверждения и выдача JWT токена.
-    
-    Возвращает:
-    - access_token: JWT токен для аутентификации
-    - token_type: Тип токена (bearer)
-    - user_id: ID пользователя
-    - has_driver: Флаг, указывающий, заполнил ли пользователь анкету водителя
-    - driver_id: ID водителя (если анкета заполнена, иначе null)
-    """
-    # Форматируем номер телефона - удаляем все кроме цифр
-    raw_phone = request.phone
-    phone = ''.join(filter(str.isdigit, request.phone))
-    print(f"Верификация кода для телефона: {phone} (исходный: {raw_phone})")
-    
-    # Получаем пользователя по номеру телефона
-    user = crud.get_driver_user_by_phone(db, phone)
-    if not user:
-        print(f"Пользователь с телефоном {phone} не найден")
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
-    
-    print(f"Найден пользователь: id={user.id}, first_name={user.first_name}, driver_id={user.driver_id}")
-    
-    # В тестовом режиме проверяем только на фиксированный код 1111
-    if request.code != "1111":
-        print(f"Неверный код: {request.code}, ожидается 1111")
-        raise HTTPException(status_code=400, detail="Неверный код подтверждения")
-    
-    # Отмечаем пользователя как верифицированного
-    user_update = schemas.DriverUserUpdate(is_verified=True)
-    user = crud.update_driver_user(db, user.id, user_update)
-    
-    # Обновляем время последнего входа
-    crud.update_last_login(db, user.id)
-    
-    # Проверяем, связан ли пользователь с водителем (заполнена ли анкета)
-    has_driver = user.driver_id is not None
-    driver_id = user.driver_id
-    print(f"Проверка наличия водителя через driver_id: driver_id={driver_id}, has_driver={has_driver}")
-    
-    # Расширенный поиск водителя по номеру телефона с разными форматами
-    if not has_driver:
-        print("Попытка найти водителя с различными форматами телефона")
-        
-        # Возможные форматы телефона
-        phone_formats = [
-            phone,                          # Без +
-            '+' + phone,                    # С +
-            '996' + phone[3:] if phone.startswith('996') else phone,  # Без 996 в начале
-            phone.replace('-', ''),         # Без дефисов
-            phone.replace(' ', '')          # Без пробелов
-        ]
-        
-        # Попробуем разные форматы телефона
-        for phone_format in phone_formats:
-            print(f"Поиск водителя с телефоном {phone_format}")
-            driver = db.query(models.Driver).filter(models.Driver.phone == phone_format).first()
-            
-            if driver:
-                print(f"Найден водитель по номеру телефона {phone_format}: id={driver.id}, name={driver.full_name}")
-                user.driver_id = driver.id
-                db.commit()
-                
-                has_driver = True
-                driver_id = driver.id
-                print(f"Связали пользователя с водителем: user_id={user.id}, driver_id={driver_id}")
-                break
-            
-        if not has_driver:
-            print(f"Водитель с телефоном {phone} и похожими форматами не найден")
-    else:
-        # Получаем водителя, если он есть через driver_id
-        driver = crud.get_driver(db, driver_id)
-        has_driver = driver is not None  # Дополнительная проверка существования водителя
-        print(f"Получен водитель через driver_id: id={driver.id if driver else None}")
-    
-    # Создаем JWT токен
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"user_id": user.id, "phone": phone},
-        expires_delta=access_token_expires
-    )
-    
-    # Устанавливаем куки с JWT токеном
-    if response:
-        print("Устанавливаем токен в куки")
-        response.set_cookie(
-            key="token",
-            value=access_token,
-            httponly=True,
-            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            samesite="strict"
-        )
-    else:
-        print("Объект response не предоставлен, куки не будут установлены")
-    
-    # Формируем ответ
-    response_data = {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user_id": user.id,
-        "has_driver": has_driver,
-        "driver_id": driver_id if has_driver else None,
-        "has_profile": True  # Для драйверов всегда True, так как они проходят полную регистрацию
-    }
-    print(f"Отправляем ответ: {response_data}")
-    return response_data
+# Эндпоинт verify-code перенесен в отдельный роутер driver_auth.py
 
 @app.post("/api/driver/update-profile", response_class=JSONResponse)
 async def update_profile(request: UpdateProfileRequest, db: Session = Depends(get_db)):
