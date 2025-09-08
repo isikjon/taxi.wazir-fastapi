@@ -128,8 +128,22 @@ def complete_order_with_progress(
             db_order.actual_price = base_price
             db_order.progress_percentage = 100.0
         else:
-            # Частичное завершение - оплата по прогрессу (минимум 30%)
-            progress = db_order.progress_percentage if db_order.progress_percentage and db_order.progress_percentage > 0 else 30.0
+            # ✅ ИСПРАВЛЕНИЕ: Рассчитываем реальный процент на основе координат
+            progress = db_order.progress_percentage if db_order.progress_percentage and db_order.progress_percentage > 0 else 0.0
+            
+            # Если нет сохраненного прогресса, рассчитываем на основе расстояния
+            if progress <= 0 and final_latitude and final_longitude:
+                from ..main import calculate_order_progress  # ✅ ИСПРАВЛЕНИЕ: правильный импорт
+                try:
+                    progress_data = calculate_order_progress(db_order, final_latitude, final_longitude)
+                    progress = max(10.0, progress_data.get("progress", 10.0))  # Минимум 10%
+                    print(f"📊 Рассчитан реальный прогресс: {progress}% на основе координат")
+                except Exception as e:
+                    print(f"⚠️ Ошибка расчета прогресса: {e}")
+                    progress = 10.0  # Минимальный процент при ошибке
+            else:
+                progress = max(10.0, progress)  # Минимум 10% вместо 30%
+                
             db_order.actual_price = round(base_price * (progress / 100))
             db_order.progress_percentage = progress
         
@@ -137,9 +151,14 @@ def complete_order_with_progress(
         db_order.status = "Завершен"
         db_order.completed_at = datetime.now()
         
-        # Обновляем баланс водителя
+        # ✅ ИСПРАВЛЕНИЕ: НЕ добавляем сумму заказа в баланс
+        # Водитель получает деньги наличными от клиента
+        # Комиссия уже была списана при принятии заказа
+        current_balance = float(db_driver.balance or 0)
+        
         if db_order.actual_price:
-            db_driver.balance = float(db_driver.balance or 0) + float(db_order.actual_price)
+            print(f"💰 Заказ завершен. Водитель получил {db_order.actual_price} сом наличными")
+            print(f"💰 Баланс водителя остался без изменений: {current_balance} сом")
         
         db.commit()
         db.refresh(db_order)

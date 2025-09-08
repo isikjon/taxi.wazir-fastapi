@@ -6258,13 +6258,37 @@ async def accept_order_by_driver(
         current_notes = order.notes or ""
         order.notes = f"{current_notes}\n[ПРИНЯТ ВОДИТЕЛЕМ] {datetime.now().strftime('%d.%m.%Y %H:%M')}".strip()
         
-        # Увеличиваем активность водителя на 4 балла
+        # Увеличиваем активность водителя на 4 балла и списываем комиссию
         driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
         if driver:
+            # Обновляем активность
             current_activity = getattr(driver, 'activity', 50) or 50
             new_activity = min(100, current_activity + 4)
             driver.activity = new_activity
             logger.info(f"📈 Активность водителя {driver_id}: {current_activity} -> {new_activity}")
+            
+            # ✅ НОВОЕ: Списываем 10% комиссию с баланса водителя
+            current_balance = getattr(driver, 'balance', 0) or 0
+            order_price = order.price or 0
+            commission = round(order_price * 0.10)  # 10% комиссия
+            new_balance = current_balance - commission
+            
+            # Записываем транзакцию о списании комиссии
+            commission_transaction = models.BalanceTransaction(
+                driver_id=driver_id,
+                amount=-commission,  # Отрицательная сумма = списание
+                type="withdrawal",  # Списание (withdrawal)
+                status="completed",
+                description=f"Комиссия 10% за заказ #{order.order_number}",
+                created_at=datetime.now()
+            )
+            db.add(commission_transaction)
+            
+            # Обновляем баланс водителя
+            driver.balance = new_balance
+            
+            logger.info(f"💰 Списана комиссия: {commission} сом (10% от {order_price} сом)")
+            logger.info(f"💰 Баланс водителя {driver_id}: {current_balance} -> {new_balance} сом")
         
         # Сохраняем изменения
         db.commit()
@@ -6493,10 +6517,14 @@ async def complete_trip(
             new_activity = min(100, current_activity + activity_gain)
             driver.activity = new_activity
             
-            # Обновляем баланс водителя
+            # ✅ ИСПРАВЛЕНИЕ: НЕ добавляем сумму заказа в баланс
+            # Водитель получает деньги наличными от клиента
+            # Комиссия уже была списана при принятии заказа
             current_balance = getattr(driver, 'balance', 0) or 0
-            new_balance = current_balance + final_price
-            driver.balance = new_balance
+            new_balance = current_balance  # Баланс не изменяется
+            
+            logger.info(f"💰 Заказ завершен. Водитель получил {final_price} сом наличными")
+            logger.info(f"💰 Баланс водителя остался: {current_balance} сом")
             
             logger.info(f"💰 Водитель {driver_id}: +{final_price} СОМ, активность {current_activity} -> {new_activity}")
         
@@ -6847,13 +6875,24 @@ async def complete_order_with_progress(request: Request, db: Session = Depends(g
         
         print(f"✅ Водитель найден: {driver.full_name}, баланс={driver.balance}")
         
-        # Рассчитываем прогресс и оплату
+        # ✅ ИСПРАВЛЕНИЕ: Рассчитываем реальный прогресс на основе координат
         if completion_type == "partial":
-            # Досрочное завершение - базовая оплата независимо от прогресса
-            progress_percentage = 0.0  # Досрочное завершение
-            actual_payment = order.price or 0.0  # Полная оплата даже при досрочном завершении
+            # Досрочное завершение - рассчитываем прогресс по координатам
+            if final_latitude and final_longitude and order.origin_lat and order.origin_lng:
+                try:
+                    progress_data = calculate_order_progress(order, final_latitude, final_longitude)
+                    progress_percentage = max(10.0, progress_data.get("progress", 10.0))  # Минимум 10%
+                    actual_payment = round((order.price or 0.0) * (progress_percentage / 100))
+                    print(f"📊 Досрочное завершение: {progress_percentage}% прогресс, оплата: {actual_payment} сом")
+                except Exception as e:
+                    print(f"⚠️ Ошибка расчета прогресса: {e}")
+                    progress_percentage = 10.0  # Минимум при ошибке
+                    actual_payment = round((order.price or 0.0) * 0.1)  # 10% оплата
+            else:
+                progress_percentage = 10.0  # Если нет координат - минимум 10%
+                actual_payment = round((order.price or 0.0) * 0.1)
         else:
-            # Полное завершение
+            # Полное завершение - 100%
             progress_percentage = 100.0
             actual_payment = order.price or 0.0
         
@@ -6863,22 +6902,15 @@ async def complete_order_with_progress(request: Request, db: Session = Depends(g
         order.actual_price = actual_payment
         order.completed_at = datetime.now()
         
-        # Обновляем баланс водителя
-        driver.balance = (driver.balance or 0.0) + actual_payment
+        # ✅ ИСПРАВЛЕНИЕ: НЕ добавляем сумму заказа в баланс
+        # Водитель получает деньги наличными от клиента
+        # Комиссия уже была списана при принятии заказа
+        current_balance = driver.balance or 0.0
         
-        # Создаем транзакцию
+        # НЕ создаем транзакцию пополнения - водитель получает наличными
         order_number = getattr(order, 'order_number', str(order.id)) if order else str(order_id)
-        print(f"💳 Создаем транзакцию: водитель={driver_id}, сумма={actual_payment}, заказ={order_number}")
-        
-        transaction = models.BalanceTransaction(
-            driver_id=int(driver_id),
-            amount=float(actual_payment),
-            type="deposit",
-            status="completed",
-            description=f"Оплата за заказ #{order_number}"
-        )
-        db.add(transaction)
-        print(f"✅ Транзакция добавлена в сессию")
+        print(f"💰 Заказ #{order_number} завершен. Водитель получил {actual_payment} сом наличными")
+        print(f"💰 Баланс водителя остался: {current_balance} сом (без изменений)")
         
         # Увеличиваем активность водителя
         current_activity = getattr(driver, 'activity', 50) or 50
@@ -6898,8 +6930,8 @@ async def complete_order_with_progress(request: Request, db: Session = Depends(g
             db.rollback()
             raise commit_error
         
-        print(f"✅ Заказ #{order.order_number} завершен. Оплата: {actual_payment} сом")
-        print(f"💰 Баланс водителя обновлен: {driver.balance} сом")
+        print(f"✅ Заказ #{order.order_number} завершен. Водитель получил: {actual_payment} сом наличными")
+        print(f"💰 Баланс водителя остался без изменений: {current_balance} сом")
         
         return JSONResponse(
             status_code=200,

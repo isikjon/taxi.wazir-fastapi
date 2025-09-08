@@ -737,6 +737,10 @@
         let orderCount = 0;
         let processedOrderIds = [];
         
+        // ✅ НОВОЕ: Переменные для расчета направления движения
+        let previousLocation = null;
+        let lastMovementTime = 0;
+        
         // Переменные для навигации
         let directionsService;
         let directionsRenderer;
@@ -1136,6 +1140,11 @@
 
         // Обработка обновления позиции
         function handlePositionUpdate(position) {
+            // ✅ НОВОЕ: Сохраняем предыдущую позицию для расчета направления
+            if (currentLocation) {
+                previousLocation = { ...currentLocation };
+            }
+            
             const newPosition = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
@@ -1146,11 +1155,25 @@
             lastKnownPosition = position;
             positionAccuracy = position.coords.accuracy;
             
-            // Обновляем направление движения если доступно
+            // Обновляем направление движения если доступно из GPS
+            let gpsHeading = null;
             if (position.coords.heading !== null && !isNaN(position.coords.heading)) {
-                lastKnownHeading = position.coords.heading;
+                gpsHeading = position.coords.heading;
+                lastKnownHeading = gpsHeading;
                 headingAccuracy = position.coords.headingAccuracy || 0;
-                console.log('🧭 Направление движения обновлено:', lastKnownHeading, '°');
+                console.log('🧭 GPS направление обновлено:', lastKnownHeading, '°');
+            } else {
+                // ✅ НОВОЕ: Рассчитываем направление на основе движения
+                if (previousLocation && currentLocation) {
+                    const distance = calculateDistance(previousLocation, currentLocation);
+                    // Обновляем направление только если переместились на значительное расстояние (минимум 3 метра)
+                    if (distance > 3) {
+                        const calculatedHeading = calculateBearing(previousLocation, currentLocation);
+                        lastKnownHeading = calculatedHeading;
+                        lastMovementTime = Date.now();
+                        console.log(`🧭 Рассчитанное направление: ${calculatedHeading.toFixed(1)}° (дистанция: ${distance.toFixed(1)}м)`);
+                    }
+                }
             }
             
             // Обновляем скорость если доступна
@@ -1292,9 +1315,10 @@
             if (driverMarker) {
                 driverMarker.setPosition(currentLocation);
                 
-                // Обновляем направление маркера если доступно
+                // ✅ УЛУЧШЕНИЕ: Обновляем направление маркера с дополнительной проверкой
                 if (lastKnownHeading !== null && !isNaN(lastKnownHeading)) {
                     updateMarkerHeading(lastKnownHeading);
+                    console.log(`🧭 Маркер повернут на ${lastKnownHeading.toFixed(1)}°`);
                 }
             } else {
                 createDriverMarker();
@@ -1597,8 +1621,23 @@
                 price: order.price ? `${order.price} СОМ` : '433 СОМ',
                 origin: order.origin || 'Не указано',
                 destination: order.destination || 'Не указано',
-                comment: order.notes || 'Комментарий отсутствует'
+                comment: order.notes || 'Комментарий отсутствует',
+                // ✅ ИСПРАВЛЕНИЕ: Добавляем координаты в orderData
+                origin_lat: order.origin_lat,
+                origin_lng: order.origin_lng,
+                destination_lat: order.destination_lat,
+                destination_lng: order.destination_lng,
+                order_number: order.order_number,
+                tariff: order.tariff,
+                notes: order.notes
             };
+            
+            // ✅ DEBUG: Проверяем, что координаты сохранились в orderData
+            console.log('🔧 DEBUG: Координаты в orderData:');
+            console.log('🔧 DEBUG: origin_lat =', orderData.origin_lat, 'typeof =', typeof orderData.origin_lat);
+            console.log('🔧 DEBUG: origin_lng =', orderData.origin_lng, 'typeof =', typeof orderData.origin_lng);
+            console.log('🔧 DEBUG: destination_lat =', orderData.destination_lat, 'typeof =', typeof orderData.destination_lat);
+            console.log('🔧 DEBUG: destination_lng =', orderData.destination_lng, 'typeof =', typeof orderData.destination_lng);
             
             // Безопасное обновление элементов с проверкой существования
             const updateElement = (id, value) => {
@@ -2164,6 +2203,21 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
             return R * c;
+        }
+
+        // ✅ НОВАЯ ФУНКЦИЯ: Расчет направления между двумя точками (в градусах)
+        function calculateBearing(point1, point2) {
+            const φ1 = point1.lat * Math.PI/180;
+            const φ2 = point2.lat * Math.PI/180;
+            const Δλ = (point2.lng - point1.lng) * Math.PI/180;
+            
+            const y = Math.sin(Δλ) * Math.cos(φ2);
+            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+            
+            const θ = Math.atan2(y, x);
+            
+            // Преобразуем в градусы и нормализуем (0-360°)
+            return (θ * 180/Math.PI + 360) % 360;
         }
 
         function completeTripEarly() {
