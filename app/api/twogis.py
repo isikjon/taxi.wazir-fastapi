@@ -90,7 +90,7 @@ async def get_route(
     origin_lon: float = Query(..., description="Долгота точки начала"),
     destination_lat: float = Query(..., description="Широта точки конца"),
     destination_lon: float = Query(..., description="Долгота точки конца"),
-    transport_type: str = Query("car", description="Тип транспорта")
+    transport_type: str = Query("driving", description="Тип транспорта (driving, walking, taxi, bicycle, scooter, emergency, truck, motorcycle)")
 ):
     """
     Получение маршрута между двумя точками

@@ -10,13 +10,13 @@ print(f"🔧 config.py: TWOGIS_API_KEY из os.getenv: {repr(os.getenv('TWOGIS_A
 
 class Settings:
     # 2GIS API Configuration
-    TWOGIS_API_KEY = os.getenv("TWOGIS_API_KEY")  # Берем из .env файла
+    TWOGIS_API_KEY = os.getenv("TWOGIS_API_KEY", "your_2gis_api_key_here")  # Берем из .env файла или используем по умолчанию
     TWOGIS_SECRET_KEY = os.getenv("TWOGIS_SECRET_KEY", "")  # Опциональный
     
-    # 2GIS API Endpoints
+    # 2GIS API Endpoints (Updated for new API version 7.0.0)
     TWOGIS_GEOCODER_URL = "https://catalog.api.2gis.com/3.0/items/geocode"
-    TWOGIS_ROUTING_URL = "https://routing.api.2gis.com/routing/2.0/route"
-    TWOGIS_DISTANCE_MATRIX_URL = "https://routing.api.2gis.com/routing/2.0/distancematrix"
+    TWOGIS_ROUTING_URL = "https://routing.api.2gis.com/routing/7.0.0/global"
+    TWOGIS_DISTANCE_MATRIX_URL = "https://routing.api.2gis.com/routing/2.0/distancematrix"  # Пока оставим старую версию
     TWOGIS_SEARCH_URL = "https://catalog.api.2gis.com/3.0/items/search"
     
     # Google Maps API Configuration

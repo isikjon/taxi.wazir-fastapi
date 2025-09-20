@@ -118,14 +118,14 @@ class TwoGISService:
     
     async def get_route(self, origin: Tuple[float, float], 
                         destination: Tuple[float, float], 
-                        transport_type: str = "car") -> Optional[Dict]:
+                        transport_type: str = "driving") -> Optional[Dict]:
         """
-        Получение маршрута между двумя точками
+        Получение маршрута между двумя точками (новый API 7.0.0)
         
         Args:
             origin: Координаты начала (lat, lon)
             destination: Координаты конца (lat, lon)
-            transport_type: Тип транспорта (car, taxi, pedestrian)
+            transport_type: Тип транспорта (driving, walking, taxi, bicycle, scooter, emergency, truck, motorcycle)
         
         Returns:
             Dict с информацией о маршруте или None
@@ -143,24 +143,48 @@ class TwoGISService:
         
         try:
             async with aiohttp.ClientSession() as session:
-                params = {
-                    'origin': f"{origin[1]},{origin[0]}",  # lon,lat
-                    'destination': f"{destination[1]},{destination[0]}",
-                    'type': transport_type,
-                    'key': self.api_key
+                # Новый формат запроса для API 7.0.0
+                request_body = {
+                    "points": [
+                        {
+                            "type": "stop",
+                            "lon": origin[1],  # долгота
+                            "lat": origin[0]   # широта
+                        },
+                        {
+                            "type": "stop", 
+                            "lon": destination[1],  # долгота
+                            "lat": destination[0]   # широта
+                        }
+                    ],
+                    "locale": "ru",
+                    "transport": transport_type,
+                    "route_mode": "fastest",  # Самый быстрый маршрут
+                    "traffic_mode": "jam",    # Учитываем пробки
+                    "output": "detailed"      # Детальный ответ с геометрией
                 }
                 
-                async with session.get(self.routing_url, params=params) as response:
+                # URL с API ключом в параметрах
+                url_with_key = f"{self.routing_url}?key={self.api_key}"
+                
+                headers = {
+                    'Content-Type': 'application/json'
+                }
+                
+                async with session.post(url_with_key, 
+                                       headers=headers,
+                                       json=request_body) as response:
                     if response.status == 200:
                         data = await response.json()
                         
-                        if data.get('result') and data['result'].get('routes'):
-                            route = data['result']['routes'][0]
+                        if data.get('result') and len(data['result']) > 0:
+                            route = data['result'][0]
                             result = {
-                                'distance': route.get('distance', 0),  # в метрах
-                                'duration': route.get('duration', 0),  # в секундах
-                                'geometry': route.get('geometry', {}),
-                                'steps': route.get('steps', []),
+                                'distance': route.get('total_distance', 0),  # в метрах
+                                'duration': route.get('total_duration', 0),  # в секундах
+                                'geometry': route.get('maneuvers', []),       # манёвры с геометрией
+                                'ui_distance': route.get('ui_total_distance', {}),
+                                'ui_duration': route.get('ui_total_duration', ''),
                                 'transport_type': transport_type
                             }
                             
@@ -172,10 +196,12 @@ class TwoGISService:
                             
                             return result
                         else:
-                            print(f"❌ Маршрут не найден")
+                            print(f"❌ Маршрут не найден в ответе API")
                             return None
                     else:
                         print(f"❌ Ошибка построения маршрута: {response.status}")
+                        response_text = await response.text()
+                        print(f"❌ Ответ сервера: {response_text}")
                         return None
                         
         except Exception as e:
